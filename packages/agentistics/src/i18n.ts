@@ -8,6 +8,7 @@ const T: Record<Lang, Record<string, string>> = {
     "nav.release": "Team Mode",
     "nav.features": "Features",
     "nav.install": "Install",
+    "nav.docs": "Docs",
     "nav.github": "GitHub ↗",
 
     // Hero
@@ -45,7 +46,7 @@ const T: Record<Lang, Record<string, string>> = {
     "terminals.tag": "CLI",
     "terminals.title.1": "One CLI.",
     "terminals.title.2": "Every real mode.",
-    "terminals.sub": "agentop start is the one launcher you need — but every mode underneath it is a real, independent command. All recorded live, nothing scripted.",
+    "terminals.sub": "Bare agentop opens the control center — one full-screen application that adds nothing to your scrollback. Every mode underneath it is still a real, independent command. All recorded live, nothing scripted.",
 
     // Release — Team Mode + unified CLI
     "release.tag": "New in v1.7",
@@ -70,15 +71,15 @@ const T: Record<Lang, Record<string, string>> = {
     "release.central.point4.title": "Real-time via SSE",
     "release.central.point4.desc": "Every push notifies dashboards instantly. Tokens are stored only as a sha256 hash.",
 
-    "release.cli.title": "agentop start — one launcher for everything",
+    "release.cli.title": "agentop — one control center for everything",
     "release.cli.desc": "One re-runnable panel: start agentistics or a central, connect to a team, or stop anything — with live status for every service.",
     "release.cli.point1.title": "English and pt-BR",
-    "release.cli.point1.desc": "Toggle the whole launcher's language in place, no restart needed.",
+    "release.cli.point1.desc": "Toggle the whole control center's language in place, no restart needed.",
     "release.cli.point2.title": "Everything else, one command away",
     "release.cli.point2.desc": "setup · restart · central · member · autostart · check-update — plus a Docker mode for the whole machine.",
 
-    "release.harness.title": "One dashboard, four coding agents",
-    "release.harness.desc": "Claude Code, Codex, Gemini and Copilot all report into one dashboard. /compare puts them side by side.",
+    "release.harness.title": "One dashboard, six coding agents",
+    "release.harness.desc": "Claude Code, Codex CLI, Gemini CLI, Copilot CLI, Antigravity and Kimi Code all report into one dashboard. /compare puts them side by side.",
     "release.harness.point1.title": "Per-harness pages",
     "release.harness.point1.desc": "/h/:harness gives every agent its own Overview and an honest \"Data & sources\" tab.",
     "release.harness.point2.title": "Honest N/A, not fake zeros",
@@ -166,6 +167,7 @@ const T: Record<Lang, Record<string, string>> = {
     "nav.release": "Modo Time",
     "nav.features": "Recursos",
     "nav.install": "Instalar",
+    "nav.docs": "Docs",
     "nav.github": "GitHub ↗",
 
     // Hero
@@ -203,7 +205,7 @@ const T: Record<Lang, Record<string, string>> = {
     "terminals.tag": "CLI",
     "terminals.title.1": "Um CLI.",
     "terminals.title.2": "Todo modo real.",
-    "terminals.sub": "O agentop start é o único launcher que você precisa — mas cada modo por trás dele é um comando real e independente. Tudo gravado ao vivo, nada roteirizado.",
+    "terminals.sub": "O agentop puro abre o control center — uma aplicação em tela cheia que não deixa nada no seu scrollback. Cada modo por trás dele continua sendo um comando real e independente. Tudo gravado ao vivo, nada roteirizado.",
 
     // Release — Team Mode + CLI unificada
     "release.tag": "Novo na v1.7",
@@ -228,15 +230,15 @@ const T: Record<Lang, Record<string, string>> = {
     "release.central.point4.title": "Tempo real via SSE",
     "release.central.point4.desc": "Todo envio notifica os dashboards na hora. Tokens são guardados só como hash sha256.",
 
-    "release.cli.title": "agentop start — um launcher pra tudo",
+    "release.cli.title": "agentop — um control center pra tudo",
     "release.cli.desc": "Um painel re-executável: inicie o agentistics ou um central, conecte-se a um time, ou pare qualquer coisa — com status ao vivo de cada serviço.",
     "release.cli.point1.title": "Inglês e pt-BR",
-    "release.cli.point1.desc": "Alterna o idioma do launcher inteiro no lugar, sem reiniciar.",
+    "release.cli.point1.desc": "Alterna o idioma do control center inteiro no lugar, sem reiniciar.",
     "release.cli.point2.title": "Tudo o resto, a um comando de distância",
     "release.cli.point2.desc": "setup · restart · central · member · autostart · check-update — e um modo Docker pra máquina inteira.",
 
-    "release.harness.title": "Um dashboard, quatro agentes de código",
-    "release.harness.desc": "Claude Code, Codex, Gemini e Copilot reportam todos pro mesmo dashboard. /compare coloca eles lado a lado.",
+    "release.harness.title": "Um dashboard, seis agentes de código",
+    "release.harness.desc": "Claude Code, Codex CLI, Gemini CLI, Copilot CLI, Antigravity e Kimi Code reportam todos pro mesmo dashboard. /compare coloca eles lado a lado.",
     "release.harness.point1.title": "Páginas por harness",
     "release.harness.point1.desc": "/h/:harness dá a cada agente sua própria Overview e uma aba \"Data & sources\" honesta.",
     "release.harness.point2.title": "N/A honesto, não zero fake",

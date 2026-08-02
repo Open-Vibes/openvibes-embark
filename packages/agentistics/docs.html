@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Docs — Agentistics</title>
+    <meta name="description" content="Agentistics documentation — install, CLI, Team Mode, security model, harness contract, MCP and OpenTelemetry." />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta property="og:title" content="Agentistics — Documentation" />
+    <meta property="og:description" content="Everything about running agentistics on one machine or across a team." />
+    <meta property="og:image" content="/logo.png" />
+    <meta property="og:type" content="website" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>body { opacity: 0; background: #0a0a0f; }</style>
+  </head>
+  <body class="docs-body">
+
+    <nav id="nav">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo">
+          <img src="/minimalistLogo.png" alt="Agentistics" class="nav-logo-img" />
+          <span class="nav-logo-text">Agentistics</span>
+        </a>
+        <div class="nav-links">
+          <a href="/#preview">Dashboard</a>
+          <a href="/#terminals">CLI</a>
+          <a href="/#release">Team Mode</a>
+          <a href="/#features">Features</a>
+          <a href="/docs.html" class="nav-active">Docs</a>
+          <a href="https://github.com/blpsoares/agentistics" target="_blank" class="nav-cta">GitHub ↗</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Mobile: the sidebar collapses behind this -->
+    <button id="docs-menu-btn" class="docs-menu-btn" aria-expanded="false" aria-controls="docs-sidebar">
+      <span></span><span></span><span></span>
+      <em>Contents</em>
+    </button>
+
+    <div class="docs-shell">
+      <aside id="docs-sidebar" class="docs-sidebar">
+        <div class="docs-search-wrap">
+          <input id="docs-search" class="docs-search" type="search" placeholder="Search the docs…" autocomplete="off" />
+        </div>
+        <nav id="docs-nav" class="docs-nav"></nav>
+      </aside>
+
+      <main class="docs-main">
+        <article id="docs-content" class="docs-content markdown">
+          <p class="docs-loading">Loading…</p>
+        </article>
+        <footer class="docs-foot">
+          <a id="docs-edit" href="https://github.com/blpsoares/agentistics" target="_blank" rel="noopener">
+            Edit this page on GitHub ↗
+          </a>
+        </footer>
+      </main>
+
+      <aside class="docs-toc-wrap">
+        <div class="docs-toc-title">On this page</div>
+        <nav id="docs-toc" class="docs-toc"></nav>
+      </aside>
+    </div>
+
+    <script type="module" src="/src/docs.ts"></script>
+  </body>
+</html>

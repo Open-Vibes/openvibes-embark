@@ -1125,3 +1125,275 @@ footer {
   .release-tabs { flex-direction: column; width: 100%; }
   .release-tab { justify-content: center; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Docs page (docs.html)
+
+   Three columns — sidebar, content, on-this-page — collapsing to one on a
+   phone, where the sidebar becomes a sheet behind the "Contents" button. The
+   content itself is rendered markdown from the agentistics repository, so the
+   `.markdown` rules below have to style tags we do not author: whatever the
+   project's docs happen to contain.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.docs-body { background: var(--bg-base); }
+.nav-links a.nav-active { color: var(--orange-light); }
+
+.docs-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr) 220px;
+  gap: 2.5rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 6.5rem 2rem 5rem;
+  align-items: start;
+}
+
+/* ── sidebar ─────────────────────────────────────────────────────────── */
+
+.docs-sidebar {
+  position: sticky;
+  top: 5.5rem;
+  max-height: calc(100vh - 7rem);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+.docs-search-wrap { margin-bottom: 1.25rem; }
+.docs-search {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+.docs-search:focus { outline: none; border-color: var(--orange); }
+.docs-search::placeholder { color: var(--text-dim); }
+
+.docs-nav-group { margin-bottom: 1.5rem; }
+.docs-nav-group-title {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-dim);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+.docs-nav-link {
+  display: block;
+  padding: 0.35rem 0.7rem;
+  margin-left: -0.7rem;
+  border-radius: 6px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  border-left: 2px solid transparent;
+}
+.docs-nav-link:hover { color: var(--text); background: var(--bg-card); }
+.docs-nav-link.is-active {
+  color: var(--orange-light);
+  border-left-color: var(--orange);
+  background: var(--orange-glow);
+}
+/* A search hit names the page it came from, or the results are unplaceable. */
+.docs-hit-page {
+  display: block;
+  font-style: normal;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+/* ── content ─────────────────────────────────────────────────────────── */
+
+.docs-main { min-width: 0; }
+.docs-content { min-width: 0; }
+.docs-loading { color: var(--text-dim); }
+
+.markdown { color: var(--text-muted); line-height: 1.72; font-size: 0.95rem; }
+.markdown h1, .markdown h2, .markdown h3, .markdown h4 {
+  color: var(--text);
+  line-height: 1.25;
+  scroll-margin-top: 6rem;
+}
+.markdown h1 { font-size: 2.1rem; font-weight: 800; margin: 0 0 1.25rem; letter-spacing: -0.02em; }
+.markdown h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 3rem 0 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.markdown h3 { font-size: 1.08rem; font-weight: 650; margin: 2rem 0 0.75rem; }
+.markdown p { margin: 0 0 1.1rem; }
+.markdown ul, .markdown ol { margin: 0 0 1.1rem; padding-left: 1.35rem; }
+.markdown li { margin-bottom: 0.4rem; }
+.markdown a { color: var(--orange-light); text-decoration: none; border-bottom: 1px solid transparent; }
+.markdown a:hover { border-bottom-color: var(--orange); }
+.markdown strong { color: var(--text); font-weight: 650; }
+.markdown hr { border: 0; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+.markdown blockquote {
+  margin: 0 0 1.1rem;
+  padding: 0.85rem 1.1rem;
+  border-left: 3px solid var(--orange);
+  background: var(--orange-glow);
+  border-radius: 0 8px 8px 0;
+}
+.markdown blockquote p:last-child { margin-bottom: 0; }
+
+.markdown code {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.845em;
+  background: var(--bg-elevated);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  color: var(--orange-light);
+}
+.markdown pre {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;      /* the block scrolls, never the page */
+  margin: 0 0 1.3rem;
+}
+.markdown pre code { background: none; padding: 0; color: var(--text); font-size: 0.82rem; line-height: 1.6; }
+
+.docs-copy {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.7rem;
+  font-family: inherit;
+  color: var(--text-dim);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.18s;
+}
+.markdown pre:hover .docs-copy, .docs-copy:focus { opacity: 1; }
+.docs-copy:hover { color: var(--text); border-color: var(--orange); }
+
+/* A wide table must scroll inside its own box; the page body never scrolls
+   sideways. */
+.markdown table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 0 0 1.4rem;
+  font-size: 0.86rem;
+}
+.markdown th, .markdown td {
+  border: 1px solid var(--border);
+  padding: 0.55rem 0.8rem;
+  text-align: left;
+  vertical-align: top;
+}
+.markdown th { background: var(--bg-card); color: var(--text); font-weight: 650; white-space: nowrap; }
+
+.markdown img { max-width: 100%; height: auto; border-radius: 10px; display: block; margin: 1.2rem auto; }
+
+.docs-anchor {
+  margin-left: 0.5rem;
+  color: var(--text-dim);
+  opacity: 0;
+  border: 0;
+  font-weight: 400;
+}
+.markdown h2:hover .docs-anchor, .markdown h3:hover .docs-anchor { opacity: 1; }
+
+.docs-foot { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.docs-foot a { color: var(--text-dim); text-decoration: none; font-size: 0.85rem; }
+.docs-foot a:hover { color: var(--orange-light); }
+
+/* ── on this page ────────────────────────────────────────────────────── */
+
+.docs-toc-wrap { position: sticky; top: 5.5rem; max-height: calc(100vh - 7rem); overflow-y: auto; }
+.docs-toc-title {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-dim);
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+}
+.docs-toc { display: flex; flex-direction: column; gap: 0.15rem; }
+.docs-toc-link {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  padding: 0.2rem 0;
+  border-left: 2px solid transparent;
+  padding-left: 0.7rem;
+}
+.docs-toc-link.lvl-3 { padding-left: 1.5rem; font-size: 0.74rem; }
+.docs-toc-link:hover { color: var(--text-muted); }
+.docs-toc-link.is-active { color: var(--orange-light); border-left-color: var(--orange); }
+.docs-toc-empty { color: var(--text-dim); font-size: 0.8rem; }
+
+/* ── mobile ──────────────────────────────────────────────────────────── */
+
+.docs-menu-btn { display: none; }
+
+@media (max-width: 1180px) {
+  .docs-shell { grid-template-columns: 240px minmax(0, 1fr); }
+  .docs-toc-wrap { display: none; }
+}
+
+@media (max-width: 860px) {
+  .docs-shell { grid-template-columns: minmax(0, 1fr); padding: 5.5rem 1.15rem 4rem; }
+
+  .docs-menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 60;
+    /* 44px minimum touch target */
+    min-height: 44px;
+    padding: 0.6rem 1rem;
+    background: var(--orange);
+    color: #1a1206;
+    border: 0;
+    border-radius: 999px;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.85rem;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    cursor: pointer;
+  }
+  .docs-menu-btn span { display: block; width: 14px; height: 2px; background: #1a1206; border-radius: 2px; }
+  .docs-menu-btn span:not(:first-of-type) { display: none; }
+  .docs-menu-btn em { font-style: normal; }
+
+  .docs-sidebar {
+    position: fixed;
+    inset: 4.2rem 0 0;
+    z-index: 55;
+    max-height: none;
+    padding: 1.25rem 1.15rem 6rem;
+    background: var(--bg-base);
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .docs-sidebar.is-open { transform: translateX(0); }
+
+  /* iOS Safari zooms the viewport on any input under 16px, which breaks the
+     sticky nav for the rest of the visit. */
+  .docs-search { font-size: 16px; }
+  .docs-nav-link { padding: 0.6rem 0.7rem; }
+
+  .markdown h1 { font-size: 1.65rem; }
+  .markdown h2 { font-size: 1.22rem; }
+}
