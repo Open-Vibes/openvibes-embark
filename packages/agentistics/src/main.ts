@@ -11,6 +11,7 @@ import { initPreview } from "./preview";
 import { initFeatures } from "./features";
 import { initLightbox } from "./lightbox";
 import { initRelease } from "./release";
+import { initVersion } from "./version";
 
 function boot() {
   // Fade in body
@@ -19,6 +20,9 @@ function boot() {
 
   // Replace <i data-lucide="..."> with inline SVGs
   initIcons();
+
+  // The real version number in the nav
+  initVersion();
 
   // i18n language toggle
   initI18n();

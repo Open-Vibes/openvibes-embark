@@ -12,6 +12,8 @@ import {
   Users,
   Terminal,
   GitCompare,
+  GitBranch,
+  EyeOff,
   Type,
   Network,
 } from "lucide";
@@ -31,6 +33,8 @@ export function initIcons(): void {
       Users,
       Terminal,
       GitCompare,
+      GitBranch,
+      EyeOff,
       Type,
       Network,
     },

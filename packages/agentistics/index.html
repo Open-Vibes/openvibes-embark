@@ -31,8 +31,8 @@
           <a href="#features" data-i18n="nav.features">Features</a>
           <a href="#how" data-i18n="nav.install">Install</a>
           <a href="/docs.html" data-i18n="nav.docs">Docs</a>
-          <a href="https://github.com/blpsoares/agentistics/releases/latest" target="_blank" class="nav-release-badge" title="Latest release">
-            <img src="https://img.shields.io/github/v/release/blpsoares/agentistics?style=flat-square&label=&color=D97706&labelColor=111118&logo=github&logoColor=D97706" alt="Latest Release" />
+          <a href="https://github.com/blpsoares/agentistics/releases/latest" target="_blank" class="nav-release-badge" title="Release notes">
+            <span data-agentistics-version>v—</span>
           </a>
           <button class="lang-toggle" id="lang-toggle">PT</button>
           <a href="https://github.com/blpsoares/agentistics" target="_blank" class="nav-cta" data-i18n="nav.github">GitHub ↗</a>
@@ -114,13 +114,13 @@
 
         <div class="preview-tabs-wrap" data-reveal>
           <div class="preview-tabs">
-            <button class="preview-tab active" data-tab="0" data-i18n="preview.tab.demo">Demo</button>
-            <button class="preview-tab" data-tab="1" data-i18n="preview.tab.overview">Overview</button>
-            <button class="preview-tab" data-tab="2" data-i18n="preview.tab.activity">Activity</button>
-            <button class="preview-tab" data-tab="3" data-i18n="preview.tab.models">Models</button>
-            <button class="preview-tab" data-tab="4" data-i18n="preview.tab.projects">Projects</button>
-            <button class="preview-tab" data-tab="5" data-i18n="preview.tab.agents">Agents</button>
-            <button class="preview-tab" data-tab="6" data-i18n="preview.tab.sessions">Sessions</button>
+            <button class="preview-tab active" data-tab="0" data-i18n="preview.tab.machine">Machine</button>
+            <button class="preview-tab" data-tab="1" data-i18n="preview.tab.central">Central</button>
+            <button class="preview-tab" data-tab="2" data-i18n="preview.tab.repos">Repositories</button>
+            <button class="preview-tab" data-tab="3" data-i18n="preview.tab.tags">Tags</button>
+            <button class="preview-tab" data-tab="4" data-i18n="preview.tab.compare">Compare</button>
+            <button class="preview-tab" data-tab="5" data-i18n="preview.tab.custom">Custom layouts</button>
+            <button class="preview-tab" data-tab="6" data-i18n="preview.tab.mobile">Mobile</button>
           </div>
         </div>
 
@@ -137,19 +137,20 @@
             </span>
           </div>
           <div class="preview-content">
-            <div class="preview-video-wrap">
-              <img
-                class="preview-video active"
-                src="/release/gifs/machine-dashboard.gif"
-                alt="Agentistics dashboard walkthrough — home, compare, and per-harness views"
-              />
-            </div>
-            <img src="/screenshots/section1.png?v=2" alt="Dashboard Overview"    class="preview-img" />
-            <img src="/screenshots/section2.png?v=2" alt="Activity"              class="preview-img" />
-            <img src="/screenshots/section3.png?v=2" alt="Model Usage"           class="preview-img" />
-            <img src="/screenshots/section4.png?v=2" alt="Projects &amp; Tools"  class="preview-img" />
-            <img src="/screenshots/section5.png?v=2" alt="Agent Metrics"         class="preview-img" />
-            <img src="/screenshots/section6.png?v=2" alt="Recent Sessions"       class="preview-img" />
+            <img class="preview-img active" data-tab-media="0" src="/release/gifs/machine-dashboard.gif"
+                 alt="agentistics on one machine — KPIs, charts, heatmap and highlights" />
+            <img class="preview-img" data-tab-media="1" src="/release/gifs/central-dashboard.gif"
+                 alt="agentistics central — the whole fleet under one account" />
+            <img class="preview-img" data-tab-media="2" src="/release/gifs/machine-repositories.gif"
+                 alt="Repositories grouped by git remote, and a repository's detail tabs" />
+            <img class="preview-img" data-tab-media="3" src="/release/gifs/machine-tags.gif"
+                 alt="Tags — saved groupings of repos, projects, machines and accounts" />
+            <img class="preview-img" data-tab-media="4" src="/release/gifs/machine-compare.gif"
+                 alt="Every harness side by side on the compare page" />
+            <img class="preview-img" data-tab-media="5" src="/release/gifs/machine-custom.gif"
+                 alt="The custom layout builder" />
+            <img class="preview-img preview-img-mobile" data-tab-media="6" src="/release/gifs/machine-mobile.gif"
+                 alt="The dashboard on a phone" />
           </div>
         </div>
         <!-- PDF Export showcase -->
@@ -208,45 +209,44 @@
         </div>
 
         <div class="term-showcase" data-reveal>
-          <div class="term-tabs-wrap">
-            <div class="term-tabs">
-              <button class="term-tab active" data-term="0">
-                <span class="cmd-dollar">$</span>
-                <span class="cmd-name">agentop</span>
-                <span class="cmd-arg"> start</span>
-              </button>
-              <button class="term-tab" data-term="1">
-                <span class="cmd-dollar">$</span>
-                <span class="cmd-name">agentop</span>
-                <span class="cmd-arg"> setup</span>
-              </button>
-              <button class="term-tab" data-term="2">
-                <span class="cmd-dollar">$</span>
-                <span class="cmd-name">agentop</span>
-                <span class="cmd-arg"> central up</span>
-              </button>
-              <button class="term-tab" data-term="3">
-                <span class="cmd-dollar">$</span>
-                <span class="cmd-name">agentop</span>
-                <span class="cmd-arg"> member connect</span>
-              </button>
-              <button class="term-tab" data-term="4">
-                <span class="cmd-dollar">$</span>
-                <span class="cmd-name">agentop</span>
-                <span class="cmd-arg"> tui</span>
-              </button>
-              <button class="term-tab" data-term="5">
-                <span class="cmd-dollar">$</span>
-                <span class="cmd-name">agentop</span>
-                <span class="cmd-arg"> watch</span>
-              </button>
-              <button class="term-tab" data-term="6">
-                <span class="cmd-dollar">$</span>
-                <span class="cmd-name">agentop</span>
-                <span class="cmd-arg"> server</span>
-              </button>
-            </div>
-          </div>
+          <!-- This section, and only this one, uses a side menu: seven commands
+               of very uneven length never divide into a tidy row of tabs. -->
+          <button class="term-menu-btn" id="term-menu-btn" aria-expanded="false" aria-controls="term-tabs">
+            <span data-i18n="terminals.pick">Pick a command</span>
+            <span class="term-menu-current" id="term-menu-current">agentop</span>
+          </button>
+
+          <nav class="term-tabs" id="term-tabs" aria-label="agentop commands">
+            <div class="term-tabs-title" data-i18n="terminals.commands">Commands</div>
+            <button class="term-tab active" data-term="0">
+              <span class="cmd-dollar">$</span><span class="cmd-name">agentop</span>
+              <span class="cmd-desc" data-i18n="terminals.d.start">the control center</span>
+            </button>
+            <button class="term-tab" data-term="1">
+              <span class="cmd-dollar">$</span><span class="cmd-name">agentop</span><span class="cmd-arg">setup</span>
+              <span class="cmd-desc" data-i18n="terminals.d.setup">solo / central / member</span>
+            </button>
+            <button class="term-tab" data-term="2">
+              <span class="cmd-dollar">$</span><span class="cmd-name">agentop</span><span class="cmd-arg">tui</span>
+              <span class="cmd-desc" data-i18n="terminals.d.tui">live dashboard, no browser</span>
+            </button>
+            <button class="term-tab" data-term="3">
+              <span class="cmd-dollar">$</span><span class="cmd-name">agentop</span><span class="cmd-arg">status</span>
+              <span class="cmd-desc" data-i18n="terminals.d.status">services + health</span>
+            </button>
+            <button class="term-tab" data-term="4">
+              <span class="cmd-dollar">$</span><span class="cmd-name">agentop</span><span class="cmd-arg">member list</span>
+              <span class="cmd-desc" data-i18n="terminals.d.member">the centrals it pushes to</span>
+            </button>
+            <button class="term-tab" data-term="5">
+              <span class="cmd-dollar">$</span><span class="cmd-name">agentop</span><span class="cmd-arg">central up</span>
+              <span class="cmd-desc" data-i18n="terminals.d.central">host the aggregator</span>
+            </button>
+            <button class="term-tab" data-term="6">
+              <span class="cmd-dollar">$</span><span class="cmd-name">agentop</span><span class="cmd-arg">watch</span>
+              <span class="cmd-desc" data-i18n="terminals.d.watch">the OTel daemon only</span>
+            </button>
+          </nav>
 
           <div class="term-frame">
             <div class="term-card-chrome">
@@ -258,30 +258,30 @@
               <span class="term-cmd-label">
                 <span class="cmd-dollar">$</span>
                 <span class="cmd-name">agentop</span>
-                <span class="cmd-arg" id="term-active-arg"> start</span>
+                <span class="cmd-arg" id="term-active-arg"></span>
               </span>
             </div>
             <div class="term-frame-body">
-              <div class="term-pane active" id="start-term-body">
+              <div class="term-pane active">
                 <img src="/release/gifs/control-center.gif" alt="agentop — the control center" class="term-gif" />
               </div>
-              <div class="term-pane" id="setup-term-body">
+              <div class="term-pane">
                 <img src="/release/gifs/control-center-setup.gif" alt="agentop setup — the first-run wizard" class="term-gif" />
               </div>
-              <div class="term-pane" id="central-term-body">
-                <img src="/release/gifs/agentop-central-up.gif" alt="agentop central up — starts the team aggregator" class="term-gif" />
+              <div class="term-pane">
+                <img src="/release/gifs/tui.gif" alt="agentop tui — the live terminal dashboard" class="term-gif" />
               </div>
-              <div class="term-pane" id="connect-term-body">
+              <div class="term-pane">
+                <img src="/release/gifs/status.gif" alt="agentop status — services and health" class="term-gif" />
+              </div>
+              <div class="term-pane">
                 <img src="/release/gifs/member-list.gif" alt="agentop member list — the centrals this machine pushes to" class="term-gif" />
               </div>
-              <div class="term-pane" id="tui-term-body">
-                <img src="/release/gifs/tui.gif" alt="agentop tui — live terminal dashboard" class="term-gif" />
+              <div class="term-pane">
+                <img src="/release/gifs/control-center-commands.gif" alt="agentop — the commands cheat sheet" class="term-gif" />
               </div>
-              <div class="term-pane" id="watch-term-body">
-                <img src="/release/gifs/agentop-watch.gif" alt="agentop watch — background metrics daemon" class="term-gif" />
-              </div>
-              <div class="term-pane" id="server-term-body">
-                <img src="/release/gifs/status.gif" alt="agentop status — services and health" class="term-gif" />
+              <div class="term-pane">
+                <img src="/release/gifs/agentop-watch.gif" alt="agentop watch — the background metrics daemon" class="term-gif" />
               </div>
             </div>
           </div>
@@ -310,159 +310,148 @@
               <span data-i18n="release.tab.central">agentistics central</span>
             </button>
             <button class="release-tab" data-release-tab="1">
-              <i data-lucide="terminal" class="release-tab-icon"></i>
-              <span data-i18n="release.tab.cli">agentop start</span>
+              <i data-lucide="shield-check" class="release-tab-icon"></i>
+              <span data-i18n="release.tab.iam">Accounts &amp; access</span>
             </button>
             <button class="release-tab" data-release-tab="2">
-              <i data-lucide="git-compare" class="release-tab-icon"></i>
-              <span data-i18n="release.tab.harness">Multi-harness</span>
+              <i data-lucide="eye-off" class="release-tab-icon"></i>
+              <span data-i18n="release.tab.sharing">What you share</span>
             </button>
             <button class="release-tab" data-release-tab="3">
-              <i data-lucide="type" class="release-tab-icon"></i>
-              <span data-i18n="release.tab.sessions">Session titles</span>
+              <i data-lucide="git-branch" class="release-tab-icon"></i>
+              <span data-i18n="release.tab.repos">Repositories &amp; CI</span>
             </button>
             <button class="release-tab" data-release-tab="4">
-              <i data-lucide="network" class="release-tab-icon"></i>
-              <span data-i18n="release.tab.ports">Ports &amp; install</span>
+              <i data-lucide="git-compare" class="release-tab-icon"></i>
+              <span data-i18n="release.tab.harness">Six harnesses</span>
             </button>
           </div>
         </div>
 
         <div class="release-frame" data-reveal>
-          <!-- Pane 0: agentistics central -->
           <div class="release-pane active" data-release-pane="0">
             <div class="release-pane-media">
-              <img src="/release/screenshots/team-manager.png" alt="agentistics central — Team Manager with live presence" class="release-img" />
+              <img src="/release/gifs/central-dashboard.gif" alt="" class="release-img" />
             </div>
             <div class="release-pane-copy">
-              <h3 data-i18n="release.central.title">agentistics central — the team aggregator</h3>
-              <p data-i18n="release.central.desc">Every machine that connects to a central sends only computed metrics — tokens, cost, sessions, agent stats. Chat is never stored centrally: opening a transcript pulls it on demand over a reverse WebSocket straight from that member's machine.</p>
+              <h3 data-i18n="release.central.title"></h3>
+              <p data-i18n="release.central.desc"></p>
               <div class="release-points">
                 <div class="release-point">
-                  <h4 data-i18n="release.central.point1.title">Mint, rotate, revoke, rename</h4>
-                  <p data-i18n="release.central.point1.desc">Full token lifecycle from Team Manager. Rotating preserves a member's history under its new credential; revoking cascades and resets that machine back to solo.</p>
+                  <h4 data-i18n="release.central.point1.title">Accounts, not a shared password</h4>
+                  <p data-i18n="release.central.point1.desc"></p>
                 </div>
                 <div class="release-point">
                   <h4 data-i18n="release.central.point2.title">Live presence + latency</h4>
-                  <p data-i18n="release.central.point2.desc">Presence is WebSocket-authoritative — a member flips offline within seconds of disconnecting, not minutes. Latency shown is real WS ping/pong round-trip time.</p>
+                  <p data-i18n="release.central.point2.desc"></p>
                 </div>
                 <div class="release-point">
                   <h4 data-i18n="release.central.point3.title">Auto-reconciliation</h4>
-                  <p data-i18n="release.central.point3.desc">If the central's data resets or a token rotates, members detect the change automatically and re-sync their full history — no manual resets, no double-counted stats.</p>
+                  <p data-i18n="release.central.point3.desc"></p>
                 </div>
                 <div class="release-point">
-                  <h4 data-i18n="release.central.point4.title">Real-time via SSE</h4>
-                  <p data-i18n="release.central.point4.desc">Every metrics push from a member notifies connected dashboards instantly through server-sent events. Tokens are stored only as a sha256 hash — never logged, never reversible.</p>
+                  <h4 data-i18n="release.central.point4.title">Computed metrics only</h4>
+                  <p data-i18n="release.central.point4.desc"></p>
                 </div>
-              </div>
-              <div class="release-thumbs">
-                <img src="/release/screenshots/team-login.png" alt="agentistics central login" />
-                <img src="/release/screenshots/team-settings.png" alt="agentistics central Team Settings" />
-                <img src="/release/screenshots/notifications.png" alt="Notifications toast and bell" />
-                <img src="/release/screenshots/connection-pill.png" alt="Live connection pill" />
-                <img src="/release/screenshots/mobile-dashboard.png" alt="agentistics dashboard at a mobile viewport" />
-                <img src="/release/screenshots/member-filters.png" alt="Member filter dropdown showing connected team members" />
               </div>
             </div>
           </div>
-
-          <!-- Pane 1: agentop start -->
           <div class="release-pane" data-release-pane="1">
             <div class="release-pane-media">
-              <img class="release-video" src="/release/gifs/control-center.gif" alt="agentop — the control center" />
+              <img src="/release/gifs/central-login.gif" alt="" class="release-img" />
             </div>
             <div class="release-pane-copy">
-              <h3 data-i18n="release.cli.title">agentop start — one launcher for everything</h3>
-              <p data-i18n="release.cli.desc">A single re-runnable control panel: arrow keys and Enter, a live status line for every service (configured vs. actually running), and one place to start agentistics, spin up agentistics central, connect or disconnect from a team, or stop whatever's running.</p>
+              <h3 data-i18n="release.iam.title"></h3>
+              <p data-i18n="release.iam.desc"></p>
               <div class="release-points">
                 <div class="release-point">
-                  <h4 data-i18n="release.cli.point1.title">English and pt-BR</h4>
-                  <p data-i18n="release.cli.point1.desc">Toggle the whole launcher's language in place, no restart needed.</p>
+                  <h4 data-i18n="release.iam.point1.title">A one-time owner setup token</h4>
+                  <p data-i18n="release.iam.point1.desc"></p>
                 </div>
                 <div class="release-point">
-                  <h4 data-i18n="release.cli.point2.title">Everything else, one command away</h4>
-                  <p data-i18n="release.cli.point2.desc">setup · restart · central · member · autostart · check-update — plus running the machine itself inside Docker when you'd rather not install anything on the host.</p>
+                  <h4 data-i18n="release.iam.point2.title">Two-factor, and step-up where it counts</h4>
+                  <p data-i18n="release.iam.point2.desc"></p>
                 </div>
-              </div>
-              <div class="release-thumbs release-thumbs-gif">
-                <img src="/release/gifs/control-center-commands.gif" alt="agentop — the commands cheat sheet" />
-                <img src="/release/gifs/member-list.gif" alt="agentop member list" />
-                <img src="/release/gifs/agentop-central-up.gif" alt="agentop central up" />
-                <img src="/release/gifs/control-center-setup.gif" alt="agentop setup wizard" />
-                <img src="/release/gifs/tui.gif" alt="agentop tui — live terminal dashboard" />
+                <div class="release-point">
+                  <h4 data-i18n="release.iam.point3.title">Teams are scope keys, not labels</h4>
+                  <p data-i18n="release.iam.point3.desc"></p>
+                </div>
+                <div class="release-point">
+                  <h4 data-i18n="release.iam.point4.title">Everything auditable</h4>
+                  <p data-i18n="release.iam.point4.desc"></p>
+                </div>
               </div>
             </div>
           </div>
-
-          <!-- Pane 2: multi-harness -->
           <div class="release-pane" data-release-pane="2">
             <div class="release-pane-media">
-              <img src="/release/screenshots/compare.png" alt="/compare — side by side harness comparison" class="release-img" />
+              <img src="/release/gifs/machine-dashboard.gif" alt="" class="release-img" />
             </div>
             <div class="release-pane-copy">
-              <h3 data-i18n="release.harness.title">One dashboard, four coding agents</h3>
-              <p data-i18n="release.harness.desc">Claude Code, Codex CLI, Gemini CLI and GitHub Copilot CLI all report into the same dashboard. A harness selector appears the moment you have data from more than one; /compare puts them side by side.</p>
+              <h3 data-i18n="release.sharing.title"></h3>
+              <p data-i18n="release.sharing.desc"></p>
+              <div class="release-points">
+                <div class="release-point">
+                  <h4 data-i18n="release.sharing.point1.title">Denylist or allowlist, per central</h4>
+                  <p data-i18n="release.sharing.point1.desc"></p>
+                </div>
+                <div class="release-point">
+                  <h4 data-i18n="release.sharing.point2.title">The rules never travel</h4>
+                  <p data-i18n="release.sharing.point2.desc"></p>
+                </div>
+                <div class="release-point">
+                  <h4 data-i18n="release.sharing.point3.title">Your machines warn each other</h4>
+                  <p data-i18n="release.sharing.point3.desc"></p>
+                </div>
+                <div class="release-point">
+                  <h4 data-i18n="release.sharing.point4.title">Applying a proposal can only narrow</h4>
+                  <p data-i18n="release.sharing.point4.desc"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="release-pane" data-release-pane="3">
+            <div class="release-pane-media">
+              <img src="/release/gifs/machine-repositories.gif" alt="" class="release-img" />
+            </div>
+            <div class="release-pane-copy">
+              <h3 data-i18n="release.repos.title"></h3>
+              <p data-i18n="release.repos.desc"></p>
+              <div class="release-points">
+                <div class="release-point">
+                  <h4 data-i18n="release.repos.point1.title">Grouped by git remote</h4>
+                  <p data-i18n="release.repos.point1.desc"></p>
+                </div>
+                <div class="release-point">
+                  <h4 data-i18n="release.repos.point2.title">GitHub Actions, keyless</h4>
+                  <p data-i18n="release.repos.point2.desc"></p>
+                </div>
+                <div class="release-point">
+                  <h4 data-i18n="release.repos.point3.title">Dynamic Workflows</h4>
+                  <p data-i18n="release.repos.point3.desc"></p>
+                </div>
+                <div class="release-point">
+                  <h4 data-i18n="release.repos.point4.title">Tags</h4>
+                  <p data-i18n="release.repos.point4.desc"></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="release-pane" data-release-pane="4">
+            <div class="release-pane-media">
+              <img src="/release/gifs/machine-compare.gif" alt="" class="release-img" />
+            </div>
+            <div class="release-pane-copy">
+              <h3 data-i18n="release.harness.title"></h3>
+              <p data-i18n="release.harness.desc"></p>
               <div class="release-points">
                 <div class="release-point">
                   <h4 data-i18n="release.harness.point1.title">Per-harness pages</h4>
-                  <p data-i18n="release.harness.point1.desc">/h/:harness gives every agent its own Overview plus a "Data &amp; sources" tab that's upfront about what that harness's data can and can't tell you.</p>
+                  <p data-i18n="release.harness.point1.desc"></p>
                 </div>
                 <div class="release-point">
                   <h4 data-i18n="release.harness.point2.title">Honest N/A, not fake zeros</h4>
-                  <p data-i18n="release.harness.point2.desc">A metric a harness can't produce shows as N/A instead of a misleading 0 — compare view respects each agent's real capabilities.</p>
-                </div>
-              </div>
-              <div class="release-thumbs">
-                <img src="/release/screenshots/harness-codex.png" alt="/h/codex — per-harness page" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Pane 3: session titles -->
-          <div class="release-pane" data-release-pane="3">
-            <div class="release-pane-media">
-              <img src="/release/screenshots/session-titles.png" alt="Recent sessions list showing real ai-generated session titles" class="release-img" />
-            </div>
-            <div class="release-pane-copy">
-              <h3 data-i18n="release.sessions.title">Real session titles</h3>
-              <p data-i18n="release.sessions.desc">Session lists now show the title Claude itself generated for the conversation instead of a truncated first prompt, with a clean fallback when no title exists yet.</p>
-              <div class="release-points">
-                <div class="release-point">
-                  <h4 data-i18n="release.sessions.point1.title">Everywhere sessions show up</h4>
-                  <p data-i18n="release.sessions.point1.desc">Highlights, recent sessions, the drilldown modal and the PDF export all use the same real title.</p>
-                </div>
-                <div class="release-point">
-                  <h4 data-i18n="release.sessions.point2.title">Transcript spacing fixed</h4>
-                  <p data-i18n="release.sessions.point2.desc">Chat bubbles no longer double their line breaks — markdown newlines render exactly once, on the central and locally.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Pane 4: ports & install -->
-          <div class="release-pane" data-release-pane="4">
-            <div class="release-pane-media release-pane-media-ports">
-              <div class="release-port-card">
-                <span class="release-port-num">47292</span>
-                <span data-i18n="release.ports.web">web dashboard</span>
-              </div>
-              <div class="release-port-card">
-                <span class="release-port-num">47291</span>
-                <span data-i18n="release.ports.api">api + MCP</span>
-              </div>
-              <div class="release-port-card">
-                <span class="release-port-num">48080</span>
-                <span data-i18n="release.ports.central">agentistics central</span>
-              </div>
-            </div>
-            <div class="release-pane-copy">
-              <h3 data-i18n="release.ports.title">New ports, one install command</h3>
-              <p data-i18n="release.ports.desc">The web dashboard and the api + MCP server now run on dedicated ports, and agentistics central ships as its own service.</p>
-              <div class="release-install">
-                <span class="release-install-label" data-i18n="release.ports.install.label">Install</span>
-                <div class="release-install-cmd">
-                  <span class="cta-cmd-prompt">$</span>
-                  curl -fsSL https://agentop.openvibes.tech/cli | bash
+                  <p data-i18n="release.harness.point2.desc"></p>
                 </div>
               </div>
             </div>
@@ -718,7 +707,7 @@
             </p>
             <div class="footer-badges">
               <a href="https://github.com/blpsoares/agentistics/releases/latest" target="_blank" class="footer-badge-link">
-                <img src="https://img.shields.io/github/v/release/blpsoares/agentistics?style=flat-square&label=latest&color=D97706&labelColor=111118" alt="Latest Release" />
+                <img src="https://img.shields.io/github/v/release/blpsoares/agentistics?style=flat-square&label=agentop&color=D97706&labelColor=111118" alt="Latest Release" />
               </a>
               <a href="https://github.com/blpsoares/agentistics/blob/main/LICENSE" target="_blank" class="footer-badge-link">
                 <img src="https://img.shields.io/github/license/blpsoares/agentistics?style=flat-square&color=6366f1&labelColor=111118" alt="License" />

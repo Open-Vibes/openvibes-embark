@@ -567,17 +567,6 @@ section { padding: 6rem 0; }
 /* ── Terminal showcase (tabbed) ─────────────── */
 .term-showcase { width: 100%; }
 
-.term-tabs-wrap { display: flex; justify-content: center; margin-bottom: 1.5rem; }
-.term-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.02);
-}
 .term-tab {
   padding: 0.65rem 1.1rem;
   border: none;
@@ -1396,4 +1385,110 @@ footer {
 
   .markdown h1 { font-size: 1.65rem; }
   .markdown h2 { font-size: 1.22rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CLI section — a SIDE menu, not a tab row.
+
+   Seven commands of very uneven length ("agentop" beside "agentop member
+   connect") never divide into a tidy row; wrapped, they read as broken. This
+   is the only section on the page that does this, deliberately.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.term-showcase {
+  display: grid;
+  grid-template-columns: 246px minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.term-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+.term-tabs-title {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  font-weight: 700;
+  padding: 0 0.5rem 0.5rem;
+}
+
+.term-tab {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: baseline;
+  gap: 0 0.4rem;
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  background: transparent;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  transition: background 0.16s, color 0.16s;
+}
+.term-tab:hover { background: var(--bg-elevated); color: var(--text); }
+.term-tab.active {
+  background: var(--orange-glow);
+  border-left-color: var(--orange);
+  color: var(--text);
+}
+.term-tab .cmd-dollar { color: var(--text-dim); }
+.term-tab .cmd-name { color: var(--text); font-weight: 600; }
+.term-tab.active .cmd-name { color: var(--orange-light); }
+.term-tab .cmd-arg { color: var(--orange-light); }
+/* The description sits on its own line, so a long command never has to
+   compete with it for width — which is what broke the old row. */
+.term-tab .cmd-desc {
+  grid-column: 1 / -1;
+  margin-top: 0.15rem;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+
+.term-menu-btn { display: none; }
+
+@media (max-width: 900px) {
+  .term-showcase { grid-template-columns: minmax(0, 1fr); gap: 0.85rem; }
+
+  /* The menu collapses behind a button: seven items stacked above the frame
+     would push the terminal — the thing you came to look at — off screen. */
+  .term-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: 44px;           /* touch target */
+    padding: 0.7rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .term-menu-current {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    color: var(--orange-light);
+    font-size: 0.8rem;
+  }
+
+  .term-tabs { display: none; }
+  .term-tabs.is-open { display: flex; }
+  .term-tab { min-height: 44px; }
 }

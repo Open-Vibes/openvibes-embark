@@ -1,43 +1,55 @@
-// Dashboard preview — tab 0: demo GIF, tabs 1-6: screenshots
+/**
+ * preview.ts — the Dashboard section's tabbed media.
+ *
+ * One recording per tab, addressed by `data-tab-media` rather than by DOM order,
+ * so adding or reordering a tab cannot silently pair a label with the wrong
+ * screenshot. The URL chrome above the frame follows the tab, because a central
+ * and a machine are served on different ports and showing one address for both
+ * is the kind of small lie that costs a support conversation.
+ */
 
-const SCREENSHOT_SRCS = [
-  "/screenshots/section1.png?v=2",
-  "/screenshots/section2.png?v=2",
-  "/screenshots/section3.png?v=2",
-  "/screenshots/section4.png?v=2",
-  "/screenshots/section5.png?v=2",
-  "/screenshots/section6.png?v=2",
+/** The address bar to show per tab — index matches `data-tab`. */
+const TAB_URLS = [
+  "localhost:47292",
+  "localhost:48080",
+  "localhost:47292",
+  "localhost:47292",
+  "localhost:47292",
+  "localhost:47292",
+  "localhost:47292",
 ];
 
 export function initPreview(): void {
   const section = document.getElementById("preview");
   if (!section) return;
 
-  const tabBtns    = section.querySelectorAll<HTMLButtonElement>(".preview-tab");
-  const videoWrap  = section.querySelector<HTMLElement>(".preview-video-wrap");
-  const demoGif    = section.querySelector<HTMLElement>(".preview-video");
-  const imgs       = section.querySelectorAll<HTMLImageElement>(".preview-img");
-  const frame      = section.querySelector<HTMLElement>(".preview-frame");
+  const tabBtns = section.querySelectorAll<HTMLButtonElement>(".preview-tab");
+  const media = section.querySelectorAll<HTMLImageElement>("[data-tab-media]");
+  const frame = section.querySelector<HTMLElement>(".preview-frame");
+  const urlEl = section.querySelector<HTMLElement>(".preview-url");
 
-  if (!tabBtns.length) return;
+  if (!tabBtns.length || !media.length) return;
 
   function activate(idx: number): void {
     tabBtns.forEach((b, i) => b.classList.toggle("active", i === idx));
+    media.forEach(img => img.classList.toggle("active", Number(img.dataset.tabMedia) === idx));
 
-    demoGif?.classList.toggle("active", idx === 0);
-    if (videoWrap) videoWrap.style.display = idx === 0 ? "" : "none";
+    // The phone recording is portrait; letting it fill a landscape frame would
+    // scale it to something nobody could read.
+    frame?.classList.toggle("is-mobile-shot", idx === media.length - 1);
 
-    imgs.forEach((img, i) => img.classList.toggle("active", i + 1 === idx));
+    if (urlEl) {
+      const dot = urlEl.querySelector(".preview-url-dot")?.outerHTML ?? "";
+      urlEl.innerHTML = `${dot} ${TAB_URLS[idx] ?? TAB_URLS[0]}`;
+    }
   }
 
-  tabBtns.forEach((btn, i) => {
-    btn.addEventListener("click", () => activate(i));
-  });
+  tabBtns.forEach((btn, i) => btn.addEventListener("click", () => activate(i)));
 
   if (frame) {
     const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
+      entries => {
+        entries.forEach(e => {
           if (e.isIntersecting) {
             frame.classList.add("visible");
             obs.disconnect();
@@ -49,9 +61,10 @@ export function initPreview(): void {
     obs.observe(frame);
   }
 
-  // Preload screenshots
-  SCREENSHOT_SRCS.forEach((src) => {
-    const img = new Image();
-    img.src = src;
+  // Warm the other tabs' recordings so switching does not show an empty frame.
+  media.forEach(img => {
+    if (img.classList.contains("active")) return;
+    const warm = new Image();
+    warm.src = img.src;
   });
 }
