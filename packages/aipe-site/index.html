@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AIPe — the AI Product Engineer</title>
+    <meta
+      name="description"
+      content="AIPe turns Claude into a general engineering coordinator and you into a Product Engineer. Hand over a demand; it decomposes it, dispatches specialists across your repos in parallel — each in an isolated worktree — and returns PRs, under a dispatch law and an evidence gate."
+    />
+    <link rel="canonical" href="https://aipe.openvibes.tech/" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://aipe.openvibes.tech/" />
+    <meta property="og:title" content="AIPe — the AI Product Engineer" />
+    <meta
+      property="og:description"
+      content="Coordinate agents across many repos, in parallel, across harnesses — under a dispatch law, worktree isolation, and an evidence gate."
+    />
+    <meta property="og:image" content="https://aipe.openvibes.tech/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AIPe — the AI Product Engineer" />
+    <meta
+      name="twitter:description"
+      content="Coordinate agents across many repos, in parallel, across harnesses — under a dispatch law, worktree isolation, and an evidence gate."
+    />
+    <meta name="twitter:image" content="https://aipe.openvibes.tech/og-image.png" />
+
+    <!-- Set the theme class before first paint to avoid a flash. Dark-first:
+         default to dark unless the visitor stored 'light' or their OS prefers
+         light with no stored choice. -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("aipe-theme");
+          var prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+          var dark = stored ? stored === "dark" : !prefersLight;
+          if (dark) document.documentElement.classList.add("dark");
+        } catch (e) {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
+</html>

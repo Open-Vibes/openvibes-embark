@@ -1,0 +1,189 @@
+name: aipe-site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/aipe-site/**"
+
+  workflow_dispatch:
+
+env:
+  SUBDOMAIN: aipe
+  ROOT_DOMAIN: false
+  DOMAIN_SETUP: true
+  DOMAIN: ${{ secrets.DOMAIN }}
+  PACKAGE_NAME: aipe-site
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --ignore-scripts
+
+      - name: Build
+        run: bun run --cwd packages/aipe-site build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-aipe-site
+          path: packages/aipe-site/dist
+          retention-days: 1
+
+  provision:
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      project_name: ${{ steps.project.outputs.project_name }}
+    steps:
+      - name: Create Cloudflare Pages project
+        id: project
+        env:
+          CF_TOKEN: ${{ secrets.CF_TOKEN_PAGES }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          if [ "$DOMAIN_SETUP" = "true" ]; then
+            DOMAIN_PREFIX="${DOMAIN%%.*}"
+            if [ "$ROOT_DOMAIN" = "true" ]; then
+              PROJECT_NAME="${DOMAIN_PREFIX}"
+            else
+              PROJECT_NAME=$(echo "${DOMAIN_PREFIX}-${SUBDOMAIN}" | tr '.' '-')
+            fi
+          else
+            PROJECT_NAME="${PACKAGE_NAME}"
+          fi
+          echo "project_name=${PROJECT_NAME}" >> $GITHUB_OUTPUT
+
+          RESPONSE=$(curl -s -X GET \
+            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/${PROJECT_NAME}" \
+            -H "Authorization: Bearer ${CF_TOKEN}" \
+            -H "Content-Type: application/json")
+
+          if [ -z "$RESPONSE" ]; then
+            echo "Empty response from Cloudflare API — check CF_TOKEN_PAGES and CF_ACCOUNT_ID secrets"
+            exit 1
+          fi
+          EXISTING=$(echo "$RESPONSE" | jq -r '.result.name // empty' 2>/dev/null || echo "")
+
+          if [ -n "$EXISTING" ] && [ "$EXISTING" != "null" ]; then
+            echo "✓ Project already exists: $EXISTING"
+          else
+            echo "Creating Cloudflare Pages project: $PROJECT_NAME"
+            CREATE_RESPONSE=$(curl -s -X POST \
+              "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects" \
+              -H "Authorization: Bearer ${CF_TOKEN}" \
+              -H "Content-Type: application/json" \
+              --data "{\"name\":\"${PROJECT_NAME}\",\"production_branch\":\"main\"}")
+
+            SUCCESS=$(echo "$CREATE_RESPONSE" | jq -r '.success')
+            if [ "$SUCCESS" = "true" ]; then
+              echo "✓ Project created: $PROJECT_NAME"
+            else
+              echo "API Response: $CREATE_RESPONSE"
+            fi
+          fi
+
+  deploy:
+    needs: provision
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-aipe-site
+          path: packages/aipe-site/dist
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_TOKEN_PAGES }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=${{ needs.provision.outputs.project_name }} --commit-dirty=true
+          workingDirectory: packages/aipe-site
+
+  dns:
+    if: true
+    needs: provision
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_NAME: ${{ needs.provision.outputs.project_name }}
+    steps:
+      - name: Add Custom Domain to Cloudflare Pages
+        env:
+          CF_TOKEN: ${{ secrets.CF_TOKEN_PAGES }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+        run: |
+          if [ "$ROOT_DOMAIN" = "true" ]; then
+            FULL_DOMAIN="${DOMAIN}"
+            CNAME_NAME="@"
+          else
+            FULL_DOMAIN="${SUBDOMAIN}.${DOMAIN}"
+            CNAME_NAME="${SUBDOMAIN}"
+          fi
+
+          echo "Checking for existing DNS records..."
+          EXISTING_RECORDS=$(curl -s -X GET \
+            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_records?name=${FULL_DOMAIN}" \
+            -H "Authorization: Bearer ${CF_TOKEN}" \
+            -H "Content-Type: application/json")
+
+          RECORD_ID=$(echo "$EXISTING_RECORDS" | jq -r '.result[0].id // empty')
+          if [ -n "$RECORD_ID" ] && [ "$RECORD_ID" != "null" ]; then
+            echo "Deleting existing DNS record: $RECORD_ID"
+            curl -s -X DELETE \
+              "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_records/${RECORD_ID}" \
+              -H "Authorization: Bearer ${CF_TOKEN}" \
+              -H "Content-Type: application/json"
+            echo "✓ Old DNS record deleted"
+            sleep 2
+          fi
+
+          echo "Creating CNAME record: ${FULL_DOMAIN} -> ${PROJECT_NAME}.pages.dev"
+          CNAME_RESPONSE=$(curl -s -X POST \
+            "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_records" \
+            -H "Authorization: Bearer ${CF_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data "{\"type\":\"CNAME\",\"name\":\"${CNAME_NAME}\",\"content\":\"${PROJECT_NAME}.pages.dev\",\"proxied\":true}")
+
+          CNAME_SUCCESS=$(echo "$CNAME_RESPONSE" | jq -r '.success')
+          if [ "$CNAME_SUCCESS" = "true" ]; then
+            echo "✓ CNAME created: ${FULL_DOMAIN} -> ${PROJECT_NAME}.pages.dev"
+          else
+            CNAME_ERROR=$(echo "$CNAME_RESPONSE" | jq -r '.errors[0].message // "Unknown"')
+            echo "⚠️ CNAME setup: $CNAME_ERROR (may already exist)"
+          fi
+
+          sleep 3
+
+          echo "Adding custom domain to Pages project..."
+          RESPONSE=$(curl -s -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/pages/projects/${PROJECT_NAME}/domains" \
+            -H "Authorization: Bearer ${CF_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data "{\"name\":\"${FULL_DOMAIN}\"}")
+
+          echo "Response: $RESPONSE"
+
+          SUCCESS=$(echo "$RESPONSE" | jq -r '.success')
+          if [ "$SUCCESS" = "true" ]; then
+            echo "✓ Custom domain added: https://${FULL_DOMAIN}"
+          else
+            ERROR=$(echo "$RESPONSE" | jq -r '.errors[0].message // "Unknown"')
+            CODE=$(echo "$RESPONSE" | jq -r '.errors[0].code // 0')
+            if [ "$CODE" = "8000400" ]; then
+              echo "✓ Custom domain already configured: https://${FULL_DOMAIN}"
+            else
+              echo "⚠️ Custom domain setup: $ERROR"
+            fi
+          fi

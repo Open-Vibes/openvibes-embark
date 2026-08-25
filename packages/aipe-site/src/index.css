@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Design tokens — every color is a space-separated RGB triple so Tailwind's
+  `rgb(var(--x) / <alpha-value>)` opacity modifiers keep working (see
+  tailwind.config.js). Two complete themes: `:root` is the light theme, `.dark`
+  is the dark-first canvas. `html` gets `.dark` before paint (index.html inline
+  script), so the site is dark by default while honouring a stored/OS choice.
+
+  AA contrast note: state hues below are tuned per theme — the light-theme
+  variants are deepened so they clear WCAG AA (>= 4.5:1) as text on light
+  surfaces; the dark-theme variants clear AA on the dark canvas.
+*/
+
+:root {
+  /* Light theme (chassis) */
+  --bg: 247 248 251;
+  --surface-1: 255 255 255;
+  --surface-2: 240 242 248;
+  --surface-3: 231 234 243;
+  --line: 216 221 232;
+  --line-soft: 233 236 244;
+  --text: 20 21 31;
+  --muted: 74 78 96;
+  --faint: 118 123 143;
+
+  /* Brand — Iris violet */
+  --brand: 98 66 224;
+  --brand-strong: 82 52 206;
+
+  /* State ramp (deepened for AA on light) */
+  --st-dispatched: 28 104 214;
+  --st-running: 168 106 8;
+  --st-delivered: 8 128 116;
+  --st-verified: 22 143 57;
+  --st-failed: 200 38 38;
+  --st-escalated: 188 80 12;
+  --st-merged: 132 58 226;
+  --st-redirected: 12 130 148;
+  --st-removed: 92 98 118;
+
+  color-scheme: light;
+}
+
+.dark {
+  /* Dark-first canvas */
+  --bg: 8 9 15;
+  --surface-1: 16 17 26;
+  --surface-2: 23 25 38;
+  --surface-3: 32 35 52;
+  --line: 40 43 60;
+  --line-soft: 26 28 42;
+  --text: 233 234 242;
+  --muted: 162 165 186;
+  --faint: 122 126 150;
+
+  --brand: 141 125 255;
+  --brand-strong: 172 158 255;
+
+  --st-dispatched: 76 154 255;
+  --st-running: 245 172 60;
+  --st-delivered: 32 202 182;
+  --st-verified: 61 210 100;
+  --st-failed: 255 104 104;
+  --st-escalated: 255 146 62;
+  --st-merged: 199 116 236;
+  --st-redirected: 44 205 226;
+  --st-removed: 128 134 158;
+
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  /* clip (not hidden) kills horizontal body scroll without creating a scroll
+     container, so position: sticky keeps working for the docs sidebar. */
+  overflow-x: clip;
+  max-width: 100vw;
+}
+
+body {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--text));
+  font-family: "Inter", system-ui, sans-serif;
+  overflow-x: clip;
+  max-width: 100vw;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgb(var(--brand) / 0.28);
+}
+
+/* Vertical rhythm — a single baseline unit (0.5rem grid) held across the site.
+   Section spacing and heading margins are multiples of it. */
+:root {
+  --rhythm: 0.5rem;
+}
+
+h1, h2, h3, h4 {
+  font-family: "Sora", "Inter", system-ui, sans-serif;
+  text-wrap: balance;
+}
+
+/* Focus ring — visible in both themes, keyboard-only. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid rgb(var(--brand));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Themed, thin scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--line)) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgb(var(--line));
+  border-radius: 9999px;
+}
+
+/* Code-highlight (rehype-highlight / highlight.js) — theme-aware, minimal. */
+.hljs { color: rgb(var(--text)); background: transparent; }
+.hljs-comment, .hljs-quote { color: rgb(var(--faint)); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-section, .hljs-link { color: rgb(var(--brand-strong)); }
+.hljs-string, .hljs-title, .hljs-name, .hljs-attribute, .hljs-symbol, .hljs-bullet, .hljs-addition { color: rgb(var(--st-delivered)); }
+.hljs-number, .hljs-meta, .hljs-built_in, .hljs-builtin-name, .hljs-type, .hljs-params { color: rgb(var(--st-running)); }
+.hljs-deletion { color: rgb(var(--st-failed)); }
+
+/* prefers-reduced-motion — kill decorative motion globally. Components that use
+   JS-driven motion also check the media query and present a static/stepped
+   view; this is the CSS backstop. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
