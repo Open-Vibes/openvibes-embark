@@ -43,6 +43,48 @@
 6. Integration: code-split Docs off the landing route, verify build/tsc/tests,
    check both themes + AA + 320px + reduced-motion, screenshot, open PR.
 
+## Journey j-20260825-55 — the Console Split, i18n, and the two blockers
+
+Build order (each TDD, RED→GREEN where there is pure logic):
+
+1. **(E) Footer version** — drop the hardcoded `aipe v0.3.1`; link to the live
+   GitHub releases page. No stale string can rot. (No pure logic; visual.)
+2. **(D) `ScrollToHash`** — port the pdd-site hardening: a double-`requestAnimationFrame`
+   plus a `setTimeout(…, 300)` fallback re-check, `behavior:"instant"`, cleaned up
+   on unmount. The new hero (A) reserves its height before content settles, so the
+   `/#harness` target stops drifting under a settling page.
+3. **(A/B) Console Split** — the centrepiece, folding in the ledger flow:
+   - `domain/skillMatch.ts` (+ test) — `matchSkills(task)` routes a task across the
+     shipped kits (`sdd-lite` floor · `spec-kit` · `pdd`) from real routing metadata
+     (`taskTypes` · `skipFor` · `minSize`); a heavy kit is declined on a trivial task.
+   - `pages/Landing/console/consoleScript.ts` (+ test) — the pure, framework-free
+     model: an ordered list of **steps**, each a left-pane terminal exchange bound
+     1:1 to a right-pane **meaning**. Every meaning's facts are derived
+     (`scheduleWaves`, `validateBatch`, `priceEnvelope`, `matchSkills`, `reduceLedger`
+     evidence/QA gates), never hand-set. Tests assert: the binding is total and
+     bijective (every step ↔ exactly one meaning), the envelope maths (Lawson 64/GATED,
+     Viola 8), the law verdicts (`same-package …` then two lawful `batch=1` waves),
+     and the skill-match routing (floor always matches; heavy kit declined for the
+     UI-dominant site unit).
+   - `pages/Landing/console/ConsoleSplit.tsx` — two synchronised panes with a shared
+     `activeStepId`; hovering/stepping either side highlights its partner (two-way
+     trace). Pace controls: play/pause · step ‹/› · scrub · replay · speed. Reduced
+     motion renders the whole flow, stepped, height-stable. Wired into `Hero` in
+     place of `TheDispatch`.
+   - Remove `signature/TheDispatch.tsx`, `signature/sceneScript.ts(+test)` (the 4-act
+     scene is superseded) and `signature/LedgerScrubber.tsx(+test)` + `LedgerSection.tsx`
+     (folded into the split). Drop `LedgerSection` from `Landing`.
+4. **(C) i18n** — mirror `pdd-site/src/i18n` exactly: `locale.ts` (+ a `navigator`
+   fallback for the brief's browser-language detection, kept pure/testable) · `en.ts`
+   · `pt.ts` · `index.tsx` · `__tests__/locale.test.ts`; a `LangToggle` in the header;
+   `I18nProvider` outside `BrowserRouter`. Following pdd exactly, the **docs chrome**
+   (sidebar/nav/menu/code-block labels) is localised while doc **bodies stay English**
+   (item labels come from markdown frontmatter). Landing prose is fully bilingual.
+
+Test-file delta (documented in the PR): removed `LedgerScrubber.test.ts` (component
+removed) and `sceneScript.test.ts` (4-act scene superseded); added
+`skillMatch.test.ts`, `consoleScript.test.ts`, and `i18n/__tests__/locale.test.ts`.
+
 ## Consistency with the monorepo
 
 `.embark.jsonc` (cloudflare-pages, subdomain `aipe`, useSubmodule false), the
