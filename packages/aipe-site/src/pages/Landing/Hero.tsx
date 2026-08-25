@@ -1,5 +1,5 @@
 import CopyButton from "../../components/CopyButton";
-import TheDispatch from "./signature/TheDispatch";
+import ConsoleSplit from "./console/ConsoleSplit";
 
 const INSTALL = "curl -fsSL https://aipe.openvibes.tech/cli | sh";
 
@@ -54,12 +54,14 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* The signature scene — the demand becoming dispatched work, staged and causal. */}
+        {/* The signature scene — the terminal on the left, what each line means on
+            the right, bound line-for-line. Fixed height, so it never shifts the
+            page as it plays. */}
         <div className="mt-12 sm:mt-14">
           <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-faint">
-            watch one demand become dispatched work
+            one demand — the terminal, and what every line means
           </p>
-          <TheDispatch />
+          <ConsoleSplit />
         </div>
       </div>
     </header>
