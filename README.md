@@ -489,6 +489,7 @@ When changes are pushed to `main` **outside of `packages/`** (scripts, workflows
 | Package | Description |
 |---------|-------------|
 | `agentistics` | Metrics for claude code |
+| `aipe-site` | AIPe — coordinate agents across many repos, in parallel, across harnesses |
 | `autoducks-docs` | Autoducks documentation site |
 | `duckflux-docs` | Duckflux documentation |
 | `duckflux-editor` | Real time editor to duckflux |

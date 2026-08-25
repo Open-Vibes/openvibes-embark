@@ -8,6 +8,14 @@
     "cloudflareUse": true
   },
   {
+    "name": "aipe-site",
+    "folderName": "aipe-site",
+    "rootDomain": false,
+    "subdomain": "aipe",
+    "appDeployment": "cloudflare-pages",
+    "cloudflareUse": true
+  },
+  {
     "name": "autoducks-docs",
     "folderName": "autoducks-docs",
     "rootDomain": false,
