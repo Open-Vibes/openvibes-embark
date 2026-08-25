@@ -27,3 +27,8 @@ find on this machine, asks for a workspace name, and creates a publishable
 
 Open that folder in your harness and **just say hi** — the coordinator drives the
 rest of onboarding conversationally.
+
+## Next
+
+- [Quickstart](quickstart.md) — install to your first demand.
+- [The two phases](../phases/the-two-phases.md) — the shape of the whole system.

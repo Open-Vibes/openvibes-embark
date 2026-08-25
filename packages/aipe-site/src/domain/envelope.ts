@@ -35,11 +35,16 @@ export function costIndex(e: Pick<Envelope, "mode" | "intensity" | "tier">): num
 }
 
 export interface Policy {
+  /** Per-envelope signature gates — the only thing that gates a SINGLE envelope. */
   gatedIntensities: Intensity[];
   gatedTiers: ModelTier[];
-  /** A single envelope whose cost-index exceeds this is GATED. */
+  /**
+   * WAVE-level ceiling: a wave whose SUMMED cost-index exceeds this is GATED.
+   * It never gates a single envelope on its own (mirrors the reference — see
+   * `isGated`), so it is carried here only to be shown as the wave-scoped policy.
+   */
   maxCostIndexPerWave: number;
-  /** More than this many sessions in a wave is GATED. */
+  /** WAVE-level: more than this many sessions in one wave is GATED. */
   gateAboveSessions: number;
 }
 
@@ -57,14 +62,17 @@ export interface GateResult {
 }
 
 /**
- * Whether a single envelope needs the PE's signature, and why. The pricer
- * enumerates and prices; it never chooses.
+ * Whether a SINGLE envelope needs the PE's signature, and why. Mirrors the
+ * reference `gateReasonsFor` (src/execution/propose.ts): a lone envelope is
+ * gated ONLY by the signature axes — a gated intensity or a gated tier. The
+ * `maxCostIndexPerWave` and `gateAboveSessions` ceilings are WAVE-level (they
+ * apply to a grouped wave's summed cost / session count), so they deliberately
+ * do NOT participate here. The pricer enumerates and prices; it never chooses.
  */
 export function isGated(e: Envelope, policy: Policy = DEFAULT_POLICY): GateResult {
   const reasons: string[] = [];
   if (policy.gatedIntensities.includes(e.intensity)) reasons.push(`intensity:${e.intensity}`);
   if (policy.gatedTiers.includes(e.tier)) reasons.push(`tier:${e.tier}`);
-  if (costIndex(e) > policy.maxCostIndexPerWave) reasons.push(`cost-index>${policy.maxCostIndexPerWave}`);
   return { gated: reasons.length > 0, reasons };
 }
 

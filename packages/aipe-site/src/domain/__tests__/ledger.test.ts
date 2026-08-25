@@ -43,11 +43,14 @@ describe("evaluateAttempt — the evidence gate", () => {
   });
 });
 
-describe("evaluateAttempt — the QA gate", () => {
-  it("blocks merged straight from delivered", () => {
+describe("evaluateAttempt — the QA gate (a process gate, not a ledger reject code)", () => {
+  it("holds a merge straight from delivered", () => {
     const r = evaluateAttempt("delivered", { status: "merged" });
     expect(r.accepted).toBe(false);
     expect(r.gateCode).toBe("qa-gate");
+    // Crucial truthfulness distinction: the QA gate is enforced by the operate
+    // flow, NOT by one of the ledger's own reject codes.
+    expect(r.gateKind).toBe("process");
     expect(r.status).toBe("delivered");
   });
 
@@ -55,6 +58,20 @@ describe("evaluateAttempt — the QA gate", () => {
     const r = evaluateAttempt("verified", { status: "merged" });
     expect(r.accepted).toBe(true);
     expect(r.status).toBe("merged");
+  });
+});
+
+describe("evaluateAttempt — the ledger's own gates are marked ledger-kind", () => {
+  it("tags the evidence gate as a ledger reject", () => {
+    const r = evaluateAttempt("dispatched", { status: "delivered" });
+    expect(r.gateCode).toBe("evidence-required");
+    expect(r.gateKind).toBe("ledger");
+  });
+
+  it("tags immutability as a ledger reject", () => {
+    const r = evaluateAttempt("merged", { status: "dispatched" });
+    expect(r.gateCode).toBe("unit-immutable");
+    expect(r.gateKind).toBe("ledger");
   });
 });
 

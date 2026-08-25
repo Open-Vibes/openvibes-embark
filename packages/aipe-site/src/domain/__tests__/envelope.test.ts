@@ -46,11 +46,15 @@ describe("isGated — policy signature gates", () => {
     expect(r.reasons).toContain("tier:frontier");
   });
 
-  it("gates a single envelope whose cost-index exceeds 24", () => {
-    // session(2) × reasoning(4) × ultracode(8) = 64 > 24, and ultracode also gates.
+  it("never gates a single envelope on the wave-level cost ceiling", () => {
+    // session(2) × reasoning(4) × ultracode(8) = 64, well over maxCostIndexPerWave (24) —
+    // yet a LONE envelope is gated only by its ultracode intensity. The summed-cost ceiling
+    // is a wave-level gate, never a single-envelope one (mirrors the reference propose.ts).
     const r = isGated({ ...base, mode: "session", tier: "reasoning", intensity: "ultracode" });
     expect(r.gated).toBe(true);
-    expect(r.reasons).toContain(`cost-index>${DEFAULT_POLICY.maxCostIndexPerWave}`);
+    expect(r.reasons).toContain("intensity:ultracode");
+    expect(r.reasons.some((x) => x.startsWith("cost-index"))).toBe(false);
+    expect(64).toBeGreaterThan(DEFAULT_POLICY.maxCostIndexPerWave);
   });
 });
 
