@@ -33,7 +33,18 @@ export default function Footer() {
       </div>
       <div className="mx-auto max-w-content mt-10 pt-6 border-t border-line-soft flex flex-col sm:flex-row justify-between gap-2 text-xs text-faint">
         <span>openvibes.tech — the open-source umbrella</span>
-        <span className="font-mono">aipe v0.3.1</span>
+        {/* No hardcoded version: this site has no build-time access to the aipe
+            repo's release number, so any pinned string rots (and breaks the
+            truthfulness gate). Link to the live releases page — current by
+            definition. */}
+        <a
+          href="https://github.com/blpsoares/aipe/releases/latest"
+          target="_blank"
+          rel="noreferrer"
+          className="font-mono hover:text-brand transition-colors"
+        >
+          latest release ↗
+        </a>
       </div>
     </footer>
   );
