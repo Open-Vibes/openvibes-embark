@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import StateBadge from "../../../components/StateBadge";
 import { useInView } from "../../../lib/useInView";
 import { useReducedMotion } from "../../../lib/useReducedMotion";
+import { useI18n, type Translations } from "../../../i18n";
 import {
   buildConsole,
   type ConsoleModel,
@@ -9,6 +10,9 @@ import {
   type Meaning,
   type Step,
 } from "./consoleScript";
+
+/** The localisable console copy slice (framing labels, control text, details). */
+type ConsoleText = Translations["console"];
 
 /** Base dwell per step (ms) at 1× — long enough to read the meaning. */
 const BASE_DWELL = 3200;
@@ -50,7 +54,9 @@ const KIND_GLYPH: Record<Meaning["kind"], string> = {
  * grows as steps reveal — it can't move an anchor target out from under a scroll.
  */
 export default function ConsoleSplit() {
-  const model: ConsoleModel = useMemo(() => buildConsole(), []);
+  const { t } = useI18n();
+  const c = t.console;
+  const model: ConsoleModel = useMemo(() => buildConsole(c.steps), [c]);
   const { steps } = model;
   const reduced = useReducedMotion();
   const { ref, inView } = useInView<HTMLDivElement>();
@@ -100,17 +106,18 @@ export default function ConsoleSplit() {
       ref={ref}
       className="overflow-hidden rounded-2xl border border-line bg-surface-1"
       role="group"
-      aria-label="The Console — a paced, two-pane walkthrough: the terminal on the left, what each line means on the right"
+      aria-label={c.aria.group}
     >
       {/* Header: what we're watching · the ledger ramp · pace controls */}
       <div className="flex flex-col gap-3 border-b border-line-soft p-3.5 sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             <span aria-hidden="true" className="text-brand">◆</span>
-            <span className="font-display text-sm font-semibold text-text">The Console</span>
-            <span className="font-mono text-[11px] text-faint truncate">· journey {model.journey}</span>
+            <span className="font-display text-sm font-semibold text-text">{c.title}</span>
+            <span className="font-mono text-[11px] text-faint truncate">{c.journeyPrefix} {model.journey}</span>
           </div>
           <Controls
+            c={c}
             reduced={reduced}
             playing={playing}
             atStart={current <= 0}
@@ -134,7 +141,7 @@ export default function ConsoleSplit() {
             max={steps.length - 1}
             value={Math.min(current, steps.length - 1)}
             onChange={(e) => go(Number(e.currentTarget.value))}
-            aria-label="Scrub through the steps"
+            aria-label={c.aria.scrub}
             className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-surface-3 accent-brand"
           />
           <div className="flex shrink-0 items-center gap-1.5">
@@ -153,6 +160,7 @@ export default function ConsoleSplit() {
       {/* The two synchronised panes. Fixed height → the box never grows. */}
       <div className="grid grid-cols-1 lg:grid-cols-2">
         <TerminalPane
+          c={c}
           steps={steps}
           visibleCount={visibleCount}
           activeId={activeId}
@@ -161,6 +169,7 @@ export default function ConsoleSplit() {
           onPick={(i) => go(i)}
         />
         <MeaningPane
+          c={c}
           model={model}
           steps={steps}
           visibleCount={visibleCount}
@@ -173,7 +182,7 @@ export default function ConsoleSplit() {
 
       {/* A screen-reader announcement of the active step and its meaning. */}
       <p className="sr-only" aria-live="polite">
-        Step {Math.min(current + 1, steps.length)} of {steps.length}: {activeStep?.meaning.title}. {activeStep?.meaning.plain}
+        {c.srStep(Math.min(current + 1, steps.length), steps.length)}: {activeStep?.meaning.title}. {activeStep?.meaning.plain}
       </p>
     </div>
   );
@@ -182,6 +191,7 @@ export default function ConsoleSplit() {
 /* ------------------------------------------------------------------ controls */
 
 function Controls(props: {
+  c: ConsoleText;
   reduced: boolean;
   playing: boolean;
   atStart: boolean;
@@ -195,33 +205,33 @@ function Controls(props: {
   onRestart: () => void;
   onCycleSpeed: () => void;
 }) {
-  const { reduced, playing, atStart, atEnd, index, total, speed } = props;
+  const { c, reduced, playing, atStart, atEnd, index, total, speed } = props;
   const btn =
     "rounded-md border border-line px-2 py-1 font-mono text-xs text-muted transition-colors hover:border-brand hover:text-brand disabled:opacity-40 disabled:hover:border-line disabled:hover:text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand";
   return (
     <div className="flex shrink-0 items-center gap-1.5">
-      <button type="button" onClick={props.onPrev} disabled={atStart} aria-label="Previous step" className={btn}>
+      <button type="button" onClick={props.onPrev} disabled={atStart} aria-label={c.aria.prev} className={btn}>
         ‹
       </button>
       {!reduced && (
         <button
           type="button"
           onClick={atEnd ? props.onRestart : props.onPlayPause}
-          aria-label={atEnd ? "Replay" : playing ? "Pause" : "Play"}
+          aria-label={atEnd ? c.aria.replay : playing ? c.aria.pause : c.aria.play}
           className={btn}
         >
-          {atEnd ? "↺ replay" : playing ? "❚❚" : "▶"}
+          {atEnd ? `↺ ${c.replay}` : playing ? "❚❚" : "▶"}
         </button>
       )}
-      <button type="button" onClick={props.onNext} disabled={atEnd} aria-label="Next step" className={btn}>
+      <button type="button" onClick={props.onNext} disabled={atEnd} aria-label={c.aria.next} className={btn}>
         ›
       </button>
       {!reduced && (
-        <button type="button" onClick={props.onCycleSpeed} aria-label={`Speed ${speed}×, tap to change`} className={btn}>
+        <button type="button" onClick={props.onCycleSpeed} aria-label={c.aria.speed(speed)} className={btn}>
           {speed}×
         </button>
       )}
-      <button type="button" onClick={props.onRestart} aria-label="Restart" className={`${btn} hidden sm:inline`}>
+      <button type="button" onClick={props.onRestart} aria-label={c.aria.restart} className={`${btn} hidden sm:inline`}>
         ↺
       </button>
       <span className="ml-0.5 font-mono text-[11px] tabular-nums text-faint">
@@ -234,6 +244,7 @@ function Controls(props: {
 /* -------------------------------------------------------------- terminal pane */
 
 function TerminalPane({
+  c,
   steps,
   visibleCount,
   activeId,
@@ -241,6 +252,7 @@ function TerminalPane({
   onHover,
   onPick,
 }: {
+  c: ConsoleText;
   steps: Step[];
   visibleCount: number;
   activeId: string | null;
@@ -261,7 +273,7 @@ function TerminalPane({
           <span className="h-2.5 w-2.5 rounded-full bg-state-escalated/60" />
           <span className="h-2.5 w-2.5 rounded-full bg-state-verified/60" />
         </span>
-        <span className="font-mono text-[10.5px] uppercase tracking-wide text-faint">terminal — what actually runs</span>
+        <span className="font-mono text-[10.5px] uppercase tracking-wide text-faint">{c.terminalHeader}</span>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto bg-surface-2/20 p-3.5 font-mono">
         <ol className="flex flex-col gap-2.5">
@@ -276,7 +288,7 @@ function TerminalPane({
                   onFocus={() => onHover(step.id)}
                   onBlur={() => onHover(null)}
                   onClick={() => onPick(i)}
-                  aria-label={`Step ${i + 1}: ${step.meaning.title}`}
+                  aria-label={c.aria.step(i + 1, step.meaning.title)}
                   className={`block w-full rounded-lg border px-3 py-2 text-left transition-colors ${
                     active ? "border-brand/70 bg-brand/[0.06]" : "border-transparent hover:border-line-soft"
                   }`}
@@ -333,6 +345,7 @@ function TerminalLineView({ line }: { line: LeftLine }) {
 /* --------------------------------------------------------------- meaning pane */
 
 function MeaningPane({
+  c,
   model,
   steps,
   visibleCount,
@@ -341,6 +354,7 @@ function MeaningPane({
   onHover,
   onPick,
 }: {
+  c: ConsoleText;
   model: ConsoleModel;
   steps: Step[];
   visibleCount: number;
@@ -358,7 +372,7 @@ function MeaningPane({
     <div className="flex h-[26rem] flex-col lg:h-[32rem]">
       <div className="flex items-center gap-2 border-b border-line-soft bg-surface-2/50 px-3.5 py-2">
         <span aria-hidden="true" className="text-brand">↔</span>
-        <span className="font-mono text-[10.5px] uppercase tracking-wide text-faint">what that line means — bound to the left</span>
+        <span className="font-mono text-[10.5px] uppercase tracking-wide text-faint">{c.meaningHeader}</span>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-3.5">
         <ol className="flex flex-col gap-2.5">
@@ -386,7 +400,7 @@ function MeaningPane({
                     <span className="font-display text-[13px] font-semibold text-text">{step.meaning.title}</span>
                   </div>
                   <p className="text-[12.5px] leading-relaxed text-muted">{step.meaning.plain}</p>
-                  <MeaningDetail model={model} meaning={step.meaning} />
+                  <MeaningDetail c={c} model={model} meaning={step.meaning} />
                 </div>
               </li>
             );
@@ -399,7 +413,7 @@ function MeaningPane({
 
 /* ----------------------------- per-kind derived detail (all from the domain) */
 
-function MeaningDetail({ model, meaning }: { model: ConsoleModel; meaning: Meaning }) {
+function MeaningDetail({ c, model, meaning }: { c: ConsoleText; model: ConsoleModel; meaning: Meaning }) {
   const [lawson, viola] = model.specialists;
 
   if (meaning.kind === "skill-match") {
@@ -407,9 +421,9 @@ function MeaningDetail({ model, meaning }: { model: ConsoleModel; meaning: Meani
       <ul className="mt-2 flex flex-col gap-1">
         {model.skill.verdicts.map((v) => (
           <li key={v.kit} className="flex items-center gap-2 font-mono text-[11px]">
-            <span className={v.matched ? "text-state-verified" : "text-faint"}>{v.matched ? "match" : "skip"}</span>
+            <span className={v.matched ? "text-state-verified" : "text-faint"}>{v.matched ? c.detail.match : c.detail.skip}</span>
             <span className={v.matched ? "text-text" : "text-faint"}>{v.kit}</span>
-            {v.floor && <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] text-brand">floor</span>}
+            {v.floor && <span className="rounded bg-surface-2 px-1.5 py-0.5 text-[10px] text-brand">{c.detail.floor}</span>}
           </li>
         ))}
       </ul>
@@ -435,10 +449,10 @@ function MeaningDetail({ model, meaning }: { model: ConsoleModel; meaning: Meani
         </div>
         <p className="mt-2 font-mono text-[11px] text-muted">
           2 × 4 × 8 = <span className="font-semibold text-text">cost-index {e.costIndex}</span>{" "}
-          <span className="text-faint">· coarse relative index, never money</span>
+          <span className="text-faint">· {c.detail.costNote}</span>
         </p>
         <p className="mt-1 flex items-center gap-1.5 font-mono text-[11px] font-semibold text-state-escalated">
-          <span aria-hidden="true">⚑</span> GATED · {e.gateReasons.join(", ")}
+          <span aria-hidden="true">⚑</span> {c.detail.gated} · {e.gateReasons.join(", ")}
         </p>
       </div>
     );
@@ -447,10 +461,10 @@ function MeaningDetail({ model, meaning }: { model: ConsoleModel; meaning: Meani
   if (meaning.kind === "law" && lawson && viola) {
     return (
       <div className="mt-2 flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
-        <span className="rounded bg-surface-2 px-1.5 py-0.5 text-muted">wave 1 · {lawson.persona}</span>
-        <span aria-hidden="true" className="text-faint">then</span>
-        <span className="rounded bg-surface-2 px-1.5 py-0.5 text-muted">wave 2 · {viola.persona}</span>
-        <span className="text-faint">— same package serializes; distinct repos would run in parallel</span>
+        <span className="rounded bg-surface-2 px-1.5 py-0.5 text-muted">{c.detail.wave} 1 · {lawson.persona}</span>
+        <span aria-hidden="true" className="text-faint">{c.detail.then}</span>
+        <span className="rounded bg-surface-2 px-1.5 py-0.5 text-muted">{c.detail.wave} 2 · {viola.persona}</span>
+        <span className="text-faint">{c.detail.sameSerialize}</span>
       </div>
     );
   }

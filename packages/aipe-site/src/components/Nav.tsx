@@ -1,18 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
-
-const LINKS: { href: string; label: string }[] = [
-  { href: "/#problem", label: "Why" },
-  { href: "/#company", label: "Company" },
-  { href: "/#how", label: "How" },
-  { href: "/#laws", label: "Laws" },
-  { href: "/#harness", label: "Harnesses" },
-  { href: "/#cost", label: "Cost" },
-];
+import LangToggle from "./LangToggle";
+import { useI18n } from "../i18n";
 
 export default function Nav() {
+  const { t } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const links: { href: string; label: string }[] = [
+    { href: "/#problem", label: t.nav.why },
+    { href: "/#company", label: t.nav.company },
+    { href: "/#how", label: t.nav.how },
+    { href: "/#laws", label: t.nav.laws },
+    { href: "/#harness", label: t.nav.harnesses },
+    { href: "/#cost", label: t.nav.cost },
+  ];
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -27,19 +30,19 @@ export default function Nav() {
     <nav className="fixed top-0 left-0 right-0 z-40 px-4 py-3">
       <div className="mx-auto max-w-content rounded-2xl lg:rounded-full border border-line bg-bg/70 backdrop-blur-xl shadow-lg shadow-black/20">
         <div className="flex items-center justify-between gap-4 px-4 sm:px-5 py-2.5">
-          <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="AIPe home">
+          <Link to="/" className="flex items-center gap-2 shrink-0" aria-label={t.nav.home}>
             <span aria-hidden="true" className="text-brand text-lg leading-none">◆</span>
             <span className="font-display font-bold text-text tracking-tight">aipe</span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-5 text-[13px] font-medium text-muted whitespace-nowrap">
-            {LINKS.map((l) => (
+            {links.map((l) => (
               <a key={l.href} href={l.href} className="hover:text-brand transition-colors">
                 {l.label}
               </a>
             ))}
             <Link to="/docs" className="hover:text-brand transition-colors">
-              Docs
+              {t.nav.docs}
             </Link>
           </div>
 
@@ -50,18 +53,19 @@ export default function Nav() {
               rel="noreferrer"
               className="hidden sm:inline-block text-[13px] font-medium text-muted hover:text-brand transition-colors"
             >
-              GitHub
+              {t.nav.github}
             </a>
+            <LangToggle />
             <ThemeToggle />
             <a
               href="/#start"
               className="hidden sm:inline-flex items-center rounded-full bg-brand px-3.5 py-1.5 text-[13px] font-semibold text-white hover:bg-brand-strong transition-colors"
             >
-              Get started
+              {t.nav.getStarted}
             </a>
             <button
               onClick={() => setMenuOpen((v) => !v)}
-              aria-label="Toggle menu"
+              aria-label={t.nav.toggleMenu}
               aria-expanded={menuOpen}
               className="lg:hidden flex flex-col gap-1 p-1.5 -mr-1"
             >
@@ -79,13 +83,13 @@ export default function Nav() {
         }`}
         aria-hidden={!menuOpen}
       >
-        {LINKS.map((l) => (
+        {links.map((l) => (
           <a key={l.href} href={l.href} onClick={() => setMenuOpen(false)} className="py-2 hover:text-brand transition-colors">
             {l.label}
           </a>
         ))}
         <Link to="/docs" onClick={() => setMenuOpen(false)} className="py-2 hover:text-brand transition-colors">
-          Docs
+          {t.nav.docs}
         </Link>
         <a
           href="https://github.com/blpsoares/aipe"
@@ -94,14 +98,14 @@ export default function Nav() {
           onClick={() => setMenuOpen(false)}
           className="py-2 hover:text-brand transition-colors"
         >
-          GitHub
+          {t.nav.github}
         </a>
         <a
           href="/#start"
           onClick={() => setMenuOpen(false)}
           className="mt-2 inline-flex items-center justify-center rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white"
         >
-          Get started
+          {t.nav.getStarted}
         </a>
       </div>
     </nav>

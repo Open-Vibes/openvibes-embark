@@ -3,8 +3,10 @@ import { Navigate, useParams } from "react-router-dom";
 import DocsSidebar from "./DocsSidebar";
 import DocMarkdown from "./DocMarkdown";
 import { docBySlug, firstDocSlug } from "./loadDocs";
+import { useI18n } from "../../i18n";
 
 export default function Docs() {
+  const { t } = useI18n();
   const { slug } = useParams<{ slug: string }>();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -23,7 +25,7 @@ export default function Docs() {
         onClick={() => setDrawerOpen(true)}
         className="lg:hidden flex items-center gap-2 font-mono text-[13px] text-muted border border-line rounded-md px-3 py-2 mb-6"
       >
-        <span aria-hidden="true">☰</span> Documentation
+        <span aria-hidden="true">☰</span> {t.docs.documentation}
       </button>
 
       {drawerOpen && (
@@ -33,9 +35,9 @@ export default function Docs() {
             <button
               onClick={() => setDrawerOpen(false)}
               className="font-mono text-[13px] text-muted mb-6"
-              aria-label="Close menu"
+              aria-label={t.docs.closeMenu}
             >
-              ✕ close
+              ✕ {t.docs.close}
             </button>
             <DocsSidebar activeSlug={activeSlug} onNavigate={() => setDrawerOpen(false)} />
           </div>

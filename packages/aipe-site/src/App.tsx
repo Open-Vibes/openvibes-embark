@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { I18nProvider } from "./i18n";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import ScrollToHash from "./components/ScrollToHash";
@@ -22,25 +23,27 @@ function DocsFallback() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <ScrollToHash />
-      <Nav />
-      <main id="top">
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/docs" element={<Navigate to={`/docs/${FIRST_DOC}`} replace />} />
-          <Route
-            path="/docs/:slug"
-            element={
-              <Suspense fallback={<DocsFallback />}>
-                <Docs />
-              </Suspense>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-      <Footer />
-    </BrowserRouter>
+    <I18nProvider>
+      <BrowserRouter>
+        <ScrollToHash />
+        <Nav />
+        <main id="top">
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/docs" element={<Navigate to={`/docs/${FIRST_DOC}`} replace />} />
+            <Route
+              path="/docs/:slug"
+              element={
+                <Suspense fallback={<DocsFallback />}>
+                  <Docs />
+                </Suspense>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+        <Footer />
+      </BrowserRouter>
+    </I18nProvider>
   );
 }

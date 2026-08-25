@@ -8,6 +8,7 @@ import {
   type HarnessId,
 } from "../../../domain/harness";
 import { useReducedMotion } from "../../../lib/useReducedMotion";
+import { useI18n } from "../../../i18n";
 
 /**
  * The exact mono line `aipe dispatch validate` prints for a session-mode
@@ -45,6 +46,8 @@ function panelId(id: HarnessId): string {
 
 export default function HarnessBay() {
   const reduced = useReducedMotion();
+  const { t } = useI18n();
+  const b = t.harnessBay;
   const [selected, setSelected] = useState<HarnessId>("claude-code");
 
   const info = HARNESSES[selected];
@@ -107,7 +110,7 @@ export default function HarnessBay() {
                 <span className="font-mono text-sm text-text">{id}</span>
                 {active ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-brand/15 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-brand-strong">
-                    <span aria-hidden="true">●</span>selected
+                    <span aria-hidden="true">●</span>{b.selected}
                   </span>
                 ) : null}
               </span>
@@ -120,10 +123,10 @@ export default function HarnessBay() {
                 <span aria-hidden="true" className="text-xs leading-none">
                   {laneEligible ? "✓" : "✕"}
                 </span>
-                {laneEligible ? "session-eligible" : "not containable"}
+                {laneEligible ? b.sessionEligible : b.notContainable}
               </span>
               <span className="font-mono text-[10px] text-faint">
-                workspace: {WORKSPACE_LABEL[id]}
+                {b.workspacePrefix} {WORKSPACE_LABEL[id]}
               </span>
             </button>
           );
@@ -151,11 +154,11 @@ export default function HarnessBay() {
           </span>
           {eligible ? (
             <span className="inline-flex items-center gap-1.5 rounded-md border border-state-verified/40 bg-state-verified/12 px-2.5 py-1 font-sans text-xs font-semibold text-state-verified">
-              <span aria-hidden="true">✓</span> session-eligible
+              <span aria-hidden="true">✓</span> {b.sessionEligible}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1.5 rounded-md border border-state-failed/40 bg-state-failed/12 px-2.5 py-1 font-sans text-xs font-semibold text-state-failed">
-              <span aria-hidden="true">✕</span> session dispatch rejected
+              <span aria-hidden="true">✕</span> {b.sessionRejected}
             </span>
           )}
         </div>
@@ -163,7 +166,7 @@ export default function HarnessBay() {
         {/* Containment mechanism / rejection reason, straight from domain `why`. */}
         <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-muted">
           <span className="font-semibold text-text">
-            {eligible ? "Containment: " : "Why it can't be contained: "}
+            {eligible ? b.containment : b.whyNotContained}
           </span>
           {info.why}
         </p>
@@ -198,7 +201,7 @@ export default function HarnessBay() {
         <div className="mt-5 border-t border-line-soft pt-4">
           <p className="font-sans text-xs leading-relaxed text-faint">
             <span className="font-semibold uppercase tracking-wide text-muted">
-              Workspace harness at{" "}
+              {b.workspaceHarnessAt}{" "}
               <span className="font-mono normal-case tracking-normal">aipe start</span>:
             </span>{" "}
             <span
@@ -210,9 +213,9 @@ export default function HarnessBay() {
             </span>
             {selected === "gemini" ? (
               <>
-                {" "}
-                — still session-eligible as a <em className="not-italic text-muted">unit</em>{" "}
-                dispatch harness, which is what enables cross-model QA.
+                {b.geminiNoteBefore}
+                <em className="not-italic text-muted">{b.geminiNoteEmphasis}</em>
+                {b.geminiNoteAfter}
               </>
             ) : null}
           </p>
@@ -225,15 +228,17 @@ export default function HarnessBay() {
             className="mt-px shrink-0 rounded-sm bg-state-running/20 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase text-state-running"
             aria-hidden="true"
           >
-            pending
+            {b.pending}
           </span>
           <p className="font-sans text-xs leading-relaxed text-muted">
-            <span className="sr-only">Pending roadmap note: </span>
-            Session containment for <span className="font-mono text-text">codex</span> and{" "}
-            <span className="font-mono text-text">copilot</span> is{" "}
-            <span className="font-semibold text-text">not shipped</span> — it's blocked on a
-            documented non-interactive trust bypass for each. Until then, unattended dispatch
-            validation rejects them by design.
+            <span className="sr-only">{b.pendingSr}</span>
+            {b.pendingBefore}
+            <span className="font-mono text-text">codex</span>
+            {b.pendingMiddle}
+            <span className="font-mono text-text">copilot</span>
+            {b.pendingNotShipped}
+            <span className="font-semibold text-text">{b.pendingNotShippedEmphasis}</span>
+            {b.pendingAfter}
           </p>
         </div>
       </motion.div>

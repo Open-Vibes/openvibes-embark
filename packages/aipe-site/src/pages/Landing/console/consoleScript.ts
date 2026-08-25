@@ -208,6 +208,13 @@ export interface Step {
   meaning: Meaning;
 }
 
+/** Per-step copy the UI can inject to localise the right pane (title + plain). */
+export interface StepCopy {
+  title: string;
+  plain: string;
+}
+export type ConsoleCopy = Partial<Record<string, StepCopy>>;
+
 /** A step whose meaning shares its id — the binding is 1:1 by construction. */
 function step(
   id: string,
@@ -217,7 +224,13 @@ function step(
   return { id, terminal: { lines }, meaning: { id, ...meaning } };
 }
 
-export function buildSteps(): Step[] {
+/**
+ * Build the ordered steps. Pass a `copy` override to localise the right pane:
+ * each step's title/plain is replaced by `copy[id]` when present. The terminal
+ * lines stay English in every locale — they are real commands. With no override
+ * the English defaults below are used verbatim.
+ */
+export function buildSteps(copy?: ConsoleCopy): Step[] {
   const [lawson, viola] = buildConsoleSpecialists();
   if (!lawson || !viola) return [];
 
@@ -226,7 +239,7 @@ export function buildSteps(): Step[] {
   const skill = matchSummary(AIPE_UNIT_TASK);
   const env = lawson.envelope;
 
-  return [
+  const built: Step[] = [
     step(
       "demand",
       {
@@ -438,6 +451,14 @@ export function buildSteps(): Step[] {
       ],
     ),
   ];
+
+  if (!copy) return built;
+  // Localise the right pane: swap in each step's translated title/plain, keep
+  // its id, kind, status and terminal lines exactly.
+  return built.map((s) => {
+    const override = copy[s.id];
+    return override ? { ...s, meaning: { ...s.meaning, title: override.title, plain: override.plain } } : s;
+  });
 }
 
 export interface ConsoleModel {
@@ -453,8 +474,8 @@ export interface ConsoleModel {
   meaningById: Map<string, Meaning>;
 }
 
-export function buildConsole(): ConsoleModel {
-  const steps = buildSteps();
+export function buildConsole(copy?: ConsoleCopy): ConsoleModel {
+  const steps = buildSteps(copy);
   return {
     demand: DEMAND,
     coordinator: COORDINATOR,

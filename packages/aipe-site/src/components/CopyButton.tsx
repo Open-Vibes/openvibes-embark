@@ -3,11 +3,12 @@ import { useState } from "react";
 interface CopyButtonProps {
   value: string;
   label?: string;
+  copiedLabel?: string;
   className?: string;
 }
 
 /** Copy-to-clipboard button with transient confirmation. */
-export default function CopyButton({ value, label = "copy", className = "" }: CopyButtonProps) {
+export default function CopyButton({ value, label = "copy", copiedLabel = "copied", className = "" }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -24,10 +25,10 @@ export default function CopyButton({ value, label = "copy", className = "" }: Co
     <button
       type="button"
       onClick={handleCopy}
-      aria-label={copied ? "Copied" : `Copy ${label}`}
+      aria-label={copied ? copiedLabel : `${label}`}
       className={`font-mono text-[11px] uppercase tracking-wide text-muted border border-line px-2 py-1 rounded-md bg-surface-1 hover:text-brand hover:border-brand transition-colors ${className}`}
     >
-      {copied ? "copied ✓" : label}
+      {copied ? `${copiedLabel} ✓` : label}
     </button>
   );
 }

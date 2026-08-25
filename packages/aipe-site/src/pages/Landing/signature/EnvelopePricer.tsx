@@ -14,6 +14,7 @@ import {
 } from "../../../domain/envelope";
 import { HARNESS_IDS, type HarnessId } from "../../../domain/harness";
 import { useReducedMotion } from "../../../lib/useReducedMotion";
+import { useI18n } from "../../../i18n";
 
 /**
  * Turn one raw `gateReasons` token from the domain module into a sentence the
@@ -132,6 +133,8 @@ function Multiplicand({ label, factor }: { label: string; factor: number }) {
 
 export default function EnvelopePricer() {
   const reduced = useReducedMotion();
+  const { t } = useI18n();
+  const e18n = t.envelope;
 
   const [mode, setMode] = useState<EnvelopeMode>("subagent");
   const [intensity, setIntensity] = useState<Intensity>("normal");
@@ -178,15 +181,15 @@ export default function EnvelopePricer() {
         />
         <AxisControl
           legend="harness"
-          hint="viability axis — not a multiplier"
+          hint={e18n.harnessHint}
           options={HARNESS_IDS}
           value={harness}
           onChange={setHarness}
           reduced={reduced}
           annotate={(id) =>
             mode === "session" && !containable[id]
-              ? { note: "not containable in session", excluded: true }
-              : { note: containable[id] ? "session-eligible" : "subagent-only" }
+              ? { note: e18n.noteNotContainable, excluded: true }
+              : { note: containable[id] ? e18n.noteSessionEligible : e18n.noteSubagentOnly }
           }
         />
       </div>
@@ -196,7 +199,7 @@ export default function EnvelopePricer() {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           {/* Index + breakdown */}
           <div className="min-w-0">
-            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-faint mb-1">cost-index</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-faint mb-1">{e18n.costIndex}</p>
             <div className="flex items-end gap-4">
               <motion.span
                 key={priced.costIndex}
@@ -219,10 +222,7 @@ export default function EnvelopePricer() {
               <span className="text-faint">(intensity)</span> ={" "}
               <span className="text-text font-semibold">{priced.costIndex}</span>
             </p>
-            <p className="mt-2 max-w-md text-[12px] leading-relaxed text-faint">
-              A coarse relative index, never currency. AIPe cannot know your token price, plan, or rate
-              limits — it ranks ways to run a unit, it does not bill them.
-            </p>
+            <p className="mt-2 max-w-md text-[12px] leading-relaxed text-faint">{e18n.coarseNote}</p>
           </div>
 
           {/* Status: gated / viability */}
@@ -231,20 +231,18 @@ export default function EnvelopePricer() {
             {priced.viable ? (
               <div className="rounded-lg border border-state-verified/40 bg-state-verified/10 px-3 py-2.5">
                 <p className="flex items-center gap-2 font-mono text-[12px] text-state-verified">
-                  <span aria-hidden="true">●</span> VIABLE envelope
+                  <span aria-hidden="true">●</span> {e18n.viable}
                 </p>
               </div>
             ) : (
               <div className="rounded-lg border border-state-failed bg-state-failed/10 px-3 py-2.5">
                 <p className="flex items-center gap-2 font-mono text-[12px] font-semibold text-state-failed">
-                  <span aria-hidden="true">✕</span> NON-VIABLE — excluded
+                  <span aria-hidden="true">✕</span> {e18n.nonViable}
                 </p>
                 <p className="mt-1 font-mono text-[12px] text-state-failed">
-                  reject: {priced.viabilityReason}
+                  {e18n.rejectPrefix} {priced.viabilityReason}
                 </p>
-                <p className="mt-1 text-[11px] leading-tight text-muted">
-                  Session mode requires a containable harness; this one can't be contained unattended.
-                </p>
+                <p className="mt-1 text-[11px] leading-tight text-muted">{e18n.sessionRequiresContainable}</p>
               </div>
             )}
 
@@ -252,7 +250,7 @@ export default function EnvelopePricer() {
             {priced.gated ? (
               <div className="rounded-lg border border-state-escalated bg-state-escalated/10 px-3 py-2.5">
                 <p className="flex items-center gap-2 font-mono text-[12px] font-semibold uppercase tracking-wide text-state-escalated">
-                  <span aria-hidden="true">⚑</span> GATED — needs the PE's signature
+                  <span aria-hidden="true">⚑</span> {e18n.gated}
                 </p>
                 <ul className="mt-1.5 space-y-1">
                   {priced.gateReasons.map((r) => (
@@ -266,7 +264,7 @@ export default function EnvelopePricer() {
             ) : (
               <div className="rounded-lg border border-line-soft bg-surface-2 px-3 py-2.5">
                 <p className="font-mono text-[12px] text-muted">
-                  <span className="text-state-verified">UNGATED</span> — auto-dispatchable
+                  <span className="text-state-verified">{e18n.ungated}</span> {e18n.autoDispatchable}
                 </p>
               </div>
             )}
@@ -277,11 +275,11 @@ export default function EnvelopePricer() {
             envelope vs. what only gates a grouped wave. */}
         <div className="mt-6 space-y-1 rounded-lg border border-line-soft bg-surface-2/60 px-3 py-2.5 font-mono text-[11px] text-faint">
           <p>
-            <span className="text-muted">per-envelope</span> · gated intensities [
-            {DEFAULT_POLICY.gatedIntensities.join(", ")}] · gated tiers [{DEFAULT_POLICY.gatedTiers.join(", ")}]
+            <span className="text-muted">{e18n.perEnvelope}</span> · {e18n.gatedIntensities} [
+            {DEFAULT_POLICY.gatedIntensities.join(", ")}] · {e18n.gatedTiers} [{DEFAULT_POLICY.gatedTiers.join(", ")}]
           </p>
           <p>
-            <span className="text-muted">per-wave</span> (applied only when units are grouped into a wave) ·
+            <span className="text-muted">{e18n.perWave}</span> ·
             maxCostIndexPerWave {DEFAULT_POLICY.maxCostIndexPerWave} · gateAboveSessions{" "}
             {DEFAULT_POLICY.gateAboveSessions}
           </p>
@@ -290,15 +288,15 @@ export default function EnvelopePricer() {
         {/* Reference table */}
         <div className="mt-6">
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-faint mb-2">
-            reference envelopes
+            {e18n.referenceEnvelopes}
           </p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[34rem] border-collapse font-mono text-[12px]">
               <thead>
                 <tr className="text-left text-faint">
-                  <th className="border-b border-line-soft py-2 pr-3 font-normal">envelope</th>
-                  <th className="border-b border-line-soft py-2 pr-3 font-normal text-right">index</th>
-                  <th className="border-b border-line-soft py-2 font-normal">status</th>
+                  <th className="border-b border-line-soft py-2 pr-3 font-normal">{e18n.thEnvelope}</th>
+                  <th className="border-b border-line-soft py-2 pr-3 font-normal text-right">{e18n.thIndex}</th>
+                  <th className="border-b border-line-soft py-2 font-normal">{e18n.thStatus}</th>
                 </tr>
               </thead>
               <tbody>
@@ -314,11 +312,11 @@ export default function EnvelopePricer() {
                       </td>
                       <td className="border-b border-line-soft/60 py-2">
                         {!p.viable ? (
-                          <span className="text-state-failed">non-viable · {p.viabilityReason}</span>
+                          <span className="text-state-failed">{e18n.nonViablePrefix} {p.viabilityReason}</span>
                         ) : p.gated ? (
-                          <span className="text-state-escalated">gated</span>
+                          <span className="text-state-escalated">{e18n.gatedLabel}</span>
                         ) : (
-                          <span className="text-state-verified">ungated</span>
+                          <span className="text-state-verified">{e18n.ungatedLabel}</span>
                         )}
                       </td>
                     </tr>
