@@ -4,6 +4,7 @@ import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { resolveDocLink } from "./loadDocs";
+import { useI18n } from "../../i18n";
 
 interface DocMarkdownProps {
   body: string;
@@ -19,6 +20,7 @@ function hastText(node: unknown): string {
 }
 
 function CodeBlockPre({ node, children }: { node?: unknown; children?: ReactNode }) {
+  const { t } = useI18n();
   const [copied, setCopied] = useState(false);
   const text = hastText(node);
 
@@ -41,7 +43,7 @@ function CodeBlockPre({ node, children }: { node?: unknown; children?: ReactNode
         onClick={handleCopy}
         className="absolute top-2.5 right-2.5 font-mono text-[10px] uppercase tracking-wide text-muted border border-line rounded px-2 py-1 bg-bg/80 hover:text-brand hover:border-brand transition-colors"
       >
-        {copied ? "copied" : "copy"}
+        {copied ? t.docs.codeBlock.copied : t.docs.codeBlock.copy}
       </button>
     </div>
   );

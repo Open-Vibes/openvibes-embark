@@ -1,14 +1,11 @@
 import Section from "../../components/Section";
 import EnvelopePricer from "./signature/EnvelopePricer";
+import { useI18n } from "../../i18n";
 
 export default function CostSection() {
+  const { t } = useI18n();
   return (
-    <Section
-      id="cost"
-      eyebrow="Cost control"
-      title="Price every way to run a unit — before you spend a token."
-      lead="Four axes decide what a dispatch costs and whether it needs your signature. AIPe enumerates and prices every viable envelope; it never chooses for you."
-    >
+    <Section id="cost" eyebrow={t.cost.eyebrow} title={t.cost.title} lead={t.cost.lead}>
       <EnvelopePricer />
     </Section>
   );
