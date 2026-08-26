@@ -92,6 +92,37 @@ Scrubber**, adds **pt/en i18n**, and closes two QA-gate blockers.
   gate) within a day. The footer instead links to the live GitHub releases page,
   which is current by definition. Argued in the PR.
 
+## Redirect v2 — the hero is two components (Terminal + Stage), not one prose panel
+
+The PE rejected v1's Console Split: *"ainda tá MUITO difícil de entender… tá muita
+informação sendo cuspida de ambos os lados… deveria ser algo separado."* The failure
+was v1 asking for "what that line means" — a request for prose — and getting a column
+of paragraph cards. v2 rebuilds the presentation (the proven domain layer stays):
+
+- **Two independent components, own files/state/tests, no cross-imports**, joined by
+  a thin coordination layer (`sceneModel.ts`: a shared step index + an ordered beat
+  stream). `Terminal.tsx` and `Stage.tsx` each render and are tested standalone
+  (`react-dom/server`, no provider, no DOM) — asserted in `Terminal.test.tsx` /
+  `Stage.test.tsx`. The joiner is `ConsoleScene.tsx`.
+- **The right pane is a stage, not a document.** The coordinator and specialists are
+  objects; allocation is movement (a specialist appears, is carved a worktree, takes a
+  wave lane, queues behind another in the same package); a decision is a visible state
+  change (the envelope axes settle, the cost-index resolves to 64, the gate padlock
+  snaps to GATED, the evidence/QA gates flip open→blocked). Parallel work is parallel
+  lanes; serialised work is a queue. Depth is used only where it carries meaning (the
+  queued token sits behind).
+- **Hard limits, enforced not eyeballed.** Right-pane text is **one short line per
+  step** (`CAPTION_BUDGET = 40` chars, asserted on the real en+pt captions in
+  `captions.i18n.test.ts`), never a paragraph. The terminal shows the **current
+  command prominently**; history recedes to one dimmed line each. **One side changes
+  per beat** — the beat stream strictly alternates terminal→stage (asserted), so a
+  reader paused on any beat can say what just happened. `prefers-reduced-motion` opens
+  on the complete, still scene.
+
+Everything on the stage is still DERIVED (`scheduleWaves`, `validateBatch`,
+`priceEnvelope`, `matchSkills`, the ledger `evaluateAttempt`), never hand-set. The
+i18n, the anchor fix (D) and the version fix (E) from v1 are unchanged.
+
 ## Scope
 
 - **Landing** (in order): Hero + Dispatch Fan-Out · The problem · The company analogy ·

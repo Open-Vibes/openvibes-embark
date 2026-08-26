@@ -39,18 +39,18 @@ const pt: Translations = {
     copied: "copiado",
     seeHow: "Veja como funciona →",
     readDocs: "Ler a documentação",
-    sceneCaption: "uma demanda — o terminal, e o que cada linha significa",
+    sceneCaption: "uma demanda — o terminal, e as decisões que ela dispara",
   },
 
   console: {
     title: "O Console",
     journeyPrefix: "· jornada",
     terminalHeader: "terminal — o que realmente roda",
-    meaningHeader: "o que essa linha significa — ligado à esquerda",
-    replay: "repetir",
+    stageHeader: "o palco — as decisões sendo tomadas",
+    running: "rodando",
     aria: {
       group:
-        "O Console — um passo a passo em dois painéis, no seu ritmo: o terminal à esquerda, o significado de cada linha à direita",
+        "O Console — dois painéis no seu ritmo: o terminal à esquerda, o palco das decisões à direita",
       scrub: "Navegar pelos passos",
       prev: "Passo anterior",
       next: "Próximo passo",
@@ -59,85 +59,40 @@ const pt: Translations = {
       replay: "Repetir",
       restart: "Recomeçar",
       speed: (s: number) => `Velocidade ${s}×, toque para mudar`,
-      step: (n: number, title: string) => `Passo ${n}: ${title}`,
     },
-    srStep: (n: number, total: number) => `Passo ${n} de ${total}`,
-    detail: {
-      match: "combina",
-      skip: "ignora",
+    captions: {
+      demand: "o coordenador recebe a demanda",
+      journey: "uma demanda → uma jornada",
+      unit: "uma unidade · aipe-site",
+      route: "roteado → sdd-lite (base)",
+      envelope: "envelope 64 · travado",
+      law: "mesma package → serializa",
+      worktree: "worktree talhado · isolado",
+      dispatch: "wave 1 roda · wave 2 espera",
+      deliver: "entregue · com evidência",
+      evidence: "sem evidência → rejeitado",
+      "qa-block": "sem verificar, não dá merge",
+      verify: "verificado pela QA",
+      merged: "merge feito · travado",
+    },
+    labels: {
+      coordinator: "coordenador",
+      unit: "unidade",
       floor: "base",
-      costNote: "índice relativo aproximado, nunca dinheiro",
-      gated: "TRAVADO",
-      wave: "onda",
-      then: "depois",
-      sameSerialize: "— o mesmo pacote serializa; repositórios distintos rodariam em paralelo",
-    },
-    steps: {
-      demand: {
-        title: "A entrada inteira é uma frase",
-        plain:
-          "Um Engenheiro de Produto entrega uma demanda em palavras comuns. Essa é a entrada inteira. Tudo deste lado é o coordenador transformando-a em trabalho despachado e registrado — ninguém escreve tickets nem conecta agentes na mão.",
-      },
-      journey: {
-        title: "Uma demanda → uma jornada",
-        plain:
-          "A demanda abre uma jornada: um registro durável que vai gravar cada passo daqui até um PR mesclado. Nada foi despachado ainda — isto é só o registro sendo aberto.",
-      },
-      decompose: {
-        title: "Uma unidade de trabalho, e seu piso de confiabilidade",
-        plain:
-          "O coordenador lê como os repositórios se relacionam. O aipe-site é um nó novinho — nada depende dele e ele não depende de nada — então há exatamente uma unidade de trabalho. O piso de qualquer unidade são duas pessoas: um dev para construir e um QA independente para conferir.",
-      },
-      "skill-match": {
-        title: "Qual método serve — e qual é exagero",
-        plain:
-          "Antes de construir, o coordenador pergunta qual framework serve ao trabalho. O sdd-lite — uma spec curta mais um plano — é o piso, sempre presente. Os kits pesados guiados por spec são recusados aqui: um site com foco em interface não é para o que eles servem. A mesma regra mantém um kit pesado longe de uma mudança de uma linha; a escolha é mecânica, não por intuição.",
-      },
-      envelope: {
-        title: "Quanta potência — e precisa de aprovação",
-        plain:
-          "Cada unidade ganha um envelope de execução em quatro eixos: modo de execução, tier do modelo, esforço e qual harness. O produto deles é um índice de custo relativo aproximado (nunca dinheiro). Este dá 64 e usa um eixo travado (esforço ultracode), então não pode despachar até o PE assinar embaixo.",
-      },
-      law: {
-        title: "A única lei que o coordenador não dobra",
-        plain:
-          "Lawson e Viola estão os dois no aipe-site. A lei de despacho proíbe o mesmo pacote rodar duas vezes ao mesmo tempo, então propor os dois juntos é rejeitado como está — e serializado: Lawson na onda 1, o QA da Viola na onda 2, sobre o branch dele. Dois repositórios DIFERENTES teriam rodado lado a lado, até 16 de uma vez.",
-      },
-      worktree: {
-        title: "Uma cópia isolada para trabalhar",
-        plain:
-          "O especialista da onda 1 ganha seu próprio git worktree — uma cópia de trabalho separada do repositório. Especialistas em paralelo nunca pisam nos arquivos uns dos outros, e as mudanças de cada um chegam como um pull request próprio.",
-      },
-      dispatch: {
-        title: "A onda 1 sai; a onda 2 espera",
-        plain:
-          "O dev é despachado como uma sessão desacoplada, com a sua própria janela de contexto inteira. O QA fica na fila atrás dele — mesmo pacote, próxima onda — então os dois nunca rodam ao mesmo tempo. O registro agora diz: dispatched.",
-      },
-      deliver: {
-        title: "Entregue — com prova",
-        plain:
-          "Lawson abre o PR e registra como delivered, anexando o comando exato que rodou e o que ele mostrou. Uma entrega TEM que carregar essa evidência; o registro é o comando e seu resultado, não uma alegação.",
-      },
-      "evidence-gate": {
-        title: "Uma alegação vazia é rejeitada na hora",
-        plain:
-          "Se ele tivesse registrado 'delivered' sem comando e sem resultado, o registro rejeita a escrita — evidence-required. 'Deve funcionar' não é evidência. É exatamente por isso que a entrega acima carregou um comando e sua saída.",
-      },
-      "qa-gate": {
-        title: "Não dá para mesclar na palavra do dev",
-        plain:
-          "Uma mesclagem direto de delivered é barrada: a unidade não está verificada. A onda 2 roda — Viola, um QA independente no seu próprio worktree, confere contra o diff, não contra o relato do Lawson — e registra verified com a evidência dela. Só agora a unidade é liberada.",
-      },
-      merged: {
-        title: "Mesclada, e agora imutável",
-        plain:
-          "Com um QA verificado em mãos, o PR é mesclado. A unidade fica imutável — nunca é redespachada — e o worktree dela é desmontado.",
-      },
-      verify: {
-        title: "O registro se confere sozinho",
-        plain:
-          "Um lint determinístico final relê o registro inteiro e confirma que está consistente: toda entrega carregou evidência, toda mesclagem foi verificada antes, nenhum worktree solto. Uma demanda, despachada e registrada, de ponta a ponta.",
-      },
+      envelope: "envelope",
+      costIndex: "cost-index",
+      gated: "travado",
+      notMoney: "índice relativo, não dinheiro",
+      wave: "wave",
+      queued: "na fila",
+      running: "rodando",
+      worktree: "worktree",
+      evidenceGate: "evidência",
+      qaGate: "QA",
+      blocked: "bloqueado",
+      open: "aberto",
+      rejected: "rejeitado",
+      ledger: "ledger",
     },
   },
 

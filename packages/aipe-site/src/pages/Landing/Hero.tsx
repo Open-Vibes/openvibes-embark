@@ -1,5 +1,5 @@
 import CopyButton from "../../components/CopyButton";
-import ConsoleSplit from "./console/ConsoleSplit";
+import ConsoleScene from "./console/ConsoleScene";
 import { useI18n } from "../../i18n";
 
 const INSTALL = "curl -fsSL https://aipe.openvibes.tech/cli | sh";
@@ -53,12 +53,12 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* The signature scene — the terminal on the left, what each line means on
-            the right, bound line-for-line. Fixed height, so it never shifts the
-            page as it plays. */}
+        {/* The signature scene — two independent components: the terminal (what
+            actually runs) and the stage (the decisions and allocations happening).
+            Fixed height, so it never shifts the page as it plays. */}
         <div className="mt-12 sm:mt-14">
           <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-faint">{t.hero.sceneCaption}</p>
-          <ConsoleSplit />
+          <ConsoleScene />
         </div>
       </div>
     </header>

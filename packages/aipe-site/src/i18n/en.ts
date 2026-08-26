@@ -41,18 +41,18 @@ const en = {
     copied: "copied",
     seeHow: "See how it works →",
     readDocs: "Read the docs",
-    sceneCaption: "one demand — the terminal, and what every line means",
+    sceneCaption: "one demand — the terminal, and the decisions it sets off",
   },
 
   console: {
     title: "The Console",
     journeyPrefix: "· journey",
     terminalHeader: "terminal — what actually runs",
-    meaningHeader: "what that line means — bound to the left",
-    replay: "replay",
+    stageHeader: "the stage — the decisions being made",
+    running: "running",
     aria: {
       group:
-        "The Console — a paced, two-pane walkthrough: the terminal on the left, what each line means on the right",
+        "The Console — two panes at your pace: the terminal on the left, the stage of decisions on the right",
       scrub: "Scrub through the steps",
       prev: "Previous step",
       next: "Next step",
@@ -61,85 +61,40 @@ const en = {
       replay: "Replay",
       restart: "Restart",
       speed: (s: number) => `Speed ${s}×, tap to change`,
-      step: (n: number, title: string) => `Step ${n}: ${title}`,
     },
-    srStep: (n: number, total: number) => `Step ${n} of ${total}`,
-    detail: {
-      match: "match",
-      skip: "skip",
+    captions: {
+      demand: "coordinator takes the demand",
+      journey: "one demand → one journey",
+      unit: "one unit · aipe-site",
+      route: "routed → sdd-lite (floor)",
+      envelope: "envelope 64 · gated",
+      law: "same package → serialize",
+      worktree: "worktree carved · isolated",
+      dispatch: "wave 1 runs · wave 2 waits",
+      deliver: "delivered · with evidence",
+      evidence: "no evidence → rejected",
+      "qa-block": "can't merge unverified",
+      verify: "verified by QA",
+      merged: "merged · locked",
+    },
+    labels: {
+      coordinator: "coordinator",
+      unit: "unit",
       floor: "floor",
-      costNote: "coarse relative index, never money",
-      gated: "GATED",
+      envelope: "envelope",
+      costIndex: "cost-index",
+      gated: "gated",
+      notMoney: "relative index, not money",
       wave: "wave",
-      then: "then",
-      sameSerialize: "— same package serializes; distinct repos would run in parallel",
-    },
-    steps: {
-      demand: {
-        title: "The whole input is one sentence",
-        plain:
-          "A Product Engineer hands over a demand in plain words. That is the entire input. Everything on this side is the coordinator turning it into dispatched, recorded work — no one writes tickets or wires up agents by hand.",
-      },
-      journey: {
-        title: "One demand → one journey",
-        plain:
-          "The demand opens a journey: a durable ledger that will record every step from here to a merged PR. Nothing has been dispatched yet — this is just the record being opened.",
-      },
-      decompose: {
-        title: "One unit of work, and its reliability floor",
-        plain:
-          "The coordinator reads how the repos relate. aipe-site is a brand-new node — nothing else depends on it and it depends on nothing — so there is exactly one unit of work. The floor for any unit is two people: one dev to build it and one independent QA to check it.",
-      },
-      "skill-match": {
-        title: "Which method fits — and which is overkill",
-        plain:
-          "Before building, the coordinator asks which framework fits the work. sdd-lite — a short spec plus a plan — is the always-on floor. The heavy spec-driven kits are declined here: a UI-dominant site isn't what they're for. The same rule keeps a heavy kit off a one-line change; it is routed mechanically, not by feel.",
-      },
-      envelope: {
-        title: "How much muscle — and does it need sign-off",
-        plain:
-          "Every unit gets an execution envelope on four axes: run mode, model tier, effort, and which harness. Their product is a coarse relative cost-index (never money). This one lands at 64 and uses a gated axis (ultracode effort), so it can't dispatch until the PE signs it off.",
-      },
-      law: {
-        title: "The one law the coordinator can't bend",
-        plain:
-          "Lawson and Viola are both on aipe-site. The dispatch law forbids the same package running twice at once, so proposing them together is rejected as written — and serialized instead: Lawson in wave 1, Viola's QA in wave 2 on his branch. Two DIFFERENT repos would have run side by side, up to 16 at once.",
-      },
-      worktree: {
-        title: "An isolated copy to work in",
-        plain:
-          "Wave 1's specialist gets its own git worktree — a separate working copy of the repo. Parallel specialists never step on each other's files, and each one's changes arrive as their own pull request.",
-      },
-      dispatch: {
-        title: "Wave 1 goes out; wave 2 waits",
-        plain:
-          "The dev is dispatched as a detached session with its own full context window. The QA stays queued behind him — same package, next wave — so the two never run at once. The ledger now reads: dispatched.",
-      },
-      deliver: {
-        title: "Delivered — with proof",
-        plain:
-          "Lawson opens the PR and records it as delivered, attaching the exact command he ran and what it showed. A delivery MUST carry that evidence; the record is the command and its result, not a claim.",
-      },
-      "evidence-gate": {
-        title: "A bare claim is rejected outright",
-        plain:
-          "Had he recorded 'delivered' with no command and no result, the ledger rejects the write — evidence-required. 'It should work' is not evidence. That is exactly why the delivery above carried a command and its output.",
-      },
-      "qa-gate": {
-        title: "You can't merge on the dev's word",
-        plain:
-          "A merge straight from delivered is held: the unit isn't verified. Wave 2 runs — Viola, an independent QA in her own worktree, re-checks against the diff, not against Lawson's report — and records verified with her own evidence. Only now is the unit cleared.",
-      },
-      merged: {
-        title: "Merged, and now immutable",
-        plain:
-          "With a verified QA in hand, the PR merges. The unit becomes immutable — it is never re-dispatched — and its worktree is torn down.",
-      },
-      verify: {
-        title: "The record checks itself",
-        plain:
-          "A final deterministic lint reads the whole ledger back and confirms it's consistent: every delivery carried evidence, every merge was verified first, no dangling worktrees. One demand, dispatched and recorded, end to end.",
-      },
+      queued: "queued",
+      running: "running",
+      worktree: "worktree",
+      evidenceGate: "evidence",
+      qaGate: "QA",
+      blocked: "blocked",
+      open: "open",
+      rejected: "rejected",
+      ledger: "ledger",
     },
   },
 

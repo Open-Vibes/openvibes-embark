@@ -85,6 +85,33 @@ Test-file delta (documented in the PR): removed `LedgerScrubber.test.ts` (compon
 removed) and `sceneScript.test.ts` (4-act scene superseded); added
 `skillMatch.test.ts`, `consoleScript.test.ts`, and `i18n/__tests__/locale.test.ts`.
 
+## Redirect v2 — Terminal + Stage (supersedes the fused Console Split)
+
+Files, all under `pages/Landing/console/`:
+
+- `consoleScript.ts` — trimmed to the **proven facts only** (`buildFacts`: specialists,
+  waves, law verdict, skill routing, envelope pricing, ledger gate outcomes). The prose
+  `Meaning`/`Step`/`buildSteps` presentation is removed. Tests in `consoleScript.test.ts`
+  now cover the surviving derivations.
+- `sceneModel.ts` (+ `sceneModel.test.ts`) — the coordination layer: `buildBeats()` (the
+  strictly alternating terminal↔stage stream, each stage beat carrying one `StageChange`
+  + a budget-capped caption key) and `foldScene(beats, upTo)` (the cumulative
+  `SceneState`). Tests assert: strict one-side-per-beat alternation, the caption budget,
+  and that the folded state (envelope 64/gated, serialize with Viola queued, evidence
+  rejected, QA blocked→open, merged/immutable) is derived from the domain.
+- `Terminal.tsx` (+ `Terminal.test.tsx`) — pure/presentational; current command
+  prominent, history dimmed; renders standalone.
+- `Stage.tsx` (+ `Stage.test.tsx`) — pure/presentational scene of objects (pipeline,
+  envelope panel, wave lanes, ledger track with gates); renders standalone; motion via
+  framer-motion, dropped under reduced motion.
+- `ConsoleScene.tsx` — the thin joiner: the shared step index, pace controls
+  (play/pause/step/scrub/replay/speed), i18n labels + captions, fixed height (keeps D).
+- `captions.i18n.test.ts` — asserts the real en+pt captions stay within budget.
+
+Removed: `ConsoleSplit.tsx` (the fused, prose-card component). Wired `ConsoleScene`
+into `Hero`. The `console` slice of `en.ts`/`pt.ts` is reshaped from step paragraphs to
+captions + object labels.
+
 ## Consistency with the monorepo
 
 `.embark.jsonc` (cloudflare-pages, subdomain `aipe`, useSubmodule false), the
