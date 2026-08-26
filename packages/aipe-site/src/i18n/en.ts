@@ -88,6 +88,20 @@ const en = {
       verify: "verified by QA",
       merged: "merged · locked",
     },
+    // Plain-language key for the console's own vocabulary — so a reader with no
+    // AIPe words can follow it. Keyed by `GLOSSARY_TERMS` in consoleScript.ts.
+    glossary: {
+      title: "The words, in plain language",
+      journey: "the durable record of one demand, from start to merge",
+      unit: "one repo's slice of the work — here, the aipe-site package",
+      envelope: "a way to run a unit (mode · tier · effort) and what it costs",
+      costIndex: "a coarse number to compare runs — never money",
+      gated: "needs the Product Engineer's sign-off before it can run",
+      wave: "work that runs at once; the same package waits for the next wave",
+      worktree: "an isolated copy of the repo, so parallel runs never collide",
+      gate: "a check that blocks “done” until it's proven — evidence, then QA",
+      ledger: "the append-only record every step is written to",
+    },
     // Glosses for the stage's envelope axes. The VALUES (session, claude-code,
     // reasoning, ultracode) are literal identifiers and stay English; these
     // reader-facing axis names are localised.

@@ -2,7 +2,7 @@ import { describe, it, expect } from "bun:test";
 import en from "../../../i18n/en";
 import pt from "../../../i18n/pt";
 import { buildBeats, CAPTION_BUDGET } from "./sceneModel";
-import { ENVELOPE_AXIS_KEYS } from "./consoleScript";
+import { ENVELOPE_AXIS_KEYS, GLOSSARY_TERMS } from "./consoleScript";
 
 const stageCaptionKeys = buildBeats()
   .filter((b) => b.side === "stage" && b.captionKey)
@@ -75,5 +75,50 @@ describe("console envelope axes — glossed through i18n in every locale", () =>
     // the site); `mode` and `effort` are ordinary words and must be translated.
     expect(pt.console.axes.mode).not.toBe(en.console.axes.mode);
     expect(pt.console.axes.effort).not.toBe(en.console.axes.effort);
+  });
+});
+
+/**
+ * Comprehension standard (team policy): a reader with no AIPe vocabulary can follow
+ * the console — unexplained jargon is a finding. Every noun the stage prints as a
+ * standing label must carry one plain-language definition, in BOTH locales, and it
+ * must be a real sentence, not another jargon token. `GLOSSARY_TERMS` is the single
+ * source; the glossary component renders exactly these.
+ */
+describe("console glossary — every AIPe noun is defined in plain language", () => {
+  it("both locales define a plain-language entry for every glossary term", () => {
+    for (const { key } of GLOSSARY_TERMS) {
+      expect(Object.keys(en.console.glossary), `en missing glossary "${key}"`).toContain(key);
+      expect(Object.keys(pt.console.glossary), `pt missing glossary "${key}"`).toContain(key);
+    }
+  });
+
+  for (const [locale, dict] of [
+    ["en", en],
+    ["pt", pt],
+  ] as const) {
+    it(`${locale}: every definition is a real, present phrase (not a bare token)`, () => {
+      for (const { key, label } of GLOSSARY_TERMS) {
+        const def = dict.console.glossary[key];
+        expect(def, `${locale} glossary "${key}" is empty`).toBeTruthy();
+        // A definition must explain, so it is longer than the term and has whitespace.
+        expect(def.length, `${locale} "${key}" = "${def}"`).toBeGreaterThan(label.length + 6);
+        expect(def.trim().includes(" "), `${locale} "${key}" is a single token, not a phrase`).toBe(true);
+      }
+    });
+  }
+
+  it("the definitions are actually translated (pt differs from en)", () => {
+    for (const { key } of GLOSSARY_TERMS) {
+      expect(pt.console.glossary[key], `pt "${key}" not translated`).not.toBe(en.console.glossary[key]);
+    }
+  });
+
+  it("covers the jargon nouns the stage prints as labels", () => {
+    // Guard against a stage label losing its glossary entry over time.
+    const covered = new Set<string>(GLOSSARY_TERMS.map((g) => g.label));
+    for (const term of ["journey", "unit", "envelope", "cost-index", "wave", "worktree", "gate", "ledger"]) {
+      expect(covered, `no glossary entry for "${term}"`).toContain(term);
+    }
   });
 });

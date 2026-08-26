@@ -132,6 +132,12 @@ captions + object labels.
   in both dicts; `ConsoleScene` builds the rows. `captions.i18n.test.ts` extended
   (RED→GREEN) to require every axis glossed in both locales and the plain ones
   (`mode`/`effort`) actually translated. `Stage.test.tsx` fixture updated with `axes`.
+- **Comprehension key** — `GLOSSARY_TERMS` in `consoleScript.ts` + `console.glossary`
+  in both dicts define every AIPe noun the stage prints (journey, unit, envelope,
+  cost-index, gated, wave, worktree, gate, ledger). `ConsoleSection` renders them as a
+  responsive definition grid beneath the console (3-col → 1-col at 320px). Tests assert
+  both locales define every term, each definition is a real phrase (len > term+6, has a
+  space) not a bare token, pt≠en, and the set covers the stage's labels.
 
 Evidence: `bun test` (all suites), `tsc --noEmit` silent, `bun run build` clean with
 gzip reported, and a Playwright responsive/theme/reduced-motion sweep (screenshots +

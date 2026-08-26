@@ -182,6 +182,30 @@ export function envelopeAxisValues(specialist: ConsoleSpecialist): Record<Envelo
   };
 }
 
+/* ----------------------------------------------- plain-language glossary keys */
+
+/**
+ * The console is dense with AIPe vocabulary a newcomer has never seen (journey,
+ * unit, envelope, wave, worktree, gate, ledger). Team policy: unexplained jargon is
+ * a finding — a reader with no AIPe vocabulary must be able to follow the console. So
+ * every noun the stage prints as a standing label gets one plain-language definition,
+ * shown as a key beneath the console. `label` is the term exactly as the stage renders
+ * it; `key` indexes its definition in `console.glossary` (localised, both locales).
+ * This is the single source the glossary component and its i18n test share.
+ */
+export const GLOSSARY_TERMS = [
+  { key: "journey", label: "journey" },
+  { key: "unit", label: "unit" },
+  { key: "envelope", label: "envelope" },
+  { key: "costIndex", label: "cost-index" },
+  { key: "gated", label: "gated" },
+  { key: "wave", label: "wave" },
+  { key: "worktree", label: "worktree" },
+  { key: "gate", label: "gate" },
+  { key: "ledger", label: "ledger" },
+] as const;
+export type GlossaryKey = (typeof GLOSSARY_TERMS)[number]["key"];
+
 /* ------------------------------------------------------ terminal line shapes */
 
 export type LineTone = "ok" | "reject" | "gated" | "info" | "queued" | "muted";

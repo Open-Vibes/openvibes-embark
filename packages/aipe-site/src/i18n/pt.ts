@@ -85,6 +85,18 @@ const pt: Translations = {
       verify: "verificado pela QA",
       merged: "merge feito · travado",
     },
+    glossary: {
+      title: "As palavras, em linguagem simples",
+      journey: "o registro durável de uma demanda, do início ao merge",
+      unit: "a fatia de trabalho de um repo — aqui, a package aipe-site",
+      envelope: "um jeito de rodar uma unidade (modo · tier · esforço) e seu custo",
+      costIndex: "um número relativo para comparar execuções — nunca dinheiro",
+      gated: "precisa da aprovação do Product Engineer antes de rodar",
+      wave: "trabalho que roda de uma vez; a mesma package espera a próxima wave",
+      worktree: "uma cópia isolada do repo, para execuções paralelas nunca colidirem",
+      gate: "uma checagem que barra o “feito” até ser provado — evidência, depois QA",
+      ledger: "o registro append-only onde cada passo é escrito",
+    },
     axes: {
       mode: "modo",
       harness: "harness",

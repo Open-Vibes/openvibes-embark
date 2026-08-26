@@ -153,6 +153,15 @@ i18n, anchor + version fixes) is preserved, not rebuilt.
   literal identifiers and stay English. `captions.i18n.test.ts` is extended to assert
   every axis is glossed in both locales (RED→GREEN); `ENVELOPE_AXIS_KEYS` in
   `consoleScript.ts` is the single source the component and the test share.
+- **(4) Comprehension standard (team policy): no unexplained jargon.** The console is
+  dense with AIPe vocabulary (journey, unit, envelope, cost-index, gated, wave,
+  worktree, gate, ledger). A **plain-language key** sits beneath the console
+  (`ConsoleSection.tsx`) defining every one of those nouns in one short, localised
+  sentence — so a reader with no AIPe words can follow it. It is a static reference,
+  NOT more text on the stage (round 2's one-caption-per-beat rule stands). `console.
+  glossary` in both dicts + `GLOSSARY_TERMS` in `consoleScript.ts` are the single
+  source; `captions.i18n.test.ts` asserts every noun is defined, in both locales, as a
+  real phrase (not a bare token) and actually translated pt≠en.
 
 ## Scope
 
