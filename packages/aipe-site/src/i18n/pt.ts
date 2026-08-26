@@ -39,10 +39,20 @@ const pt: Translations = {
     copied: "copiado",
     seeHow: "Veja como funciona →",
     readDocs: "Ler a documentação",
-    sceneCaption: "uma demanda — o terminal, e as decisões que ela dispara",
+    scene: {
+      coordinator: "coordenador",
+      dispatch: "despacha",
+      pr: "PRs voltam",
+    },
   },
 
   console: {
+    section: {
+      eyebrow: "Veja rodando",
+      title: "Uma demanda, executada passo a passo.",
+      lead:
+        "É uma jornada real acontecendo. O terminal à esquerda são os comandos que de fato rodam; o palco à direita são as decisões e alocações que cada um dispara. Avance passo a passo, ou deixe rodar.",
+    },
     title: "O Console",
     journeyPrefix: "· jornada",
     terminalHeader: "terminal — o que realmente roda",
@@ -74,6 +84,12 @@ const pt: Translations = {
       "qa-block": "sem verificar, não dá merge",
       verify: "verificado pela QA",
       merged: "merge feito · travado",
+    },
+    axes: {
+      mode: "modo",
+      harness: "harness",
+      tier: "tier",
+      effort: "esforço",
     },
     labels: {
       coordinator: "coordenador",

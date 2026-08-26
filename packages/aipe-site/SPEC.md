@@ -123,6 +123,37 @@ Everything on the stage is still DERIVED (`scheduleWaves`, `validateBatch`,
 `priceEnvelope`, `matchSkills`, the ledger `evaluateAttempt`), never hand-set. The
 i18n, the anchor fix (D) and the version fix (E) from v1 are unchanged.
 
+## Journey j-20260826-19 — hero, console scale, console i18n
+
+Three targeted changes; round 2 (Terminal + Stage, two-way domain search, landing/docs
+i18n, anchor + version fixes) is preserved, not rebuilt.
+
+- **(1) A hero worthy of the product.** The old gradient-only hero is replaced by an
+  animated backdrop that *is* AIPe's nature: a coordinator core fans specialist
+  dispatch pulses out to a column of repo nodes, and each landing pulse sends a PR
+  token back to merge at the core. It is a bespoke **Canvas 2D** scene
+  (`hero/HeroCanvas.tsx`) — reference-calibre depth/motion (ambient parallax field,
+  additive-blended pulses, a breathing hub) taken from `embark-site/src/hero.ts`, but
+  truer to AIPe than generic particles and with **zero** new bundle weight (no `three`
+  dependency — a deliberate choice to hold the gzip budget). The headline stays plain
+  DOM (LCP element, paints before the canvas mounts); a scrim keeps copy at AA in both
+  themes; the canvas reads live theme vars and re-tints on toggle; the RAF loop stops
+  off-screen and on tab-hidden and is DPR-capped at 2. `prefers-reduced-motion` draws
+  one complete still frame (edges, nodes, frozen pulses **and** PR tokens). A legend
+  names the three things the motion shows, so it is documentation, not decoration.
+- **(2) The console gets its own near-full-viewport section.** `ConsoleScene` moves
+  out of the hero into `ConsoleSection.tsx`; each pane is `56vh` (min `23rem`) stacked
+  and `74vh` (max `48rem`) side-by-side, so terminal and stage both have room. At
+  320px the two panes stack, no horizontal overflow, text wraps and stays readable —
+  verified with Playwright (`overflowX:false`, equal stacked panes) not one screenshot.
+- **(3) The console's envelope-axis glosses go through i18n.** `mode / harness / tier /
+  effort` were hardcoded English in `Stage.tsx`; they now come from `console.axes` in
+  both dicts (`mode→modo`, `effort→esforço`; `harness`/`tier` kept as product jargon,
+  as elsewhere). The axis VALUES (`session · claude-code · reasoning · ultracode`) are
+  literal identifiers and stay English. `captions.i18n.test.ts` is extended to assert
+  every axis is glossed in both locales (RED→GREEN); `ENVELOPE_AXIS_KEYS` in
+  `consoleScript.ts` is the single source the component and the test share.
+
 ## Scope
 
 - **Landing** (in order): Hero + Dispatch Fan-Out · The problem · The company analogy ·

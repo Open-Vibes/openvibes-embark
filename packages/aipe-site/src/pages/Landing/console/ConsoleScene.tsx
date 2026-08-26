@@ -4,7 +4,7 @@ import { useInView } from "../../../lib/useInView";
 import { useReducedMotion } from "../../../lib/useReducedMotion";
 import Terminal from "./Terminal";
 import Stage, { type StageLabels } from "./Stage";
-import { buildFacts } from "./consoleScript";
+import { buildFacts, ENVELOPE_AXIS_KEYS, envelopeAxisValues } from "./consoleScript";
 import { buildBeats, foldScene, activeDecision as decisionAt, type DecisionId } from "./sceneModel";
 
 /**
@@ -28,6 +28,9 @@ export default function ConsoleScene() {
   const c = t.console;
   const facts = useMemo(() => buildFacts(), []);
   const beats = useMemo(() => buildBeats(facts), [facts]);
+  // Literal envelope axis values (session/claude-code/reasoning/ultracode) from the
+  // wave-1 specialist's real priced envelope; the glosses beside them come from i18n.
+  const axisValues = useMemo(() => envelopeAxisValues(facts.specialists[0]!), [facts]);
   const reduced = useReducedMotion();
   const { ref, inView } = useInView<HTMLDivElement>();
 
@@ -98,6 +101,10 @@ export default function ConsoleScene() {
     open: c.labels.open,
     rejected: c.labels.rejected,
     ledger: c.labels.ledger,
+    axes: ENVELOPE_AXIS_KEYS.map((key) => ({
+      gloss: c.axes[key],
+      value: axisValues[key],
+    })),
   };
 
   return (

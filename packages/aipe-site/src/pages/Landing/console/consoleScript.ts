@@ -160,6 +160,28 @@ export function qaGateOutcome() {
   return evaluateAttempt("delivered", { status: "merged" });
 }
 
+/* --------------------------------------------------- envelope axes (stage panel) */
+
+/**
+ * The four axes the stage's envelope panel prints, as `[gloss-key, literal-value]`.
+ * The KEYS are glosses the reader reads *about* the dispatch, so they are localised
+ * (see `console.axes` in the i18n dicts); the VALUES are literal identifiers from the
+ * real envelope (`priceEnvelope` inputs) and stay English in both locales. This is
+ * the single source the stage renders and `captions.i18n.test.ts` asserts against.
+ */
+export const ENVELOPE_AXIS_KEYS = ["mode", "harness", "tier", "effort"] as const;
+export type EnvelopeAxisKey = (typeof ENVELOPE_AXIS_KEYS)[number];
+
+/** The literal axis values, derived from the wave-1 specialist's priced envelope. */
+export function envelopeAxisValues(specialist: ConsoleSpecialist): Record<EnvelopeAxisKey, string> {
+  return {
+    mode: specialist.mode,
+    harness: specialist.harness,
+    tier: specialist.tier,
+    effort: specialist.intensity,
+  };
+}
+
 /* ------------------------------------------------------ terminal line shapes */
 
 export type LineTone = "ok" | "reject" | "gated" | "info" | "queued" | "muted";

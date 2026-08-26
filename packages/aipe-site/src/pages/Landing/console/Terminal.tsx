@@ -66,7 +66,7 @@ export default function Terminal({
   const currentIndex = terminalBeats.length - 1;
 
   return (
-    <div className="flex h-[26rem] flex-col border-b border-line-soft lg:h-[32rem] lg:border-b-0 lg:border-r">
+    <div className="flex h-[56vh] min-h-[23rem] flex-col border-b border-line-soft lg:h-[74vh] lg:max-h-[48rem] lg:border-b-0 lg:border-r">
       <div className="flex items-center gap-2 border-b border-line-soft bg-surface-2/50 px-3.5 py-2">
         <span className="flex gap-1.5" aria-hidden="true">
           <span className="h-2.5 w-2.5 rounded-full bg-state-failed/60" />

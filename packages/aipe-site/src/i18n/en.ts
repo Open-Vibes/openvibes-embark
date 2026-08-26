@@ -41,10 +41,21 @@ const en = {
     copied: "copied",
     seeHow: "See how it works →",
     readDocs: "Read the docs",
-    sceneCaption: "one demand — the terminal, and the decisions it sets off",
+    // Legend for the animated backdrop — names what its motion depicts.
+    scene: {
+      coordinator: "coordinator",
+      dispatch: "dispatch out",
+      pr: "PRs return",
+    },
   },
 
   console: {
+    section: {
+      eyebrow: "Watch it run",
+      title: "One demand, executed step by step.",
+      lead:
+        "This is a real journey playing out. The terminal on the left is the commands that actually run; the stage on the right is the decisions and allocations each one sets off. Step through it, or let it play.",
+    },
     title: "The Console",
     journeyPrefix: "· journey",
     terminalHeader: "terminal — what actually runs",
@@ -76,6 +87,15 @@ const en = {
       "qa-block": "can't merge unverified",
       verify: "verified by QA",
       merged: "merged · locked",
+    },
+    // Glosses for the stage's envelope axes. The VALUES (session, claude-code,
+    // reasoning, ultracode) are literal identifiers and stay English; these
+    // reader-facing axis names are localised.
+    axes: {
+      mode: "mode",
+      harness: "harness",
+      tier: "tier",
+      effort: "effort",
     },
     labels: {
       coordinator: "coordinator",
