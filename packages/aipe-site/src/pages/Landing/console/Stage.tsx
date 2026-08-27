@@ -34,6 +34,8 @@ export interface StageLabels {
   open: string;
   rejected: string;
   ledger: string;
+  /** Envelope axis rows: localised gloss + literal value, in display order. */
+  axes: { gloss: string; value: string }[];
 }
 
 export interface StageProps {
@@ -165,7 +167,7 @@ export default function Stage({ scene, caption, activeDecision, labels, reduced 
     activeDecision === "deliver" || activeDecision === "evidence" || activeDecision === "qa-block" || activeDecision === "verify" || activeDecision === "merged";
 
   return (
-    <div className="flex h-[26rem] flex-col lg:h-[32rem]">
+    <div className="flex h-[56vh] min-h-[23rem] flex-col lg:h-[74vh] lg:max-h-[48rem]">
       <div className="flex items-center gap-2 border-b border-line-soft bg-surface-2/50 px-3.5 py-2">
         <span aria-hidden="true" className="text-brand">◆</span>
         <span className="font-mono text-[10.5px] uppercase tracking-wide text-faint">{labels.header}</span>
@@ -195,14 +197,9 @@ export default function Stage({ scene, caption, activeDecision, labels, reduced 
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex flex-wrap gap-1.5">
-                    {[
-                      ["mode", "session"],
-                      ["harness", "claude-code"],
-                      ["tier", "reasoning"],
-                      ["effort", "ultracode"],
-                    ].map(([k, v]) => (
-                      <span key={k} className="rounded bg-surface-1 px-1.5 py-0.5 font-mono text-[10px] text-muted">
-                        <span className="text-faint">{k}</span> {v}
+                    {labels.axes.map((axis) => (
+                      <span key={axis.gloss} className="rounded bg-surface-1 px-1.5 py-0.5 font-mono text-[10px] text-muted">
+                        <span className="text-faint">{axis.gloss}</span> {axis.value}
                       </span>
                     ))}
                   </div>

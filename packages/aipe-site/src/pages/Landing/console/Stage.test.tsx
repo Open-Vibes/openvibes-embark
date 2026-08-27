@@ -11,6 +11,12 @@ const LABELS: StageLabels = {
   costIndex: "cost-index", gated: "gated", notMoney: "not money", wave: "wave", queued: "queued",
   running: "running", worktree: "worktree", evidenceGate: "evidence", qaGate: "QA", blocked: "blocked",
   open: "open", rejected: "rejected", ledger: "ledger",
+  axes: [
+    { gloss: "mode", value: "session" },
+    { gloss: "harness", value: "claude-code" },
+    { gloss: "tier", value: "reasoning" },
+    { gloss: "effort", value: "ultracode" },
+  ],
 };
 
 describe("Stage — renders standalone", () => {

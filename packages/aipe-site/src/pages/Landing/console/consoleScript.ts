@@ -160,6 +160,52 @@ export function qaGateOutcome() {
   return evaluateAttempt("delivered", { status: "merged" });
 }
 
+/* --------------------------------------------------- envelope axes (stage panel) */
+
+/**
+ * The four axes the stage's envelope panel prints, as `[gloss-key, literal-value]`.
+ * The KEYS are glosses the reader reads *about* the dispatch, so they are localised
+ * (see `console.axes` in the i18n dicts); the VALUES are literal identifiers from the
+ * real envelope (`priceEnvelope` inputs) and stay English in both locales. This is
+ * the single source the stage renders and `captions.i18n.test.ts` asserts against.
+ */
+export const ENVELOPE_AXIS_KEYS = ["mode", "harness", "tier", "effort"] as const;
+export type EnvelopeAxisKey = (typeof ENVELOPE_AXIS_KEYS)[number];
+
+/** The literal axis values, derived from the wave-1 specialist's priced envelope. */
+export function envelopeAxisValues(specialist: ConsoleSpecialist): Record<EnvelopeAxisKey, string> {
+  return {
+    mode: specialist.mode,
+    harness: specialist.harness,
+    tier: specialist.tier,
+    effort: specialist.intensity,
+  };
+}
+
+/* ----------------------------------------------- plain-language glossary keys */
+
+/**
+ * The console is dense with AIPe vocabulary a newcomer has never seen (journey,
+ * unit, envelope, wave, worktree, gate, ledger). Team policy: unexplained jargon is
+ * a finding — a reader with no AIPe vocabulary must be able to follow the console. So
+ * every noun the stage prints as a standing label gets one plain-language definition,
+ * shown as a key beneath the console. `label` is the term exactly as the stage renders
+ * it; `key` indexes its definition in `console.glossary` (localised, both locales).
+ * This is the single source the glossary component and its i18n test share.
+ */
+export const GLOSSARY_TERMS = [
+  { key: "journey", label: "journey" },
+  { key: "unit", label: "unit" },
+  { key: "envelope", label: "envelope" },
+  { key: "costIndex", label: "cost-index" },
+  { key: "gated", label: "gated" },
+  { key: "wave", label: "wave" },
+  { key: "worktree", label: "worktree" },
+  { key: "gate", label: "gate" },
+  { key: "ledger", label: "ledger" },
+] as const;
+export type GlossaryKey = (typeof GLOSSARY_TERMS)[number]["key"];
+
 /* ------------------------------------------------------ terminal line shapes */
 
 export type LineTone = "ok" | "reject" | "gated" | "info" | "queued" | "muted";

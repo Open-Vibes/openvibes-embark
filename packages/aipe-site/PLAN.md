@@ -112,6 +112,37 @@ Removed: `ConsoleSplit.tsx` (the fused, prose-card component). Wired `ConsoleSce
 into `Hero`. The `console` slice of `en.ts`/`pt.ts` is reshaped from step paragraphs to
 captions + object labels.
 
+## Journey j-20260826-19 — hero, console scale, console i18n
+
+- **Hero** — new `pages/Landing/hero/HeroCanvas.tsx`: a decorative Canvas 2D fan-out
+  (coordinator core → repo nodes; dispatch pulses out, PR tokens back; ambient parallax
+  field). Pure DOM/canvas, no new deps. `Hero.tsx` becomes a tall animated hero (min
+  `88vh`) with a two-layer scrim for AA contrast and a legend; it no longer embeds the
+  console. Perf: DPR≤2, RAF stops off-screen (IntersectionObserver) and on
+  `visibilitychange`; reduced-motion draws one static frame; palette read from live CSS
+  vars, re-tinted on the `<html>` class-toggle via a MutationObserver.
+- **Console section** — new `pages/Landing/ConsoleSection.tsx` wraps `ConsoleScene` in a
+  `Section id="console"`, added to `Landing` right after the hero. `Terminal.tsx` and
+  `Stage.tsx` pane heights go `26/32rem` → `56vh min-23rem` / `74vh max-48rem`. The
+  `grid-cols-1 lg:grid-cols-2` stacking (round 2) is unchanged, so 320px stacks; proven
+  by a Playwright pass at 320/1280 in light/dark/reduced (no horizontal overflow, equal
+  panes). New i18n `console.section` copy (eyebrow/title/lead) explains what to watch.
+- **Console i18n** — `ENVELOPE_AXIS_KEYS` + `envelopeAxisValues()` added to
+  `consoleScript.ts`; `StageLabels.axes` renders localised glosses from `console.axes`
+  in both dicts; `ConsoleScene` builds the rows. `captions.i18n.test.ts` extended
+  (RED→GREEN) to require every axis glossed in both locales and the plain ones
+  (`mode`/`effort`) actually translated. `Stage.test.tsx` fixture updated with `axes`.
+- **Comprehension key** — `GLOSSARY_TERMS` in `consoleScript.ts` + `console.glossary`
+  in both dicts define every AIPe noun the stage prints (journey, unit, envelope,
+  cost-index, gated, wave, worktree, gate, ledger). `ConsoleSection` renders them as a
+  responsive definition grid beneath the console (3-col → 1-col at 320px). Tests assert
+  both locales define every term, each definition is a real phrase (len > term+6, has a
+  space) not a bare token, pt≠en, and the set covers the stage's labels.
+
+Evidence: `bun test` (all suites), `tsc --noEmit` silent, `bun run build` clean with
+gzip reported, and a Playwright responsive/theme/reduced-motion sweep (screenshots +
+overflow/stacking assertions). This repo has **no CI on PRs**, so QA is the only gate.
+
 ## Consistency with the monorepo
 
 `.embark.jsonc` (cloudflare-pages, subdomain `aipe`, useSubmodule false), the
