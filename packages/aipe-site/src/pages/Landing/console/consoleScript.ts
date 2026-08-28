@@ -196,7 +196,10 @@ export function envelopeAxisValues(specialist: ConsoleSpecialist): Record<Envelo
 export const GLOSSARY_TERMS = [
   { key: "journey", label: "journey" },
   { key: "unit", label: "unit" },
+  { key: "sddLite", label: "sdd-lite" },
   { key: "envelope", label: "envelope" },
+  { key: "harness", label: "harness" },
+  { key: "tier", label: "tier" },
   { key: "costIndex", label: "cost-index" },
   { key: "gated", label: "gated" },
   { key: "wave", label: "wave" },
@@ -205,6 +208,41 @@ export const GLOSSARY_TERMS = [
   { key: "ledger", label: "ledger" },
 ] as const;
 export type GlossaryKey = (typeof GLOSSARY_TERMS)[number]["key"];
+
+/**
+ * The comprehension contract that stops this finding's whole CLASS from returning.
+ *
+ * Every AIPe-vocabulary token a visitor READS on the console surface — the stage
+ * pipeline nodes, the routed-kit pill, the envelope axis chips — that a newcomer
+ * cannot be expected to know is declared here, spelled exactly as the stage prints
+ * it. `glossary.coverage.test.ts` crosses this list against `GLOSSARY_TERMS` (by
+ * `label`) and the two locale glossaries: a term listed here with no rendered,
+ * bilingual plain-language entry FAILS the build. That is precisely how this
+ * finding was born — `sdd-lite (floor/base)` was shown on the pill but never
+ * explained — so surfacing a new jargon term now costs a glossary entry, in both
+ * languages, mechanically, instead of depending on anyone to remember.
+ *
+ * Plain-English status words the stage also prints (queued, running, blocked,
+ * open, rejected, delivered, verified, merged) and self-explanatory role/axis
+ * words (coordinator, mode, effort) are deliberately NOT here: they carry their
+ * ordinary meaning, so a gloss would add noise, not comprehension. See the
+ * task's vocabulary sweep for the full ruling on each.
+ */
+export const PRESENTED_VOCABULARY = [
+  "journey",
+  "unit",
+  "sdd-lite",
+  "envelope",
+  "harness",
+  "tier",
+  "cost-index",
+  "gated",
+  "wave",
+  "worktree",
+  "gate",
+  "ledger",
+] as const;
+export type PresentedTerm = (typeof PRESENTED_VOCABULARY)[number];
 
 /* ------------------------------------------------------ terminal line shapes */
 
