@@ -41,10 +41,21 @@ const en = {
     copied: "copied",
     seeHow: "See how it works →",
     readDocs: "Read the docs",
-    sceneCaption: "one demand — the terminal, and the decisions it sets off",
+    // Legend for the animated backdrop — names what its motion depicts.
+    scene: {
+      coordinator: "coordinator",
+      dispatch: "dispatch out",
+      pr: "PRs return",
+    },
   },
 
   console: {
+    section: {
+      eyebrow: "Watch it run",
+      title: "One demand, executed step by step.",
+      lead:
+        "This is a real journey playing out. The terminal on the left is the commands that actually run; the stage on the right is the decisions and allocations each one sets off. Step through it, or let it play.",
+    },
     title: "The Console",
     journeyPrefix: "· journey",
     terminalHeader: "terminal — what actually runs",
@@ -76,6 +87,29 @@ const en = {
       "qa-block": "can't merge unverified",
       verify: "verified by QA",
       merged: "merged · locked",
+    },
+    // Plain-language key for the console's own vocabulary — so a reader with no
+    // AIPe words can follow it. Keyed by `GLOSSARY_TERMS` in consoleScript.ts.
+    glossary: {
+      title: "The words, in plain language",
+      journey: "the durable record of one demand, from start to merge",
+      unit: "one repo's slice of the work — here, the aipe-site package",
+      envelope: "a way to run a unit (mode · tier · effort) and what it costs",
+      costIndex: "a coarse number to compare runs — never money",
+      gated: "needs the Product Engineer's sign-off before it can run",
+      wave: "work that runs at once; the same package waits for the next wave",
+      worktree: "an isolated copy of the repo, so parallel runs never collide",
+      gate: "a check that blocks “done” until it's proven — evidence, then QA",
+      ledger: "the append-only record every step is written to",
+    },
+    // Glosses for the stage's envelope axes. The VALUES (session, claude-code,
+    // reasoning, ultracode) are literal identifiers and stay English; these
+    // reader-facing axis names are localised.
+    axes: {
+      mode: "mode",
+      harness: "harness",
+      tier: "tier",
+      effort: "effort",
     },
     labels: {
       coordinator: "coordinator",

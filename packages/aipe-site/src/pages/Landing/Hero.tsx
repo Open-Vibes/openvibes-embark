@@ -1,44 +1,57 @@
 import CopyButton from "../../components/CopyButton";
-import ConsoleScene from "./console/ConsoleScene";
+import HeroCanvas from "./hero/HeroCanvas";
 import { useI18n } from "../../i18n";
 
 const INSTALL = "curl -fsSL https://aipe.openvibes.tech/cli | sh";
 
+/**
+ * The hero. The headline is plain DOM text so it paints immediately (the LCP
+ * element); the animated fan-out (`HeroCanvas`) sits behind it and starts its loop
+ * only after mount. A scrim gradient keeps the copy at AA contrast over the scene in
+ * both themes. A small legend names what the backdrop shows, so the motion is
+ * documentation rather than decoration — a reader with no AIPe vocabulary can read it.
+ */
 export default function Hero() {
   const { t } = useI18n();
   return (
-    <header className="relative overflow-hidden px-5 sm:px-6 pt-28 sm:pt-32 pb-16 sm:pb-20">
+    <header className="relative flex min-h-[88vh] items-center overflow-hidden px-5 pb-16 pt-28 sm:px-6 sm:pt-32">
+      {/* The scene itself — decorative, behind everything. */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10">
+        <HeroCanvas />
+      </div>
+      {/* Contrast scrim: anchors the copy column in both themes without hiding the scene. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 opacity-70"
+        className="pointer-events-none absolute inset-0 -z-10"
         style={{
           background:
-            "radial-gradient(60rem 40rem at 70% -10%, rgb(var(--brand) / 0.16), transparent 60%), radial-gradient(50rem 30rem at 0% 20%, rgb(var(--st-delivered) / 0.10), transparent 55%)",
+            "linear-gradient(100deg, rgb(var(--bg)) 0%, rgb(var(--bg) / 0.9) 30%, rgb(var(--bg) / 0.45) 50%, transparent 66%), linear-gradient(to bottom, rgb(var(--bg) / 0.55) 0%, transparent 20%, transparent 80%, rgb(var(--bg) / 0.55) 100%)",
         }}
       />
-      <div className="mx-auto max-w-content">
+
+      <div className="mx-auto w-full max-w-content">
         <div className="max-w-2xl">
-          <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-1 px-3 py-1 font-mono text-[12px] text-muted">
+          <p className="inline-flex items-center gap-2 rounded-full border border-line bg-surface-1/80 px-3 py-1 font-mono text-[12px] text-muted backdrop-blur-sm">
             <span className="text-brand" aria-hidden="true">◆</span>
             {t.hero.eyebrow}
           </p>
 
-          <h1 className="mt-5 font-display text-4xl sm:text-5xl lg:text-[3.4rem] font-bold leading-[1.05] tracking-tight text-text">
+          <h1 className="mt-5 font-display text-4xl font-bold leading-[1.05] tracking-tight text-text sm:text-5xl lg:text-[3.4rem]">
             {t.hero.headlineLine1}
             <br />
             <span className="text-brand">{t.hero.headlineLine2}</span>
           </h1>
 
-          <p className="mt-5 text-lg text-muted leading-relaxed">
+          <p className="mt-5 text-lg leading-relaxed text-muted">
             {t.hero.bodyBefore}
             <span className="text-text">{t.hero.bodyEmphasis}</span>
             {t.hero.bodyAfter}
           </p>
 
-          <div className="mt-7 flex flex-col sm:flex-row gap-3 sm:items-center">
-            <div className="flex items-center gap-3 rounded-xl border border-line bg-surface-1 px-4 py-3 font-mono text-[13px] text-text">
-              <span className="text-faint select-none" aria-hidden="true">$</span>
-              <code className="whitespace-nowrap overflow-x-auto">{INSTALL}</code>
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-3 rounded-xl border border-line bg-surface-1/80 px-4 py-3 font-mono text-[13px] text-text backdrop-blur-sm">
+              <span className="select-none text-faint" aria-hidden="true">$</span>
+              <code className="overflow-x-auto whitespace-nowrap">{INSTALL}</code>
               <CopyButton value={INSTALL} label={t.hero.copy} copiedLabel={t.hero.copied} className="ml-auto shrink-0" />
             </div>
           </div>
@@ -47,18 +60,26 @@ export default function Hero() {
             <a href="#how" className="font-medium text-brand hover:underline">
               {t.hero.seeHow}
             </a>
-            <a href="/docs" className="font-medium text-muted hover:text-text transition-colors">
+            <a href="/docs" className="font-medium text-muted transition-colors hover:text-text">
               {t.hero.readDocs}
             </a>
           </div>
-        </div>
 
-        {/* The signature scene — two independent components: the terminal (what
-            actually runs) and the stage (the decisions and allocations happening).
-            Fixed height, so it never shifts the page as it plays. */}
-        <div className="mt-12 sm:mt-14">
-          <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.2em] text-faint">{t.hero.sceneCaption}</p>
-          <ConsoleScene />
+          {/* Legend — names the three things the backdrop shows. */}
+          <ul className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-[11px] text-faint">
+            <li className="flex items-center gap-2">
+              <span aria-hidden="true" className="inline-block h-2.5 w-2.5 rounded-full bg-brand shadow-[0_0_10px_2px] shadow-brand/50" />
+              {t.hero.scene.coordinator}
+            </li>
+            <li className="flex items-center gap-2">
+              <span aria-hidden="true" className="inline-block h-2 w-2 rounded-full bg-brand-strong" />
+              {t.hero.scene.dispatch}
+            </li>
+            <li className="flex items-center gap-2">
+              <span aria-hidden="true" className="inline-block h-2 w-2 rotate-45 bg-state-verified" />
+              {t.hero.scene.pr}
+            </li>
+          </ul>
         </div>
       </div>
     </header>

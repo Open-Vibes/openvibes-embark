@@ -39,10 +39,20 @@ const pt: Translations = {
     copied: "copiado",
     seeHow: "Veja como funciona →",
     readDocs: "Ler a documentação",
-    sceneCaption: "uma demanda — o terminal, e as decisões que ela dispara",
+    scene: {
+      coordinator: "coordenador",
+      dispatch: "despacha",
+      pr: "PRs voltam",
+    },
   },
 
   console: {
+    section: {
+      eyebrow: "Veja rodando",
+      title: "Uma demanda, executada passo a passo.",
+      lead:
+        "É uma jornada real acontecendo. O terminal à esquerda são os comandos que de fato rodam; o palco à direita são as decisões e alocações que cada um dispara. Avance passo a passo, ou deixe rodar.",
+    },
     title: "O Console",
     journeyPrefix: "· jornada",
     terminalHeader: "terminal — o que realmente roda",
@@ -74,6 +84,24 @@ const pt: Translations = {
       "qa-block": "sem verificar, não dá merge",
       verify: "verificado pela QA",
       merged: "merge feito · travado",
+    },
+    glossary: {
+      title: "As palavras, em linguagem simples",
+      journey: "o registro durável de uma demanda, do início ao merge",
+      unit: "a fatia de trabalho de um repo — aqui, a package aipe-site",
+      envelope: "um jeito de rodar uma unidade (modo · tier · esforço) e seu custo",
+      costIndex: "um número relativo para comparar execuções — nunca dinheiro",
+      gated: "precisa da aprovação do Product Engineer antes de rodar",
+      wave: "trabalho que roda de uma vez; a mesma package espera a próxima wave",
+      worktree: "uma cópia isolada do repo, para execuções paralelas nunca colidirem",
+      gate: "uma checagem que barra o “feito” até ser provado — evidência, depois QA",
+      ledger: "o registro append-only onde cada passo é escrito",
+    },
+    axes: {
+      mode: "modo",
+      harness: "harness",
+      tier: "tier",
+      effort: "esforço",
     },
     labels: {
       coordinator: "coordenador",

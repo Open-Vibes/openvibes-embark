@@ -1,4 +1,5 @@
 import Hero from "./Hero";
+import ConsoleSection from "./ConsoleSection";
 import ProblemSection from "./ProblemSection";
 import CompanySection from "./CompanySection";
 import HowItWorks from "./HowItWorks";
@@ -11,6 +12,7 @@ export default function Landing() {
   return (
     <>
       <Hero />
+      <ConsoleSection />
       <ProblemSection />
       <CompanySection />
       <HowItWorks />
