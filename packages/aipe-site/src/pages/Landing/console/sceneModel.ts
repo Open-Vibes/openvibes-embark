@@ -16,8 +16,9 @@
  * hand-set.
  */
 
-import { buildFacts, type ConsoleFacts, type LeftLine } from "./consoleScript";
+import { buildFacts, fillScript, type ConsoleFacts, type ConsoleScript, type LeftLine } from "./consoleScript";
 import type { LedgerStatus } from "../../../domain/states";
+import en from "../../../i18n/en";
 
 export type DecisionId =
   | "demand"
@@ -102,7 +103,16 @@ function decision(
   ];
 }
 
-export function buildBeats(facts: ConsoleFacts = buildFacts()): Beat[] {
+/**
+ * Build the beat stream. `script` is the localised narration (the SPEECH half of
+ * the roteiro); it defaults to English so the pure derivations stay locale-free in
+ * tests. The COMMAND / machine-output half is written inline below and is
+ * identical in every locale — see the boundary rule in `consoleScript.ts`.
+ */
+export function buildBeats(
+  facts: ConsoleFacts = buildFacts(),
+  script: ConsoleScript = en.console.script,
+): Beat[] {
   const [lawson, viola] = facts.specialists;
   if (!lawson || !viola) return [];
 
@@ -113,14 +123,17 @@ export function buildBeats(facts: ConsoleFacts = buildFacts()): Beat[] {
   const pairs: [Omit<Beat, "index">, Omit<Beat, "index">][] = [
     decision(
       "demand",
-      [{ kind: "prompt", text: facts.demand.text, tone: "info" }],
+      // SPEECH — the PE's spoken demand.
+      [{ kind: "prompt", text: script.demand, tone: "info" }],
       { t: "coordinator" },
     ),
     decision(
       "journey",
       [
+        // COMMAND — literal, English in both locales.
         { kind: "command", text: `aipe journey start --demand "aipe public site"` },
-        { kind: "output", text: `JOURNEY ${facts.journey}  ·  1 demand → 1 ledger`, tone: "ok" },
+        // OUTPUT — the id is literal; the tail ("1 demand → 1 ledger") is narration.
+        { kind: "output", text: `JOURNEY ${facts.journey}  ·  ${script.oneDemandOneLedger}`, tone: "ok" },
       ],
       { t: "journey" },
     ),
@@ -129,7 +142,8 @@ export function buildBeats(facts: ConsoleFacts = buildFacts()): Beat[] {
       [
         {
           kind: "reply",
-          text: `⎇ ${facts.coordinator} › one producing unit: ${lawson.repo}/${lawson.package} (0 edges)`,
+          // SPEECH — the coordinator's reply; `{unit}` is a literal identifier.
+          text: `⎇ ${facts.coordinator} › ${fillScript(script.oneUnit, { unit: `${lawson.repo}/${lawson.package}` })}`,
           tone: "info",
         },
       ],
@@ -146,7 +160,8 @@ export function buildBeats(facts: ConsoleFacts = buildFacts()): Beat[] {
             tone: v.matched ? "ok" : "muted",
           }),
         ),
-        { kind: "output", text: `STATE routed → ${skill.routed.join(", ")}`, tone: "info" },
+        // "STATE" is the CLI banner (literal); "routed" is narration; the kit is literal.
+        { kind: "output", text: `STATE ${script.routed} → ${skill.routed.join(", ")}`, tone: "info" },
       ],
       { t: "route" },
     ),
@@ -159,7 +174,8 @@ export function buildBeats(facts: ConsoleFacts = buildFacts()): Beat[] {
           text: `${lawson.mode} · ${lawson.harness} · ${lawson.tier} · ${lawson.intensity}   cost-index ${env.costIndex}`,
           tone: "info",
         },
-        { kind: "output", text: `GATED ${env.gateReasons.join(", ")} — awaiting PE signature`, tone: "gated" },
+        // "GATED" banner + literal reason token; "awaiting PE signature" is narration.
+        { kind: "output", text: `GATED ${env.gateReasons.join(", ")} — ${script.awaitingSignature}`, tone: "gated" },
       ],
       { t: "envelope" },
     ),
@@ -168,7 +184,8 @@ export function buildBeats(facts: ConsoleFacts = buildFacts()): Beat[] {
       [
         { kind: "command", text: `aipe dispatch validate --batch ${lawson.id},${viola.id}` },
         { kind: "output", text: `REJECT ${lawReason}`, tone: "reject" },
-        { kind: "output", text: `→ serialize: wave 1 [${lawson.id}] · wave 2 [${viola.id}]`, tone: "info" },
+        // "serialize" is narration; wave numbers and ids are literal.
+        { kind: "output", text: `→ ${script.serialize}: wave 1 [${lawson.id}] · wave 2 [${viola.id}]`, tone: "info" },
       ],
       { t: "serialize" },
     ),
@@ -201,7 +218,8 @@ export function buildBeats(facts: ConsoleFacts = buildFacts()): Beat[] {
     decision(
       "evidence",
       [
-        { kind: "command", text: `aipe journey record --status delivered   # no evidence` },
+        // The command is literal; the trailing `#` comment is narration.
+        { kind: "command", text: `aipe journey record --status delivered   # ${script.noEvidence}` },
         { kind: "output", text: `REJECT ${facts.evidenceGate.gateCode}`, tone: "reject" },
       ],
       { t: "reject", gate: "evidence" },
@@ -209,8 +227,9 @@ export function buildBeats(facts: ConsoleFacts = buildFacts()): Beat[] {
     decision(
       "qa-block",
       [
-        { kind: "command", text: `aipe journey record --status merged   # straight from delivered` },
-        { kind: "output", text: `REJECT ${facts.qaGate.gateCode}: not verified`, tone: "reject" },
+        // The command is literal; the `#` comment is narration; "delivered" stays a status token.
+        { kind: "command", text: `aipe journey record --status merged   # ${script.straightFromDelivered}` },
+        { kind: "output", text: `REJECT ${facts.qaGate.gateCode}: ${script.notVerified}`, tone: "reject" },
       ],
       { t: "reject", gate: "qa" },
     ),
@@ -226,7 +245,8 @@ export function buildBeats(facts: ConsoleFacts = buildFacts()): Beat[] {
       "merged",
       [
         { kind: "command", text: `aipe journey record --status merged` },
-        { kind: "output", text: `OK merged  (immutable)`, tone: "ok" },
+        // "OK merged" is banner + status token (literal); "(immutable)" is narration.
+        { kind: "output", text: `OK merged  (${script.immutable})`, tone: "ok" },
       ],
       { t: "merged" },
     ),

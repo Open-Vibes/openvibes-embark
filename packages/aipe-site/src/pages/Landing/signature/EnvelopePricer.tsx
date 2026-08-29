@@ -16,19 +16,27 @@ import { HARNESS_IDS, type HarnessId } from "../../../domain/harness";
 import { useReducedMotion } from "../../../lib/useReducedMotion";
 import { useI18n } from "../../../i18n";
 
+/** The localised sentence templates a `gateReasons` token is wrapped in. */
+interface GateReasonCopy {
+  gateIntensityNeedsSignature: (intensity: string) => string;
+  gateTierNeedsSignature: (tier: string) => string;
+}
+
 /**
  * Turn one raw `gateReasons` token from the domain module into a sentence the
  * reader can act on. Pure and total — every reason the pricer can emit maps to
- * a label, and anything unknown is passed through verbatim (never dropped).
- * Kept exported + colocated-tested so the copy can't silently drift from the
- * policy tokens `priceEnvelope` actually returns.
+ * a label, and anything unknown is passed through verbatim (never dropped). The
+ * token (ultracode, frontier, …) is a literal identifier and stays English; the
+ * sentence around it comes from i18n and translates. Kept exported + colocated-
+ * tested so the copy can't silently drift from the policy tokens `priceEnvelope`
+ * actually returns.
  */
-export function gateReasonLabel(reason: string): string {
+export function gateReasonLabel(reason: string, copy: GateReasonCopy): string {
   if (reason.startsWith("intensity:")) {
-    return `${reason.slice("intensity:".length)} intensity needs your signature`;
+    return copy.gateIntensityNeedsSignature(reason.slice("intensity:".length));
   }
   if (reason.startsWith("tier:")) {
-    return `${reason.slice("tier:".length)} tier needs your signature`;
+    return copy.gateTierNeedsSignature(reason.slice("tier:".length));
   }
   return reason;
 }
@@ -256,7 +264,7 @@ export default function EnvelopePricer() {
                   {priced.gateReasons.map((r) => (
                     <li key={r} className="text-[11.5px] leading-tight text-muted">
                       <span className="font-mono text-state-escalated">{r}</span>
-                      <span className="text-faint"> — {gateReasonLabel(r)}</span>
+                      <span className="text-faint"> — {gateReasonLabel(r, e18n)}</span>
                     </li>
                   ))}
                 </ul>

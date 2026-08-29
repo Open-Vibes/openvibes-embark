@@ -255,6 +255,63 @@ export interface LeftLine {
   tone?: LineTone;
 }
 
+/* --------------------------------------------- the command/speech boundary rule */
+
+/**
+ * THE COMMAND/SPEECH BOUNDARY — read this before adding a terminal line.
+ *
+ * The console types out a roteiro, and it is the part of the page a visitor reads
+ * most, because it is the part that moves. Every line is one of two things, and
+ * the next line must be born on the right side:
+ *
+ *  • COMMAND / MACHINE OUTPUT — *code*, English in every locale. It is what the
+ *    person would literally type or what the machine literally prints: `aipe`
+ *    verbs and flags (`--status merged`, `--pr #15`), the harness/mode/tier/effort
+ *    values kept English across this whole site (`session`, `claude-code`,
+ *    `reasoning`, `ultracode`), ledger status tokens (`dispatched`/`delivered`/
+ *    `verified`/`merged`), identifiers (journey ids, fqids, worktree paths,
+ *    `cost-index 64`), the UPPERCASE banners a real CLI prints (`OK`, `REJECT`,
+ *    `GATED`, `MATCH`, `SKIP`, `STATE`, `JOURNEY`), and anything DERIVED from the
+ *    proven domain layer (skill-match reasons like `floor`, gate codes like
+ *    `evidence-required`/`qa-gate`, the law's `same-package …` reason). A
+ *    translated command would be a lie — nobody types `aipe jornada registrar`.
+ *    In `buildBeats`, write these inline as literal strings.
+ *
+ *  • NARRATION / SPEECH — *prose*, and it translates. The PE's spoken demand, the
+ *    coordinator's spoken reply, the `#` comments, and the explanatory clauses a
+ *    real CLI would not print but the console adds to be readable ("one producing
+ *    unit …", "awaiting PE signature", "not verified", "1 demand → 1 ledger",
+ *    "(immutable)"). In `buildBeats`, these NEVER appear inline — they come from
+ *    the localised `console.script` dict, keyed by `SCRIPT_KEYS` below.
+ *
+ * The gate that keeps it honest is `script.i18n.test.ts` (the brother of
+ * `glossary.coverage.test.ts`): every key in `SCRIPT_KEYS` must have an EN/PT pair
+ * that actually differs, commands must stay byte-identical across locales, and no
+ * English narration may survive in the rendered PT transcript. A roteiro line with
+ * no EN/PT pair breaks the build — that is how the roteiro stops regressing.
+ */
+export const SCRIPT_KEYS = [
+  "demand",
+  "oneDemandOneLedger",
+  "oneUnit",
+  "routed",
+  "awaitingSignature",
+  "serialize",
+  "noEvidence",
+  "straightFromDelivered",
+  "notVerified",
+  "immutable",
+] as const;
+export type ScriptKey = (typeof SCRIPT_KEYS)[number];
+
+/** The localised narration the terminal speaks — one string per `SCRIPT_KEYS` entry. */
+export type ConsoleScript = Record<ScriptKey, string>;
+
+/** Interpolate `{name}` placeholders in a narration string with literal values. */
+export function fillScript(template: string, vars: Record<string, string> = {}): string {
+  return template.replace(/\{(\w+)\}/g, (whole, name) => vars[name] ?? whole);
+}
+
 /* ------------------------------------------------------------------- the facts */
 
 export interface ConsoleFacts {

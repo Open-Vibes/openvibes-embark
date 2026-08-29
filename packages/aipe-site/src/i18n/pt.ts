@@ -85,6 +85,22 @@ const pt: Translations = {
       verify: "verificado pela QA",
       merged: "merge feito · travado",
     },
+    // Ver a REGRA (fronteira comando/fala) e SCRIPT_KEYS em consoleScript.ts: só a
+    // narração vive aqui e traduz; comandos, tokens de máquina e identificadores
+    // ficam em inglês. `{unit}` é um identificador literal, injetado na renderização.
+    script: {
+      demand:
+        "Precisamos do site público da AIPe — uma package em openvibes-embark. Faça um site genuinamente bom, e que MOSTRE o trabalho multi-agente e multi-harness em vez de descrevê-lo.",
+      oneDemandOneLedger: "1 demanda → 1 ledger",
+      oneUnit: "uma unidade produtora: {unit} (0 arestas)",
+      routed: "roteado",
+      awaitingSignature: "aguardando assinatura do PE",
+      serialize: "serializa",
+      noEvidence: "sem evidência",
+      straightFromDelivered: "direto do delivered",
+      notVerified: "não verificado",
+      immutable: "imutável",
+    },
     glossary: {
       title: "As palavras, em linguagem simples",
       journey: "o registro durável de uma demanda, do início ao merge",
@@ -292,6 +308,10 @@ const pt: Translations = {
     sessionRequiresContainable:
       "O modo sessão exige um harness contível; este não pode ser contido sem supervisão.",
     gated: "TRAVADO — precisa da assinatura do PE",
+    // O token de domínio (ultracode, frontier, …) é literal e fica em inglês; a
+    // frase ao redor traduz. Ver `gateReasonLabel`.
+    gateIntensityNeedsSignature: (intensity: string) => `intensidade ${intensity} precisa da sua assinatura`,
+    gateTierNeedsSignature: (tier: string) => `tier ${tier} precisa da sua assinatura`,
     ungated: "LIVRE",
     autoDispatchable: "— despacha automaticamente",
     perEnvelope: "por-envelope",
@@ -316,6 +336,9 @@ const pt: Translations = {
     lead: "Três passos até um coordenador funcionando. Sem passo de marketplace, nada instalado globalmente — a integração vive na pasta de workspace que você cria.",
     copy: "copiar",
     copied: "copiado",
+    // A única linha autoral do transcript (o resto é saída real do `aipe start`,
+    // que fica em inglês): um comentário `#` é narração, então traduz.
+    replayComment: "# abra a pasta no seu harness e é só dizer oi",
     steps: [
       { body: "Instale o binário standalone do aipe — sem precisar de Bun, Node ou npm." },
       { body: "Escolha seu harness e nomeie o workspace. Ele cria uma pasta aipe-<nome>/ publicável." },
