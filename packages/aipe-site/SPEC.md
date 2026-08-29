@@ -189,3 +189,133 @@ landing route).
 See `PLAN.md` §Acceptance — mirrors the assignment's acceptance list, with the
 non-trivial logic (ledger state machine, envelope cost-index, dispatch
 serialize/parallel/cap rules) covered by real `bun test` suites.
+
+## Journey j-20260829-b3 — compat-hero (Lawson)
+
+Five things in one delivery: (1) honest harness compatibility, (2) a per-harness
+accordion, (3) install ideology, (4) the hero = the PE's real flow, (5) the
+console glossary shows process order. Plus the PE's cross-cutting demand: the site
+must not read as *"AIPe is a Claude Code tool."* Every claim below was checked
+against `aipe/src/harness/*.ts` and `aipe/src/start/start.ts`, not memory.
+
+### (1)+(2) Compatibility — the truth, and the ruler
+
+Source-of-truth read from `aipe/src/harness`:
+
+| harness | adapter? | agentop hosts? | `aipe start` supported? | session-containable? | why (verbatim source) |
+|---|---|---|---|---|---|
+| claude-code | yes | yes (`claude`) | yes | **yes** | PreToolUse hook in `.claude/settings.json`, trusted headless |
+| gemini | yes | yes (`gemini`) | yes | **yes** | BeforeTool hook; folder-trust *disabled by default* → no prompt on a fresh worktree (`gemini.ts:82`) |
+| codex | yes | yes (`codex`) | yes | **no** | hook written but never trusted; needs interactive `/hooks`, no file-declarable trust (`codex.ts:61`); `containmentHook()` returns null |
+| copilot | yes | yes (`copilot`) | yes | **no** | directory-trust default-ON for any new folder; the file trust list is global + unconfirmed for hooks (`copilot.ts:43`); returns null |
+| generic | (fallback) | no (`null`) | yes (experimental) | **no** | file-only harness, no block-before-execute mechanism (`generic.ts:80`) |
+
+Key correction vs the old site: `codex`/`copilot` were shown with
+`workspaceStatus: "coming-soon"`. That is **wrong** — `start.ts` HARNESSES marks
+`claude-code, codex, gemini, copilot, generic` all `status: "supported"`; only
+`antigravity` + `cursor` are `coming-soon`. The site conflated *workspace
+availability* with *session containment*. The accordion now separates the two.
+
+**Host × contain number.** `agentop` HOSTS ten harnesses (the print, = the PDD
+list). AIPe fully CONTAINS two. Both true; the section names the distinction
+instead of hiding the smaller number. Modelled in `domain/harnessCompat.ts`
+(`AGENTOP_HOSTED_COUNT = 10`, `FULLY_CONTAINED_COUNT = 2`, locked to the pricer's
+`isSessionEligible` by `harnessCompat.test.ts`).
+
+**The percentage has a visible ruler** — five checks, each verifiable in
+`aipe/src/harness`, shown on the page: content-install · agentop-host ·
+dedicated-adapter · interception-hook · trusted-headless. `%` = passed/5.
+→ claude-code/gemini 100 · codex/copilot 80 · the six no-adapter 40. The first two
+checks (content + host) pass for all ten — that IS the "install content vs contain
+session" lesson: content install is the PDD-parity floor; headless containment is
+the AIPe-only bar.
+
+**No inflation.** The six PDD harnesses with no aipe adapter (Cursor, Antigravity,
+Factory Droid, Kimi Code, OpenCode, Pi) are marked `not verified` / generic-path
+only — never "supported." Each non-contained row carries the degraded path
+(subagent, or a human-accepted session) **and what you lose** (AIPe stops
+guaranteeing the agent can't leave its worktree).
+
+### (3) Install ideology
+
+The PE: *"AIPe is installable from its own CLI, not as a plugin."* The CODE agrees
+— `start.ts` header: *"a compiled standalone executable needs no Bun/Node/npm …
+installs into the workspace, never globally."* So the site's *"a Claude Code
+plugin"* diverges from **both** code and ideology → fixed as copy, not escalated.
+(An escalation would only be warranted if the *code* diverged from the ideology.)
+
+### (4) Hero — element → product mapping (fidelity, not decoration)
+
+`hero/HeroCanvas.tsx`, Canvas 2D, no new dependency. Each element maps to a real
+AIPe mechanic; anything without a mapping was cut:
+
+- four demand squares → demands entering **by area**;
+- PE node → where the demand enters the system;
+- coordinator node → decompose + dispatch;
+- four specialist nodes, each tagged with a **different harness** (`claude`,
+  `gemini`, `codex`, `antigravity`) → the multi-harness fan-out, *shown*;
+- shared node (`MCPs · skills`) → the shared frameworks every specialist draws on;
+- QA node the delivery passes **through** before a repo → the **wave-2** gate
+  (QA after the dev, not parallel);
+- a **red** token returning QA → specialist → the rejection + **correction loop**
+  (only-success would lie about the product);
+- repo squares → "integrated"; **two lanes deliver to the same square** → two
+  specialists in one repo at once, made lawful by path-lock (`j-20260826-xj`).
+
+`prefers-reduced-motion`: one complete static frame freezes a token on every lane
+— including the red rejection and the two-into-one convergence — so the whole
+story reads without motion or sound.
+
+### (5) Console glossary — order without lying about nature
+
+The twelve terms were a flat list. Classified against the aipe operate flow
+(`domain/dispatchLaw.ts`, `envelope.ts`, `ledger.ts`, and `how.operation` copy),
+justified here:
+
+- **Stages** (numbered 1–5, the timeline of one demand): `journey` (opened from
+  the demand) → `unit` (decomposed) → `sdd-lite` (each unit planned) → `wave`
+  (grouped + runs) → `gate` (evidence, then QA). A stage occupies a point in the
+  timeline.
+- **Concepts** (un-numbered — they attach to a stage, they are not one):
+  - *decisions* (how a dispatch is priced/gated): `envelope`, `tier`,
+    `cost-index`, `gated`;
+  - *things* (the machinery a stage runs on / writes to): `harness`, `worktree`,
+    `ledger`.
+
+Numbering all twelve would lie — a `ledger` is not a step, it is where steps are
+written. The one **non-linear** marker (discreet, no second colour system): `gate`
+carries a `↺` — a rejecting gate opens the correction loop, so the flow isn't a
+straight line. Encoded in `GLOSSARY_TERMS` (`kind` + `order` + `loops`), rendered
+by `ConsoleSection.tsx`, labels in `console.flow` (EN/PT).
+
+### Claude-centric sweep — full audit (found · changed · kept, and why)
+
+Criterion is the *impression*, not the word count: a visitor must not leave
+thinking AIPe is a Claude Code tool. Truthful Claude Code mentions are **framed,
+not deleted** (it is the default `aipe start` harness, the only one with full
+containment, and `aipe handoff` really writes `CLAUDE.md`).
+
+**Changed:**
+- `i18n` hero eyebrow `a Claude Code plugin` → `a standalone CLI, not a plugin` (EN+PT).
+- `i18n` hero body `turns Claude into a coordinator` → `turns your coding agent into a coordinator` (EN+PT).
+- `i18n` footer tagline `a Claude Code plugin that coordinates…` → `a standalone CLI … in the agent harness you choose` (EN+PT).
+- `i18n` company coordinator `The main Claude, with a name you give it` → `A coordinator agent you name, running in your harness — Claude Code by default` (role / persona / harness split) (EN+PT).
+- `i18n` harnessSection: `Four harnesses. Two can be contained.` → `Ten harnesses can host it. Two, AIPe can fully contain.` (EN+PT).
+- `HeroCanvas`: the fan-out now tags four **different** harnesses; the legend names them.
+- `GetStarted` transcript picker `❯ Claude Code` → the full supported list.
+- `installation.md`: `distributed as a Claude Code plugin` → `a standalone CLI … installs into whichever harness`.
+- `quickstart.md`: `aipe start offers only Claude Code` (outdated) → the five supported workspace harnesses + the "default and most complete, but not a Claude Code tool" framing; `cd … && claude` marked as **one example**.
+- `onboarding.md`: `each a skill in the plugin` → `a skill the coordinator runs`; `.claude/skills/…` persona path framed as the Claude Code path, with the Codex/Gemini/generic paths named.
+- `handoff.md`: `install the plugin` → `install AIPe`; added why the file is named `CLAUDE.md`.
+- `session-mode-dispatch.md`: the outdated "only Claude Code at `aipe start`" parenthetical → the two-axes (workspace vs containment) correction.
+
+**Kept, and why (truthful, framed as an option not the idea):**
+- `console` demo journey runs on `claude-code` — it is THIS site's real build journey; changing it would fake data. The harness section carries the multi-harness story.
+- `glossary.harness` def "here, Claude Code" — "here" already frames it as the example.
+- `session-mode-dispatch` containment table + cross-model-QA example (`claude-code` workspace dispatches QA to `gemini`) — accurate, and the example itself shows non-Claude use.
+- `execution-envelopes.md` harness axis lists all four ids — accurate.
+- `handoff` `CLAUDE.md` filename — the real artifact `aipe handoff` writes.
+
+### Evidence
+`bun test` 136/136 · `tsc --noEmit` clean · `vite build` clean · no new dependency
+(hero is Canvas 2D). Driven in the browser, both themes, both locales.

@@ -8,8 +8,9 @@ order: 1
 
 # Installation
 
-AIPe is distributed as a Claude Code plugin, driven by a single standalone `aipe`
-binary. You need no Bun, Node, or npm to run it.
+AIPe is a **standalone CLI**, not a plugin — a single `aipe` binary that installs
+its own integration into whichever agent harness you use. You need no Bun, Node,
+or npm to run it.
 
 ```sh
 curl -fsSL https://aipe.openvibes.tech/cli | sh

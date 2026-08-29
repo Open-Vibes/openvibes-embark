@@ -68,9 +68,13 @@ A unit's session harness is **independent of the workspace harness**. A
 cross-model second read of a delivery. All that requires is the `gemini` binary
 being present.
 
-(As a **workspace** harness at `aipe start`, only Claude Code — plus an
-experimental generic/`AGENTS.md` adapter — is offered today; `gemini`, `codex`,
-and `copilot` are listed coming-soon there.)
+(Two different axes, easy to conflate. As a **workspace** harness at `aipe start`,
+Claude Code, Codex, Gemini CLI, GitHub Copilot, and an experimental
+generic/`AGENTS.md` adapter are all supported today — Antigravity and Cursor are
+`coming-soon`. **Session containment** is the narrower bar in the table above:
+`codex` and `copilot` are fine as a *workspace* harness but are rejected as a
+*session dispatch target*, because that needs a hook trusted with no human
+present. See [harness compatibility](/#harness).)
 
 ## Session grant
 

@@ -28,7 +28,7 @@ const REPLAY: readonly Omit<TermLine, "text">[] = [
 
 const REPLAY_LITERAL: readonly (string | null)[] = [
   "aipe start",
-  "? Choose your agent harness:  ❯ Claude Code",
+  "? Choose your agent harness:  ❯ Claude Code · Codex · Gemini CLI · GitHub Copilot · generic",
   "? Workspace name:  minha-empresa",
   "aipe: checked which harnesses are available on this machine:",
   "aipe:  - OK claude-code claude 2.1.4",

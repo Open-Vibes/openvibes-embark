@@ -21,9 +21,11 @@ aipe handoff
 A handoff is a one-shot export. It captures what a collaborator needs to work
 effectively without adopting the whole framework: the shape of the context, the
 relevant conventions, and enough grounding for their harness to be useful. Because
-it is **standalone**, the recipient does not clone the workspace, install the
-plugin, or run onboarding — they drop the generated `CLAUDE.md` into their repo
-and go.
+it is **standalone**, the recipient does not clone the workspace, install AIPe,
+or run onboarding — they drop the generated `CLAUDE.md` into their repo and go.
+(The file is named `CLAUDE.md` because that is the artifact `aipe handoff`
+writes — the Claude-collaborator bridge; the export itself is harness-agnostic
+context.)
 
 ## Where it sits
 

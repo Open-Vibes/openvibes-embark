@@ -73,11 +73,15 @@ export default function Hero() {
             </li>
             <li className="flex items-center gap-2">
               <span aria-hidden="true" className="inline-block h-2 w-2 rounded-full bg-brand-strong" />
-              {t.hero.scene.dispatch}
+              {t.hero.scene.harnesses}
+            </li>
+            <li className="flex items-center gap-2">
+              <span aria-hidden="true" className="inline-block h-2 w-2 rounded-full bg-state-failed" />
+              {t.hero.scene.reject}
             </li>
             <li className="flex items-center gap-2">
               <span aria-hidden="true" className="inline-block h-2 w-2 rotate-45 bg-state-verified" />
-              {t.hero.scene.pr}
+              {t.hero.scene.repos}
             </li>
           </ul>
         </div>

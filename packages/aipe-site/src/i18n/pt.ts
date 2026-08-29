@@ -27,11 +27,11 @@ const pt: Translations = {
   },
 
   hero: {
-    eyebrow: "Engenheiro de Produto com IA · um plugin do Claude Code",
+    eyebrow: "Engenheiro de Produto com IA · uma CLI standalone, não um plugin",
     headlineLine1: "Você traz a demanda.",
     headlineLine2: "Ela comanda a área de engenharia.",
     bodyBefore:
-      "A AIPe transforma o Claude num coordenador de engenharia e você no Engenheiro de Produto. Entregue uma demanda; ela decompõe o trabalho, despacha um especialista por repositório ",
+      "A AIPe transforma o seu agente de código num coordenador de engenharia e você no Engenheiro de Produto. Entregue uma demanda; ela decompõe o trabalho, despacha um especialista por repositório ",
     bodyEmphasis: "em paralelo",
     bodyAfter:
       " — cada um isolado no seu próprio git worktree — e devolve PRs, sob uma única lei de despacho e um portão de evidências.",
@@ -41,8 +41,9 @@ const pt: Translations = {
     readDocs: "Ler a documentação",
     scene: {
       coordinator: "coordenador",
-      dispatch: "despacha",
-      pr: "PRs voltam",
+      harnesses: "fan-out · harnesses",
+      reject: "QA reprova → loop",
+      repos: "merge nos repos",
     },
   },
 
@@ -115,6 +116,18 @@ const pt: Translations = {
       worktree: "uma cópia isolada do repo, para execuções paralelas nunca colidirem",
       gate: "uma checagem que barra o “feito” até ser provado — evidência, depois QA",
       ledger: "o registro append-only onde cada passo é escrito",
+    },
+    // Ordem de leitura do glossário: as etapas numeradas acontecem em sequência; os
+    // conceitos (decisões e coisas) se ligam a uma etapa em vez de serem uma. Ver a
+    // classificação, justificada contra o fluxo operate do aipe, em SPEC.md.
+    flow: {
+      stepsTitle: "A ordem em que acontece",
+      conceptsTitle: "Os conceitos que se ligam a ela",
+      kindDecision: "decisão",
+      kindThing: "coisa",
+      loop: "pode voltar",
+      legend: "1–5 são as etapas, em ordem · um traço marca um conceito, não uma etapa · ↺ marca uma etapa que pode repetir",
+      loopNote: "um gate que reprova abre um loop de correção — o fluxo não é uma linha reta",
     },
     axes: {
       mode: "modo",
@@ -190,7 +203,7 @@ const pt: Translations = {
       },
       {
         role: "Coordenador",
-        who: "O Claude principal, com um nome que você dá a ele.",
+        who: "Um agente coordenador que você nomeia, rodando no seu harness — Claude Code por padrão.",
         does: "Lê o estado de cada repositório, decompõe cada demanda, despacha os especialistas, revisa o que volta e escala as decisões entre repositórios para você.",
       },
       {
@@ -263,32 +276,83 @@ const pt: Translations = {
     ],
   },
 
+  statement: {
+    lead: "Instalar conteúdo é fácil. ",
+    emphasis: "Conter uma sessão é a promessa",
+    trail: " — e é a razão inteira de a AIPe governar menos harnesses do que poderia hospedar.",
+    sub: "Toda outra ferramenta de agente copia uma skill e torce. A AIPe não inicia uma sessão que não consiga impedir de sair do worktree — então o número que ela suporta é menor, e honesto.",
+  },
+
   harnessSection: {
     eyebrow: "Multi-harness",
-    title: "Quatro harnesses. Dois podem ser contidos. Essa é a linha honesta.",
-    lead: "A AIPe pode despachar um especialista para diferentes CLIs de agente — e cruzar o trabalho de um modelo com o de outro. Mas o modo sessão precisa de contenção real, e só claude-code e gemini têm isso hoje. Escolha uma faixa e veja o que muda.",
+    title: "Dez harnesses podem hospedá-la. Dois, a AIPe consegue conter de verdade. Os dois números são honestos.",
+    lead: "O agentop pode rodar uma sessão da AIPe em qualquer um de dez CLIs de agente — os mesmos dez que o PDD alcança. Mas o modo sessão precisa de contenção real, e só claude-code e gemini passam nessa régua hoje. Aqui está cada harness, o que falta, e como rodar a AIPe nele mesmo assim.",
   },
 
   harnessBay: {
-    selected: "selecionado",
-    sessionEligible: "elegível para sessão",
-    notContainable: "não contível",
-    workspacePrefix: "workspace:",
-    sessionRejected: "despacho de sessão rejeitado",
-    containment: "Contenção: ",
-    whyNotContained: "Por que não pode ser contido: ",
-    workspaceHarnessAt: "Harness de workspace no",
-    geminiNoteBefore: " — ainda elegível para sessão como harness de despacho de ",
-    geminiNoteEmphasis: "unidade",
-    geminiNoteAfter: ", que é o que habilita o QA entre modelos.",
-    pending: "pendente",
-    pendingSr: "Nota de roadmap pendente: ",
-    pendingBefore: "A contenção de sessão para ",
-    pendingMiddle: " e ",
-    pendingNotShipped: " ",
-    pendingNotShippedEmphasis: "não foi lançada",
-    pendingAfter:
-      " — está travada num bypass de confiança não interativo e documentado para cada um. Até lá, a validação de despacho não assistida os rejeita de propósito.",
+    hostContain: {
+      hostLabel: "agentop hospeda",
+      hostNote: "CLIs de agente que o agentop consegue rodar numa sessão — os dez do print, os mesmos dez que o PDD alcança.",
+      containLabel: "AIPe contém de verdade",
+      containNote: "desses, os que a AIPe governa sem supervisão em modo sessão. Hospedar uma sessão e contê-la são trabalhos diferentes.",
+    },
+    installVsContain: {
+      title: "Instalar conteúdo, ou conter a sessão?",
+      body: "O PDD alcança dez harnesses porque instala CONTEÚDO — skills e prompts. Qualquer agente que lê um arquivo passa. A AIPe exige mais: ela precisa CONTER a sessão, o que pede um hook que barra um comando antes de ele rodar e é confiado sem nenhum humano presente. Instalar é fácil; conter é a promessa — e é por isso que o número de suporte pleno da AIPe é menor. Não menos capaz, mais responsável.",
+      rule: "aipe/src/harness/types.ts — “A harness whose adapter returns null cannot be contained — and is therefore NOT eligible for session-mode dispatch. That is the whole eligibility rule: AIPe never starts a session it cannot govern.”",
+    },
+    ruler: {
+      title: "Como o percentual é medido — cinco checagens, cada uma verificável em aipe/src/harness",
+      caps: {
+        contentInstall: "instala conteúdo",
+        agentopHost: "host do agentop",
+        dedicatedAdapter: "adapter dedicado",
+        interceptionHook: "hook de interceptação",
+        headlessContainment: "confiado sem humano",
+      },
+      hints: {
+        contentInstall: "a AIPe consegue escrever suas personas e skills aqui — nativamente, ou pelo caminho genérico AGENTS.md.",
+        agentopHost: "o agentop consegue iniciar e hospedar uma sessão neste harness.",
+        dedicatedAdapter: "existe um adapter nativo do aipe, não só o fallback genérico.",
+        interceptionHook: "esse adapter escreve um hook que barra antes de executar (PreToolUse / BeforeTool).",
+        headlessContainment: "o hook se sustenta sem nenhum humano presente — a checagem decisiva para despacho de sessão.",
+      },
+    },
+    row: {
+      hostedAs: "agentop:",
+      fullyContained: "contido de verdade",
+      adapterNotContained: "adapter · não contido",
+      notVerified: "não verificado",
+      whyContainedLabel: "Por que é contido:",
+      whyNotLabel: "Por que não é contido:",
+      whatsMissingLabel: "O que falta:",
+      howAnywayLabel: "Use mesmo assim:",
+      tradeoff: "troca",
+    },
+    degraded: {
+      howAnyway: "A AIPe ainda instala as personas e as skills. Rode o especialista como subagente dentro de uma sessão-pai contida, ou deixe uma pessoa iniciar a sessão e aceitar o prompt de confiança do harness uma vez.",
+      lose: "Você perde a garantia que a AIPe normalmente impõe — a de que o agente não sai do seu worktree. Essa garantia passa a ser sua.",
+    },
+    copy: {
+      "claude-code": {
+        why: "A AIPe escreve um hook PreToolUse em .claude/settings.json. Ele é confiado sem nenhum humano presente, então um despacho não assistido é totalmente governado — a contenção de referência com que todo outro adapter é comparado.",
+      },
+      gemini: {
+        why: "A AIPe escreve um hook BeforeTool em .gemini/settings.json. O folder-trust do Gemini é desligado por padrão, então um worktree novo carrega o hook sem prompt — contível, e é o que habilita o QA entre modelos.",
+      },
+      codex: {
+        missing: "Um caminho de confiança declarável em arquivo, para que o hook que a AIPe já escreve seja honrado sem alguém rodar /hooks na mão.",
+        why: "O Codex só confia num hook quando um humano roda /hooks interativamente — a confiança é por-hash-de-hook, sem jeito de auto-declarar em arquivo, e o despacho é não interativo. A AIPe escreve o hook; ele fica presente, bem-formado e nunca confiado, então containmentHook() devolve null de propósito.",
+      },
+      copilot: {
+        missing: "Uma confiança de diretório com escopo de workspace, não interativa, que um worktree novo consiga satisfazer sem prompt.",
+        why: "O Copilot CLI pede para você confiar em qualquer diretório que ele não viu, e todo worktree é novo por construção. A única lista de confiança declarável em arquivo (~/.copilot/config.json) é global, sobrevive ao worktree, e não está confirmado que ela barra o carregamento do hook — então a AIPe não se apoia nela. containmentHook() devolve null.",
+      },
+      "no-adapter": {
+        missing: "Um adapter dedicado do aipe. O caminho existe (o modo genérico); a integração nativa que o tornaria pronto para contenção, não.",
+        why: "O agentop consegue hospedar uma sessão aqui, e o caminho genérico AGENTS.md consegue instalar as instruções da AIPe — mas ainda não há um adapter dedicado em aipe/src/harness, e o caminho genérico não foi validado numa sessão real.",
+      },
+    },
   },
 
   cost: {
@@ -349,7 +413,7 @@ const pt: Translations = {
   },
 
   footer: {
-    tagline: "O Engenheiro de Produto com IA — um plugin do Claude Code que coordena especialistas pelos seus repositórios.",
+    tagline: "O Engenheiro de Produto com IA — uma CLI standalone que coordena especialistas pelos seus repositórios, no harness de agente que você escolher.",
     product: "Produto",
     learn: "Aprender",
     howItWorks: "Como funciona",
