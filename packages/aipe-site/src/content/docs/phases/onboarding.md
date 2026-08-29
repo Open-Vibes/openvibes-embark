@@ -9,7 +9,7 @@ order: 2
 # Onboarding
 
 Onboarding maps a **context** — a team's group of repos — into a workspace AIPe
-can operate. It is four ordered steps, each a skill in the plugin. Each step is
+can operate. It is four ordered steps, each a skill the coordinator runs. Each step is
 **unlocked only when the prior step's state is done**, and re-running any step
 **fills only what is missing** (it never clobbers existing work).
 
@@ -52,8 +52,10 @@ graph that later drives **dependency-first wave ordering** during operation.
 
 For each repo, the coordinator hires **two persona skills**: one
 **dev-fullstack** and one **QA**. These are plain Markdown skills installed
-**inside each repo** (`.claude/skills/<persona>/SKILL.md`), with their sources
-published under `.aipe/personas/` so they can be rehydrated. The roster is
+**inside each repo** at the harness's own persona path (for Claude Code,
+`.claude/skills/<persona>/SKILL.md`; Codex/Gemini use `.agents/skills/`, the
+generic adapter uses `.aipe-personas/`), with their sources published under
+`.aipe/personas/` so they can be rehydrated. The roster is
 recorded in `.aipe/personas.yaml`. During operation, a specialist is a subagent
 **wearing** its repo's persona.
 

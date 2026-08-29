@@ -32,25 +32,28 @@ machine's harness binaries and writes `.aipe/capabilities.yaml`.
 
 ```sh
 aipe start
-#   ? Choose your agent harness:  ❯ Claude Code / generic (AGENTS.md, experimental)
+#   ? Choose your agent harness:  ❯ Claude Code · Codex · Gemini CLI · GitHub Copilot · generic
 #   ? Workspace name:  my-company
 #   ✓ Created aipe-my-company/
 ```
 
-Today `aipe start` offers only **Claude Code** and an experimental
-**generic/AGENTS.md** adapter as the *workspace* harness — Codex, Gemini,
-Copilot, Antigravity and Cursor are listed but `coming-soon`. That is a separate
-question from which harness a *unit* can be dispatched to under session mode: a
+As a *workspace* harness, `aipe start` supports **Claude Code, Codex, Gemini CLI,
+GitHub Copilot**, and an experimental **generic/AGENTS.md** adapter today;
+**Antigravity** and **Cursor** are listed `coming-soon`. Claude Code is the
+default and the most complete — it is the only one with full **session
+containment** — but AIPe is not a Claude Code tool. That workspace question is
+separate from which harness a *unit* can be dispatched to under session mode: a
 Claude Code workspace can still dispatch a QA unit to `gemini`. See
 [session mode & dispatch](../capabilities/session-mode-dispatch.md).
 
 ## 3. Open the workspace and say hi
 
 Onboarding is conversational — there are no slash commands to memorize. Open the
-new folder in your harness and greet the coordinator.
+new folder in your harness and greet the coordinator. The command below shows
+Claude Code as **one example**; open the folder in whichever harness you picked.
 
 ```sh
-cd aipe-my-company && claude
+cd aipe-my-company && claude   # Claude Code shown here — use your harness's launch command
 ```
 
 Just say **hi**. A `SessionStart` hook injects the coordinator's awareness, and

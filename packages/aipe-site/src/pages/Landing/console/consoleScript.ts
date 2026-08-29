@@ -193,21 +193,36 @@ export function envelopeAxisValues(specialist: ConsoleSpecialist): Record<Envelo
  * it; `key` indexes its definition in `console.glossary` (localised, both locales).
  * This is the single source the glossary component and its i18n test share.
  */
+/**
+ * Each term carries its NATURE, so the glossary can show the order of the work
+ * without lying about what each word is (the PE's v4 note). Classified against
+ * the aipe operate flow, justified in SPEC.md:
+ *  - `kind: "step"` + an `order` → a stage that happens, in sequence (journey →
+ *    unit → sdd-lite → wave → gate). These are numbered.
+ *  - `kind: "decision"` → what a dispatch is priced/gated as (envelope, tier,
+ *    cost-index, gated). Not a stage; attaches to one. Not numbered.
+ *  - `kind: "thing"` → the machinery a stage runs on or writes to (harness,
+ *    worktree, ledger). Not a stage. Not numbered.
+ * `loops: true` marks the one non-linear stage: a gate that rejects sends the
+ * work back (the correction loop). Ordered first (steps 1–5), then the concepts,
+ * so the array's own order is the reading order.
+ */
 export const GLOSSARY_TERMS = [
-  { key: "journey", label: "journey" },
-  { key: "unit", label: "unit" },
-  { key: "sddLite", label: "sdd-lite" },
-  { key: "envelope", label: "envelope" },
-  { key: "harness", label: "harness" },
-  { key: "tier", label: "tier" },
-  { key: "costIndex", label: "cost-index" },
-  { key: "gated", label: "gated" },
-  { key: "wave", label: "wave" },
-  { key: "worktree", label: "worktree" },
-  { key: "gate", label: "gate" },
-  { key: "ledger", label: "ledger" },
+  { key: "journey", label: "journey", kind: "step", order: 1 },
+  { key: "unit", label: "unit", kind: "step", order: 2 },
+  { key: "sddLite", label: "sdd-lite", kind: "step", order: 3 },
+  { key: "wave", label: "wave", kind: "step", order: 4 },
+  { key: "gate", label: "gate", kind: "step", order: 5, loops: true },
+  { key: "envelope", label: "envelope", kind: "decision", order: null },
+  { key: "tier", label: "tier", kind: "decision", order: null },
+  { key: "costIndex", label: "cost-index", kind: "decision", order: null },
+  { key: "gated", label: "gated", kind: "decision", order: null },
+  { key: "harness", label: "harness", kind: "thing", order: null },
+  { key: "worktree", label: "worktree", kind: "thing", order: null },
+  { key: "ledger", label: "ledger", kind: "thing", order: null },
 ] as const;
 export type GlossaryKey = (typeof GLOSSARY_TERMS)[number]["key"];
+export type GlossaryKind = (typeof GLOSSARY_TERMS)[number]["kind"];
 
 /**
  * The comprehension contract that stops this finding's whole CLASS from returning.

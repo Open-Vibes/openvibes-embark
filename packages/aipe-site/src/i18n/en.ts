@@ -29,11 +29,11 @@ const en = {
   },
 
   hero: {
-    eyebrow: "AI Product Engineer · a Claude Code plugin",
+    eyebrow: "AI Product Engineer · a standalone CLI, not a plugin",
     headlineLine1: "You bring the demand.",
     headlineLine2: "It runs the engineering org.",
     bodyBefore:
-      "AIPe turns Claude into a general engineering coordinator and you into the Product Engineer. Hand over a demand; it decomposes the work, dispatches a specialist per repo ",
+      "AIPe turns your coding agent into a general engineering coordinator and you into the Product Engineer. Hand over a demand; it decomposes the work, dispatches a specialist per repo ",
     bodyEmphasis: "in parallel",
     bodyAfter:
       " — each isolated in its own git worktree — and returns PRs, under one dispatch law and an evidence gate.",
@@ -41,11 +41,13 @@ const en = {
     copied: "copied",
     seeHow: "See how it works →",
     readDocs: "Read the docs",
-    // Legend for the animated backdrop — names what its motion depicts.
+    // Legend for the animated backdrop — names the beats of the real flow it
+    // transcribes: demand → coordinator → multi-harness fan-out → QA → repos.
     scene: {
       coordinator: "coordinator",
-      dispatch: "dispatch out",
-      pr: "PRs return",
+      harnesses: "fan-out · harnesses",
+      reject: "QA rejects → loop",
+      repos: "merged to repos",
     },
   },
 
@@ -127,6 +129,18 @@ const en = {
       gate: "a check that blocks “done” until it's proven — evidence, then QA",
       ledger: "the append-only record every step is written to",
     },
+    // Reading order for the glossary: the numbered stages happen in sequence; the
+    // concepts (decisions and things) attach to a stage rather than being one. See
+    // the classification, justified against the aipe operate flow, in SPEC.md.
+    flow: {
+      stepsTitle: "The order it happens",
+      conceptsTitle: "The concepts that attach to it",
+      kindDecision: "decision",
+      kindThing: "thing",
+      loop: "can loop back",
+      legend: "1–5 are the stages, in order · a dash marks a concept, not a step · ↺ marks a stage that can loop",
+      loopNote: "a gate that rejects opens a correction loop — the flow isn't a straight line",
+    },
     // Glosses for the stage's envelope axes. The VALUES (session, claude-code,
     // reasoning, ultracode) are literal identifiers and stay English; these
     // reader-facing axis names are localised.
@@ -204,7 +218,7 @@ const en = {
       },
       {
         role: "Coordinator",
-        who: "The main Claude, with a name you give it.",
+        who: "A coordinator agent you name, running in your harness — Claude Code by default.",
         does: "Reads the state of every repo, decomposes each demand, dispatches the specialists, reviews what comes back, and escalates cross-repo calls to you.",
       },
       {
@@ -277,32 +291,83 @@ const en = {
     ],
   },
 
+  statement: {
+    lead: "Installing content is easy. ",
+    emphasis: "Containing a session is the promise",
+    trail: " — and it's the whole reason AIPe governs fewer harnesses than it could host.",
+    sub: "Every other agent tool copies a skill and hopes. AIPe won't start a session it can't stop from leaving its worktree — so its supported number is smaller, and honest.",
+  },
+
   harnessSection: {
     eyebrow: "Multi-harness",
-    title: "Four harnesses. Two can be contained. That's the honest line.",
-    lead: "AIPe can dispatch a specialist to different agent CLIs — and cross-check one model's work with another. But session mode needs true containment, and only claude-code and gemini have it today. Pick a lane and see what changes.",
+    title: "Ten harnesses can host it. Two, AIPe can fully contain. Both numbers are honest.",
+    lead: "agentop can run an AIPe session on any of ten agent CLIs — the same ten the PDD reaches. But session mode needs true containment, and only claude-code and gemini clear that bar today. Here's every harness, what's missing, and how to run AIPe on it anyway.",
   },
 
   harnessBay: {
-    selected: "selected",
-    sessionEligible: "session-eligible",
-    notContainable: "not containable",
-    workspacePrefix: "workspace:",
-    sessionRejected: "session dispatch rejected",
-    containment: "Containment: ",
-    whyNotContained: "Why it can't be contained: ",
-    workspaceHarnessAt: "Workspace harness at",
-    geminiNoteBefore: " — still session-eligible as a ",
-    geminiNoteEmphasis: "unit",
-    geminiNoteAfter: " dispatch harness, which is what enables cross-model QA.",
-    pending: "pending",
-    pendingSr: "Pending roadmap note: ",
-    pendingBefore: "Session containment for ",
-    pendingMiddle: " and ",
-    pendingNotShipped: " is ",
-    pendingNotShippedEmphasis: "not shipped",
-    pendingAfter:
-      " — it's blocked on a documented non-interactive trust bypass for each. Until then, unattended dispatch validation rejects them by design.",
+    hostContain: {
+      hostLabel: "agentop hosts",
+      hostNote: "agent CLIs agentop can run a session on — the ten the print shows, the same ten the PDD reaches.",
+      containLabel: "AIPe fully contains",
+      containNote: "of those, the ones AIPe can govern unattended in session mode. Hosting a session and containing it are different jobs.",
+    },
+    installVsContain: {
+      title: "Install content, or contain the session?",
+      body: "The PDD reaches ten harnesses because it installs CONTENT — skills and prompts. Any agent that can read a file passes. AIPe asks for more: it has to CONTAIN the session, which needs a hook that blocks a command before it runs and is trusted with no human present. Installing is easy; containing is the promise — and it's why AIPe's fully-supported number is smaller. Not less capable, more accountable.",
+      rule: "aipe/src/harness/types.ts — “A harness whose adapter returns null cannot be contained — and is therefore NOT eligible for session-mode dispatch. That is the whole eligibility rule: AIPe never starts a session it cannot govern.”",
+    },
+    ruler: {
+      title: "How the percentage is measured — five checks, each verifiable in aipe/src/harness",
+      caps: {
+        contentInstall: "installs content",
+        agentopHost: "agentop host",
+        dedicatedAdapter: "dedicated adapter",
+        interceptionHook: "interception hook",
+        headlessContainment: "trusted headless",
+      },
+      hints: {
+        contentInstall: "AIPe can write its personas and skills here — natively, or via the generic AGENTS.md path.",
+        agentopHost: "agentop can start and host a session on this harness.",
+        dedicatedAdapter: "a native aipe adapter exists, not just the generic fallback.",
+        interceptionHook: "that adapter writes a block-before-execute hook (PreToolUse / BeforeTool).",
+        headlessContainment: "the hook holds with no human present — the decisive check for session dispatch.",
+      },
+    },
+    row: {
+      hostedAs: "agentop:",
+      fullyContained: "fully contained",
+      adapterNotContained: "adapter · not contained",
+      notVerified: "not verified",
+      whyContainedLabel: "Why it's contained:",
+      whyNotLabel: "Why it isn't contained:",
+      whatsMissingLabel: "What's missing:",
+      howAnywayLabel: "Use it anyway:",
+      tradeoff: "trade-off",
+    },
+    degraded: {
+      howAnyway: "AIPe still installs the personas and skills. Run the specialist as a subagent inside a contained parent session, or let a person start the session and accept the harness's trust prompt once.",
+      lose: "You lose the guarantee AIPe otherwise enforces — that the agent can't step outside its worktree. That guarantee becomes yours to hold.",
+    },
+    copy: {
+      "claude-code": {
+        why: "AIPe writes a PreToolUse hook into .claude/settings.json. It's trusted with no human present, so an unattended dispatch is fully governed — the reference containment every other adapter is measured against.",
+      },
+      gemini: {
+        why: "AIPe writes a BeforeTool hook into .gemini/settings.json. Gemini's folder-trust is disabled by default, so a fresh worktree loads the hook with no prompt — containable, and it's what unlocks cross-model QA.",
+      },
+      codex: {
+        missing: "A file-declarable trust path, so the hook AIPe already writes is honoured without someone running /hooks by hand.",
+        why: "Codex trusts a hook only when a human runs /hooks interactively — trust is per-hook-hash, with no config-file way to self-declare it, and dispatch is non-interactive. AIPe writes the hook; it stays present, well-formed, and never trusted, so containmentHook() returns null on purpose.",
+      },
+      copilot: {
+        missing: "A workspace-scoped, non-interactive directory trust a fresh worktree can satisfy without a prompt.",
+        why: "Copilot CLI asks you to trust any directory it hasn't seen, and every worktree is new by construction. The one file-declarable trust list (~/.copilot/config.json) is global, outlives the worktree, and isn't confirmed to gate hook-loading — so AIPe won't rely on it. containmentHook() returns null.",
+      },
+      "no-adapter": {
+        missing: "A dedicated aipe adapter. The path exists (the generic mode); the native integration that would make it contain-ready does not.",
+        why: "agentop can host a session here, and the generic AGENTS.md path can install AIPe's instructions — but there is no dedicated adapter in aipe/src/harness yet, and the generic path hasn't been validated in a live session.",
+      },
+    },
   },
 
   cost: {
@@ -365,7 +430,7 @@ const en = {
   },
 
   footer: {
-    tagline: "The AI Product Engineer — a Claude Code plugin that coordinates specialists across your repos.",
+    tagline: "The AI Product Engineer — a standalone CLI that coordinates specialists across your repos, in the agent harness you choose.",
     product: "Product",
     learn: "Learn",
     howItWorks: "How it works",
