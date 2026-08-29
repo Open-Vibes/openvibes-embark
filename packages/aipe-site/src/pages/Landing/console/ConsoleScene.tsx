@@ -27,7 +27,8 @@ export default function ConsoleScene() {
   const { t } = useI18n();
   const c = t.console;
   const facts = useMemo(() => buildFacts(), []);
-  const beats = useMemo(() => buildBeats(facts), [facts]);
+  // The terminal roteiro's SPEECH follows the active locale; its COMMANDS don't.
+  const beats = useMemo(() => buildBeats(facts, c.script), [facts, c.script]);
   // Literal envelope axis values (session/claude-code/reasoning/ultracode) from the
   // wave-1 specialist's real priced envelope; the glosses beside them come from i18n.
   const axisValues = useMemo(() => envelopeAxisValues(facts.specialists[0]!), [facts]);

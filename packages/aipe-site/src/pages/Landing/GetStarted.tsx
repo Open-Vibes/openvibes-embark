@@ -8,20 +8,41 @@ const INSTALL = "curl -fsSL https://aipe.openvibes.tech/cli | sh";
 /** The command tokens per step — code, English in both locales, matched by index. */
 const STEP_CMDS = ["curl … | sh", "aipe start", "say hi"];
 
-/** The terminal transcript is real CLI output — English in both locales. */
-const REPLAY: TermLine[] = [
-  { kind: "prompt", text: "aipe start" },
-  { kind: "output", text: "? Choose your agent harness:  ❯ Claude Code" },
-  { kind: "output", text: "? Workspace name:  minha-empresa" },
-  { kind: "output", text: "aipe: checked which harnesses are available on this machine:" },
-  { kind: "ok", text: "aipe:  - OK claude-code claude 2.1.4" },
-  { kind: "note", text: "aipe:  - NOTE capabilities: probed, not confirmed — run `aipe capabilities confirm`" },
-  { kind: "ok", text: "✓ Created aipe-minha-empresa/" },
-  { kind: "note", text: "# open the folder in your harness and just say hi" },
+/**
+ * The `aipe start` transcript is real CLI output — the prompts, harness probe and
+ * paths are what the tool literally prints, so they stay English in both locales
+ * (same command/speech rule as the console; see consoleScript.ts). The one
+ * authored line is the trailing `#` comment: a comment is narration, so it comes
+ * from i18n and translates. `replayComment` is filled in per locale below.
+ */
+const REPLAY: readonly Omit<TermLine, "text">[] = [
+  { kind: "prompt" },
+  { kind: "output" },
+  { kind: "output" },
+  { kind: "output" },
+  { kind: "ok" },
+  { kind: "note" },
+  { kind: "ok" },
+  { kind: "note" }, // ← replayComment (narration, localised)
+];
+
+const REPLAY_LITERAL: readonly (string | null)[] = [
+  "aipe start",
+  "? Choose your agent harness:  ❯ Claude Code",
+  "? Workspace name:  minha-empresa",
+  "aipe: checked which harnesses are available on this machine:",
+  "aipe:  - OK claude-code claude 2.1.4",
+  "aipe:  - NOTE capabilities: probed, not confirmed — run `aipe capabilities confirm`",
+  "✓ Created aipe-minha-empresa/",
+  null, // the localised `#` comment, sourced from i18n
 ];
 
 export default function GetStarted() {
   const { t } = useI18n();
+  const replay: TermLine[] = REPLAY.map((line, i) => ({
+    ...line,
+    text: REPLAY_LITERAL[i] ?? t.getStarted.replayComment,
+  }));
   return (
     <Section
       id="start"
@@ -67,7 +88,7 @@ export default function GetStarted() {
           </div>
         </div>
 
-        <TerminalReplay lines={REPLAY} title="aipe start" />
+        <TerminalReplay lines={replay} title="aipe start" />
       </div>
     </Section>
   );

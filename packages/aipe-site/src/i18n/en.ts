@@ -88,6 +88,28 @@ const en = {
       verify: "verified by QA",
       merged: "merged · locked",
     },
+    // The terminal ROTEIRO — the moving text the console types out. This is the
+    // one surface where the command/speech boundary lives: a terminal line is
+    // either a *command* (what the PE would literally type) or *machine output*
+    // — both English in every locale, they are code — or the *narration* the
+    // console wraps around them (the PE's spoken demand, the coordinator's spoken
+    // reply, the `#` comments, the explanatory clauses). Only the narration lives
+    // here and translates; see the rule and `SCRIPT_KEYS` in consoleScript.ts,
+    // and the parity gate in `script.i18n.test.ts`. `{unit}` is a literal
+    // identifier interpolated at render — it stays English inside both locales.
+    script: {
+      demand:
+        "We need the public site for AIPe — a package in openvibes-embark. Make it genuinely good, and make it SHOW multi-agent, multi-harness work instead of describing it.",
+      oneDemandOneLedger: "1 demand → 1 ledger",
+      oneUnit: "one producing unit: {unit} (0 edges)",
+      routed: "routed",
+      awaitingSignature: "awaiting PE signature",
+      serialize: "serialize",
+      noEvidence: "no evidence",
+      straightFromDelivered: "straight from delivered",
+      notVerified: "not verified",
+      immutable: "immutable",
+    },
     // Plain-language key for the console's own vocabulary — so a reader with no
     // AIPe words can follow it. Keyed by `GLOSSARY_TERMS` in consoleScript.ts.
     glossary: {
@@ -300,6 +322,11 @@ const en = {
     sessionRequiresContainable:
       "Session mode requires a containable harness; this one can't be contained unattended.",
     gated: "GATED — needs the PE's signature",
+    // Reader-facing sentences built from a raw domain `gateReasons` token. The
+    // token itself (ultracode, frontier, …) is a literal identifier and stays
+    // English; the sentence around it translates. See `gateReasonLabel`.
+    gateIntensityNeedsSignature: (intensity: string) => `${intensity} intensity needs your signature`,
+    gateTierNeedsSignature: (tier: string) => `${tier} tier needs your signature`,
     ungated: "UNGATED",
     autoDispatchable: "— auto-dispatchable",
     perEnvelope: "per-envelope",
@@ -324,6 +351,10 @@ const en = {
     lead: "Three moves to a working coordinator. No marketplace step, nothing installed globally — the integration lives in the workspace folder you create.",
     copy: "copy",
     copied: "copied",
+    // The one authored line in the otherwise-literal `aipe start` transcript: a
+    // `#` comment is narration, so it translates (the CLI prompts/output around
+    // it are real machine text and stay English). See REPLAY in GetStarted.tsx.
+    replayComment: "# open the folder in your harness and just say hi",
     steps: [
       { body: "Install the standalone aipe binary — no Bun, Node, or npm required." },
       { body: "Pick your harness and name the workspace. It creates a publishable aipe-<name>/ folder." },
