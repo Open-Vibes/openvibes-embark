@@ -71,14 +71,20 @@ const pt: Translations = {
       worktree: "worktree",
       ledger: "ledger",
       receiving: "recebendo a demanda…",
+      dispatching: "despachando…",
+      qaRole: "revisor de QA",
+      prOpened: "PR aberto",
     },
     captions: {
       demand: "o coordenador recebe a demanda",
       validate: "dois repos → a lei roda em paralelo",
-      dispatch: "três agentes despachados de uma vez",
+      "dispatch-1": "agente 1 de 3 despachado — entra em cena",
+      "dispatch-2": "agente 2 de 3 despachado — junta-se ao time",
+      "dispatch-3": "agente 3 de 3 — 3 agentes, 2 repos, de uma vez",
       work: "três worktrees, trabalhando em paralelo",
-      deliver: "os PRs voltam · cada um com sua evidência",
-      review: "a revisão chega depois · QA verifica",
+      deliver: "cada agente entrega sua evidência",
+      qa: "o QA chega — um revisor novo entra em cena",
+      pr: "cada entrega abre seu próprio PR",
       merged: "tudo mesclado · imutável",
     },
     script: {
@@ -87,7 +93,7 @@ const pt: Translations = {
     },
     aria: {
       label:
-        "A AIPe despachando três agentes em dois repositórios em paralelo: Lawson em openvibes-embark/aipe-site, Marco em openvibes-embark/embark-site e Jane em agentistics/web. A lei de despacho aceita o lote como uma única wave paralela; os agentes rodam em worktrees isolados, devolvem pull requests cada um com evidência, são verificados pela revisão de QA e todos mesclam. A cena roda em loop.",
+        "A AIPe despachando três agentes em dois repositórios, um de cada vez: Lawson em openvibes-embark/aipe-site, depois Marco em openvibes-embark/embark-site, depois Jane em agentistics/web, todos rodando em paralelo uma vez despachados. O QA — Viola — entra como um revisor novo depois da entrega; cada agente então abre seu próprio pull request como um artefato novo; os três mesclam. A cena roda em loop, começando vazia a cada vez.",
     },
   },
 

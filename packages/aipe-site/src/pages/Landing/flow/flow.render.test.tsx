@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import FlowFloor, { type FlowFloorLabels } from "./FlowFloor";
 import FlowTerminal from "./FlowTerminal";
-import { buildFlowFacts, buildFlowTerminal, foldFlow, FLOW_LAST_PHASE } from "./flowModel";
+import { buildFlowFacts, buildFlowTerminal, foldFlow, FLOW_LAST_PHASE, FLOW_PHASE_IDS } from "./flowModel";
 
 const facts = buildFlowFacts();
 
@@ -21,6 +21,9 @@ const LABELS: FlowFloorLabels = {
   worktree: "worktree",
   ledger: "ledger",
   receiving: "receiving…",
+  dispatching: "dispatching…",
+  qaRole: "QA reviewer",
+  prOpened: "PR opened",
   caption: "all merged · immutable",
 };
 
@@ -60,6 +63,63 @@ describe("Flow — the reduced-motion still frame is COMPLETE", () => {
   it("carries a real alt text (role=img + aria-label), not aria-hidden decoration", () => {
     expect(html).toContain('role="img"');
     expect(html).toContain(LABELS.ariaLabel);
+  });
+});
+
+/* ------------------------------------------------- the entrances are real DOM */
+
+/**
+ * The PE's rejection of v2: "deixou so 3 caras fixos ali" — three fixed rows
+ * that only changed a badge. These assertions read the actual rendered
+ * markup at three distinct beats and prove the picture is not the same
+ * picture with different labels: nodes that are absent at one beat are
+ * genuinely present — by name — at the next.
+ */
+describe("Flow — the markup itself grows across beats (not a relabelled panel)", () => {
+  const dispatch1 = renderToStaticMarkup(
+    <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("dispatch-1"), facts)} labels={LABELS} reduced />,
+  );
+  const dispatch3 = renderToStaticMarkup(
+    <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("dispatch-3"), facts)} labels={LABELS} reduced />,
+  );
+  const qa = renderToStaticMarkup(
+    <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("qa"), facts)} labels={LABELS} reduced />,
+  );
+  const pr = renderToStaticMarkup(
+    <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("pr"), facts)} labels={LABELS} reduced />,
+  );
+
+  it("at dispatch-1 only Lawson is named — Marco and Jane are absent, not just dimmed", () => {
+    expect(dispatch1).toContain("Lawson");
+    expect(dispatch1).not.toContain("Marco");
+    expect(dispatch1).not.toContain("Jane");
+  });
+
+  it("by dispatch-3 all three are named, and the markup has strictly more agent rows than dispatch-1", () => {
+    expect(dispatch3).toContain("Lawson");
+    expect(dispatch3).toContain("Marco");
+    expect(dispatch3).toContain("Jane");
+    const rowsAt1 = dispatch1.split(LABELS.worktree).length - 1;
+    const rowsAt3 = dispatch3.split(LABELS.worktree).length - 1;
+    expect(rowsAt1).toBe(1);
+    expect(rowsAt3).toBe(3);
+    expect(rowsAt3).toBeGreaterThan(rowsAt1);
+  });
+
+  it("QA is absent before its beat and present, by name, once it arrives", () => {
+    expect(dispatch3).not.toContain(facts.qaPersona);
+    expect(qa).toContain(facts.qaPersona);
+  });
+
+  it("no PR number appears before the pr beat; every PR number appears once it arrives", () => {
+    for (const a of facts.agents) expect(qa).not.toContain(`#${a.pr}`);
+    for (const a of facts.agents) expect(pr).toContain(`#${a.pr}`);
+  });
+
+  it("frame-to-frame the scene is a strictly bigger document, not a same-size relabel", () => {
+    expect(dispatch3.length).toBeGreaterThan(dispatch1.length);
+    expect(qa.length).toBeGreaterThan(dispatch3.length);
+    expect(pr.length).toBeGreaterThan(qa.length);
   });
 });
 

@@ -89,6 +89,9 @@ export default function FlowScene() {
     worktree: f.labels.worktree,
     ledger: f.labels.ledger,
     receiving: f.labels.receiving,
+    dispatching: f.labels.dispatching,
+    qaRole: f.labels.qaRole,
+    prOpened: f.labels.prOpened,
     caption: f.captions[scene.captionKey],
   };
 
