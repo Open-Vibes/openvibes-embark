@@ -355,6 +355,36 @@ const pt: Translations = {
     },
   },
 
+  harnessCompat: {
+    eyebrow: "Ledger de contenção",
+    title: "Dez harnesses que o agentop pode hospedar. Três estados, nunca dois.",
+    lead: '"Sem adapter ainda" e "não pode ser contido" costumavam colapsar num único rótulo "em breve" — foi exatamente isso que escondeu o achado do Antigravity abaixo. Cada afirmação aqui remete à documentação da própria ferramenta, não a um resumo dela.',
+    adapterShipped: "Adapter da AIPe: lançado",
+    adapterNone: "Adapter da AIPe: ainda não",
+    sourceLabel: "Fonte primária",
+    readSource: "Ler a fonte",
+    accessedLabel: "Acessado em",
+    caveatLabel: "Ressalva",
+    groups: {
+      shipped: {
+        label: "Lançado — provado capaz",
+        body: "A AIPe tem um adapter, e a documentação da própria ferramenta prova que um hook de bloqueio headless se sustenta.",
+      },
+      "proven-limit": {
+        label: "Provado incapaz — um limite real",
+        body: "A documentação da própria ferramenta mostra que a contenção exige um humano presente. Isso não é backlog: construir um adapter não mudaria o veredito.",
+      },
+      backlog: {
+        label: "Não implementado — a doc já prova que dá",
+        body: "Ainda não existe adapter da AIPe, mas a documentação da própria ferramenta já descreve um mecanismo de bloqueio headless. Trabalho não feito, não um limite provado.",
+      },
+      "open-question": {
+        label: "Não estabelecido — a doc não responde",
+        body: "Nem provado capaz, nem provado incapaz. A fonte primária não responde à pergunta que importa.",
+      },
+    },
+  },
+
   cost: {
     eyebrow: "Controle de custo",
     title: "Precifique cada jeito de rodar uma unidade — antes de gastar um token.",

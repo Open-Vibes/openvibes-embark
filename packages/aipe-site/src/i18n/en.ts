@@ -370,6 +370,36 @@ const en = {
     },
   },
 
+  harnessCompat: {
+    eyebrow: "Containment ledger",
+    title: "Ten harnesses agentop can host. Three states, never two.",
+    lead: '"No adapter yet" and "cannot be contained" used to collapse into one "coming soon" label — exactly what buried the Antigravity finding below. Every claim here traces to the tool\'s own docs, not a summary of one.',
+    adapterShipped: "AIPe adapter: shipped",
+    adapterNone: "AIPe adapter: none yet",
+    sourceLabel: "Primary source",
+    readSource: "Read the source",
+    accessedLabel: "Accessed",
+    caveatLabel: "Caveat",
+    groups: {
+      shipped: {
+        label: "Shipped — proven capable",
+        body: "AIPe has an adapter, and the tool's own docs prove a headless deny hook holds.",
+      },
+      "proven-limit": {
+        label: "Proven incapable — a real limit",
+        body: "The tool's own docs show containment needs a human present. This is not backlog: building an adapter would not change the verdict.",
+      },
+      backlog: {
+        label: "Not implemented — docs already say it's possible",
+        body: "No AIPe adapter yet, but the tool's own docs already describe a headless deny mechanism. Unfinished work, not a proven limit.",
+      },
+      "open-question": {
+        label: "Unestablished — the docs don't say",
+        body: "Neither proven capable nor proven incapable. The primary source doesn't answer the question that matters.",
+      },
+    },
+  },
+
   cost: {
     eyebrow: "Cost control",
     title: "Price every way to run a unit — before you spend a token.",
