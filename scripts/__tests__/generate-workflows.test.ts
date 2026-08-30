@@ -21,7 +21,7 @@ describe("exists", () => {
   });
 
   test("returns false for deleted file", async () => {
-    const testFile = join(tmpdir(), `test-${Date.now()}.txt`);
+    const testFile = join(tmpdir(), `test-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}.txt`);
     writeFileSync(testFile, "test");
     expect(await exists(testFile)).toBe(true);
     unlinkSync(testFile);
@@ -147,7 +147,7 @@ image: gcr.io/embark/__PACKAGE_NAME_LOWERCASE__:latest`;
 
 describe("processPackageWorkflow - I/O integration", () => {
   test("creates gcp workflow when it does not exist", async () => {
-    const testDir = join(tmpdir(), `test-workflow-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -166,7 +166,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("creates netlify workflow when it does not exist", async () => {
-    const testDir = join(tmpdir(), `test-workflow-netlify-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-netlify-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -183,7 +183,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("adds cloudflare steps when cloudflareUse=true for netlify", async () => {
-    const testDir = join(tmpdir(), `test-workflow-cf-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-cf-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -201,7 +201,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("adds cloudflare steps when cloudflareUse=true for gcp", async () => {
-    const testDir = join(tmpdir(), `test-workflow-gcp-cf-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-gcp-cf-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -219,7 +219,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("generates cloudflare-pages workflow with DNS setup", async () => {
-    const testDir = join(tmpdir(), `test-workflow-cf-pages-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-cf-pages-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -237,7 +237,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("returns false if workflow already exists", async () => {
-    const testDir = join(tmpdir(), `test-workflow-exist-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-exist-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -255,7 +255,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("creates multiple workflows in sequence", async () => {
-    const testDir = join(tmpdir(), `test-workflow-multiple-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-multiple-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -277,7 +277,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("adds submodules: recursive to checkout when useSubmodule=true", async () => {
-    const testDir = join(tmpdir(), `test-workflow-submodules-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-submodules-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -292,7 +292,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("gcp workflow has multi-job structure with outputs", async () => {
-    const testDir = join(tmpdir(), `test-workflow-multijob-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-multijob-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -319,7 +319,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("netlify workflow has multi-job structure with outputs", async () => {
-    const testDir = join(tmpdir(), `test-workflow-netlify-multijob-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-netlify-multijob-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -339,7 +339,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("cloudflare-pages workflow has multi-job structure with project_name output", async () => {
-    const testDir = join(tmpdir(), `test-workflow-cfpages-multijob-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-cfpages-multijob-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -360,7 +360,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("generates cloudflare-workers workflow with DNS setup", async () => {
-    const testDir = join(tmpdir(), `test-workflow-cf-workers-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-cf-workers-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -378,7 +378,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("cloudflare-workers workflow deploys directly without build/artifact", async () => {
-    const testDir = join(tmpdir(), `test-workflow-cfworkers-multijob-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-cfworkers-multijob-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -402,7 +402,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("does not include submodules when useSubmodule=false", async () => {
-    const testDir = join(tmpdir(), `test-workflow-no-submodules-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-no-submodules-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -417,7 +417,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("adds gitlink path entry to paths filter when useSubmodule=true", async () => {
-    const testDir = join(tmpdir(), `test-workflow-submodule-path-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-submodule-path-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -434,7 +434,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("does not add gitlink path entry when useSubmodule=false", async () => {
-    const testDir = join(tmpdir(), `test-workflow-no-submodule-path-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-no-submodule-path-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -451,7 +451,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("submodule path filter works for cloudflare-pages template", async () => {
-    const testDir = join(tmpdir(), `test-workflow-submodule-cfpages-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-submodule-cfpages-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -466,7 +466,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("uses plain bun install when useSubmodule=true", async () => {
-    const testDir = join(tmpdir(), `test-workflow-install-submodule-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-install-submodule-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -482,7 +482,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("uses bun install --ignore-scripts when useSubmodule=false", async () => {
-    const testDir = join(tmpdir(), `test-workflow-install-no-submodule-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-install-no-submodule-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -497,7 +497,7 @@ describe("processPackageWorkflow - I/O integration", () => {
   });
 
   test("uses bun install --ignore-scripts when useSubmodule is undefined", async () => {
-    const testDir = join(tmpdir(), `test-workflow-install-undefined-submodule-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflow-install-undefined-submodule-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -514,7 +514,7 @@ describe("processPackageWorkflow - I/O integration", () => {
 
 describe("processPackagesWorkflows", () => {
   test("processes multiple packages and detects changes", async () => {
-    const testDir = join(tmpdir(), `test-workflows-batch-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflows-batch-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -537,7 +537,7 @@ describe("processPackagesWorkflows", () => {
   });
 
   test("returns false when all workflows already exist", async () => {
-    const testDir = join(tmpdir(), `test-workflows-exist-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflows-exist-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -558,7 +558,7 @@ describe("processPackagesWorkflows", () => {
   });
 
   test("processes empty list without changes", async () => {
-    const testDir = join(tmpdir(), `test-workflows-empty-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflows-empty-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -575,7 +575,7 @@ describe("processPackagesWorkflows", () => {
   });
 
   test("processes partially existing packages", async () => {
-    const testDir = join(tmpdir(), `test-workflows-partial-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-workflows-partial-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {

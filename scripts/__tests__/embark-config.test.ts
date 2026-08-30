@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { rmSync } from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import {
   readEmbarkConfig,
   getAppDeployment,
@@ -15,7 +16,7 @@ import {
 } from "../embark-config";
 import type { DeployConfig } from "../embark-config";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-embark-config");
+const TEST_DIR = join(tmpdir(), `embark-embark-config-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
 const makeDeployConfig = (overrides?: Partial<DeployConfig>): DeployConfig => ({
   appDeployment: "gcp",

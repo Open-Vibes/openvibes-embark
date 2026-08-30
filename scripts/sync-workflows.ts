@@ -445,7 +445,16 @@ export async function syncWorkflows(
   }
 
   if (updated > 0) {
-    execSync("git add .github/workflows/", { cwd: ROOT, stdio: "inherit" });
+    // Stage the workflows we just rewrote from the directory they actually live in,
+    // rather than the hard-coded repo root. In real hook usage `workflowsDir` is
+    // `<root>/.github/workflows`, so this stages exactly what it did before; in tests
+    // it targets the isolated temp dir, so a run never touches the pusher's index.
+    // Best-effort: a workflows dir outside a git repo (the test fixtures) is a no-op.
+    try {
+      execSync("git add .", { cwd: workflowsDir, stdio: "inherit" });
+    } catch {
+      // not inside a git repo (e.g. isolated test fixtures) — nothing to stage
+    }
   }
 
   return { updated, skipped };

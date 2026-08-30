@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { rmSync, existsSync } from "node:fs";
 import { buildAppsEntries, updateAppsJsonc } from "../update-apps-jsonc";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-apps-jsonc");
+const TEST_DIR = join(tmpdir(), `embark-apps-jsonc-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 const PACKAGES_DIR = join(TEST_DIR, "packages");
 
 const completeConfig = {

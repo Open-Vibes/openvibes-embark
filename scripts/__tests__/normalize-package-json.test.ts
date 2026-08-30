@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { rmSync, existsSync } from "node:fs";
 import { normalizePackageJson, normalizeAllPackages } from "../normalize-package-json";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-normalize");
+const TEST_DIR = join(tmpdir(), `embark-normalize-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 const PACKAGES_DIR = join(TEST_DIR, "packages");
 
 async function setup() {

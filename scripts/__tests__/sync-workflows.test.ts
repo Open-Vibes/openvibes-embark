@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile, readdir, readFile } from "node:fs/promises";
 import { Readable } from "node:stream";
+import { execSync } from "node:child_process";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { rmSync } from "node:fs";
 import {
   generateExpectedContent,
@@ -18,7 +20,7 @@ import {
   CUSTOM_BLOCK_END,
 } from "../sync-workflows";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-sync");
+const TEST_DIR = join(tmpdir(), `embark-sync-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 const TEST_WORKFLOWS_DIR = join(TEST_DIR, ".github", "workflows");
 const TEST_TEMPLATE = join(TEST_DIR, "templates", "workflow.template.yml");
 
@@ -396,6 +398,25 @@ describe("sync-workflows", () => {
 
       expect(result.updated).toBe(0);
       expect(result.skipped).toBe(0);
+    });
+
+    it("stages updated workflows in the workflows dir's own repo, not the pusher's tree", async () => {
+      // Make the isolated fixture a real git repo so we can observe where staging lands.
+      // If syncWorkflows staged the hard-coded ROOT instead of workflowsDir, nothing
+      // would be staged here and this assertion would fail — that is the mutation guard.
+      execSync("git init", { cwd: TEST_DIR, stdio: "ignore" });
+      execSync("git config user.email test@test.com", { cwd: TEST_DIR, stdio: "ignore" });
+      execSync("git config user.name Test", { cwd: TEST_DIR, stdio: "ignore" });
+
+      const customizedContent = "name: Deploy my-app\ncustom: true";
+      await writeFile(TEST_TEMPLATE, customizedContent);
+      await writeFile(join(TEST_WORKFLOWS_DIR, "my-app.yml"), customizedContent);
+
+      const result = await syncWorkflows(TEST_WORKFLOWS_DIR, TEST_TEMPLATE, true, join(TEST_DIR, "packages"));
+      expect(result.updated).toBe(1);
+
+      const staged = execSync("git diff --cached --name-only", { cwd: TEST_DIR, encoding: "utf-8" });
+      expect(staged).toContain(".github/workflows/my-app.yml");
     });
 
     it("overwrites customized workflows when acceptAll is true", async () => {

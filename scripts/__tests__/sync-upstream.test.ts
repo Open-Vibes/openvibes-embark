@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile, rm } from "node:fs/promises";
 import { execSync } from "node:child_process";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import {
   fileExists,
   removeDemoArtifacts,
@@ -12,7 +13,7 @@ import {
   syncUpstream,
 } from "../sync-upstream";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-sync-upstream");
+const TEST_DIR = join(tmpdir(), `embark-sync-upstream-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 
 async function setupTest() {
   await mkdir(TEST_DIR, { recursive: true });

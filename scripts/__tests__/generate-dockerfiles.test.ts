@@ -148,7 +148,7 @@ describe("buildDockerfile", () => {
 
 describe("processPackageDockerfile - I/O integration", () => {
   test("creates Dockerfile when package.json exists", async () => {
-    const testDir = join(tmpdir(), `test-docker-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-docker-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -169,7 +169,7 @@ describe("processPackageDockerfile - I/O integration", () => {
   });
 
   test("returns false if Dockerfile already exists", async () => {
-    const testDir = join(tmpdir(), `test-docker-exist-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-docker-exist-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -188,7 +188,7 @@ describe("processPackageDockerfile - I/O integration", () => {
   });
 
   test("returns false if package.json does not exist", async () => {
-    const testDir = join(tmpdir(), `test-no-pkg-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-no-pkg-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -200,7 +200,7 @@ describe("processPackageDockerfile - I/O integration", () => {
   });
 
   test("generates Dockerfile with build step when scripts.build exists", async () => {
-    const testDir = join(tmpdir(), `test-docker-build-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-docker-build-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {
@@ -222,7 +222,7 @@ describe("processPackageDockerfile - I/O integration", () => {
 
 describe("netlify packages", () => {
   test("processPackageDockerfile still creates Dockerfile for non-netlify packages", async () => {
-    const testDir = join(tmpdir(), `test-docker-non-netlify-${Date.now()}`);
+    const testDir = join(tmpdir(), `test-docker-non-netlify-${Date.now()}-${process.pid}-${Math.random().toString(36).slice(2)}`);
     mkdirSync(testDir, { recursive: true });
 
     try {

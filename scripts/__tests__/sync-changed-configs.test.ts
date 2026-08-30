@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import { rmSync, existsSync } from "node:fs";
 import { syncWorkflowForPackage } from "../sync-changed-configs";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-sync-changed");
+const TEST_DIR = join(tmpdir(), `embark-sync-changed-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`);
 const PACKAGES_DIR = join(TEST_DIR, "packages");
 const WORKFLOWS_DIR = join(TEST_DIR, "workflows");
 
