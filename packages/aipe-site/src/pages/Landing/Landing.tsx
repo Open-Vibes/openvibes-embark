@@ -1,4 +1,5 @@
 import Hero from "./Hero";
+import FlowSection from "./flow/FlowSection";
 import ConsoleSection from "./ConsoleSection";
 import ProblemSection from "./ProblemSection";
 import CompanySection from "./CompanySection";
@@ -13,6 +14,7 @@ export default function Landing() {
   return (
     <>
       <Hero />
+      <FlowSection />
       <ConsoleSection />
       <ProblemSection />
       <CompanySection />
