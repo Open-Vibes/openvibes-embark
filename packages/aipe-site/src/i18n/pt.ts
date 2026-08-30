@@ -47,6 +47,50 @@ const pt: Translations = {
     },
   },
 
+  // Cena ambiente do Fluxo — três agentes em dois repos, despachados em
+  // paralelo, rodando, entregando, revisados, mesclados, em loop. Tokens de
+  // status/lei (parallel, dispatched, delivered, verified, merged) seguem em
+  // inglês pela fronteira comando/fala; só a prosa traduz.
+  flow: {
+    section: {
+      eyebrow: "Veja rodando",
+      title: "Três agentes. Dois repos. Ao mesmo tempo.",
+      lead:
+        "Não um diagrama de como funciona — a coisa funcionando. O coordenador entrega uma demanda a três especialistas em dois repositórios; a lei de despacho deixa os três rodarem de uma vez; os PRs voltam e a revisão verifica antes de qualquer merge. Roda sozinho — não há nada para apertar.",
+    },
+    terminalHeader: "coordenador — console",
+    labels: {
+      coordinator: "coordenador",
+      dispatchLaw: "lei de despacho",
+      parallel: "parallel",
+      units: "unidades",
+      repos: "repos",
+      wave: "wave",
+      placed: "posicionado",
+      running: "running",
+      worktree: "worktree",
+      ledger: "ledger",
+      receiving: "recebendo a demanda…",
+    },
+    captions: {
+      demand: "o coordenador recebe a demanda",
+      validate: "dois repos → a lei roda em paralelo",
+      dispatch: "três agentes despachados de uma vez",
+      work: "três worktrees, trabalhando em paralelo",
+      deliver: "os PRs voltam · cada um com sua evidência",
+      review: "a revisão chega depois · QA verifica",
+      merged: "tudo mesclado · imutável",
+    },
+    script: {
+      demand: "entregue três unidades em dois repos — e mostre rodando de uma vez",
+      reviewAfter: "a revisão chega depois do trabalho, nunca antes",
+    },
+    aria: {
+      label:
+        "A AIPe despachando três agentes em dois repositórios em paralelo: Lawson em openvibes-embark/aipe-site, Marco em openvibes-embark/embark-site e Jane em agentistics/web. A lei de despacho aceita o lote como uma única wave paralela; os agentes rodam em worktrees isolados, devolvem pull requests cada um com evidência, são verificados pela revisão de QA e todos mesclam. A cena roda em loop.",
+    },
+  },
+
   console: {
     section: {
       eyebrow: "Veja rodando",

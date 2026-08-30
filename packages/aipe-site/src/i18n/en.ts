@@ -51,6 +51,50 @@ const en = {
     },
   },
 
+  // The ambient Flow scene — three agents across two repos, dispatched in
+  // parallel, running, delivering, reviewed, merged, on a loop. Status/law
+  // tokens (parallel, dispatched, delivered, verified, merged) stay English by
+  // the command/speech boundary; only prose translates.
+  flow: {
+    section: {
+      eyebrow: "Watch it run",
+      title: "Three agents. Two repos. At the same time.",
+      lead:
+        "Not a diagram of how it works — the thing working. The coordinator hands a demand to three specialists across two repositories; the dispatch law lets them run at once; PRs return and review verifies before anything merges. It loops on its own — there is nothing to press.",
+    },
+    terminalHeader: "coordinator — console",
+    labels: {
+      coordinator: "coordinator",
+      dispatchLaw: "dispatch law",
+      parallel: "parallel",
+      units: "units",
+      repos: "repos",
+      wave: "wave",
+      placed: "placed",
+      running: "running",
+      worktree: "worktree",
+      ledger: "ledger",
+      receiving: "receiving the demand…",
+    },
+    captions: {
+      demand: "the coordinator takes the demand",
+      validate: "two repos → the law runs them in parallel",
+      dispatch: "three agents dispatched at once",
+      work: "three worktrees, working in parallel",
+      deliver: "PRs return · each with its evidence",
+      review: "review arrives after · QA verifies",
+      merged: "all merged · immutable",
+    },
+    script: {
+      demand: "ship three units across two repos — and show them run at once",
+      reviewAfter: "review lands after the work, never before",
+    },
+    aria: {
+      label:
+        "AIPe dispatching three agents across two repositories in parallel: Lawson on openvibes-embark/aipe-site, Marco on openvibes-embark/embark-site, and Jane on agentistics/web. The dispatch law accepts the batch as one parallel wave; the agents run in isolated worktrees, return pull requests each carrying evidence, are verified by QA review, and all merge. The scene runs on a loop.",
+    },
+  },
+
   console: {
     section: {
       eyebrow: "Watch it run",
