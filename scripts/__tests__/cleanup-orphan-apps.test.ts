@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { testDir } from "./test-utils";
 import { rmSync, existsSync } from "node:fs";
 import {
   getActivePackages,
@@ -15,7 +16,7 @@ import {
 } from "../cleanup-orphan-apps";
 import type { ActivePackage } from "../cleanup-orphan-apps";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-cleanup-orphan");
+const TEST_DIR = testDir("cleanup-orphan");
 const PACKAGES_DIR = join(TEST_DIR, "packages");
 
 const completeConfig = {

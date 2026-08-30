@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile, readdir, readFile } from "node:fs/promises";
 import { Readable } from "node:stream";
 import { join } from "node:path";
+import { testDir } from "./test-utils";
 import { rmSync } from "node:fs";
 import {
   generateExpectedContent,
@@ -18,7 +19,7 @@ import {
   CUSTOM_BLOCK_END,
 } from "../sync-workflows";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-sync");
+const TEST_DIR = testDir("sync");
 const TEST_WORKFLOWS_DIR = join(TEST_DIR, ".github", "workflows");
 const TEST_TEMPLATE = join(TEST_DIR, "templates", "workflow.template.yml");
 

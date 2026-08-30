@@ -445,7 +445,16 @@ export async function syncWorkflows(
   }
 
   if (updated > 0) {
-    execSync("git add .github/workflows/", { cwd: ROOT, stdio: "inherit" });
+    // Stage the synced workflows in whichever repo they live in. In production
+    // `workflowsDir` is `<repo>/.github/workflows`, so this stages the real repo.
+    // In tests it points at an isolated temp dir that is not a git repo, where
+    // staging is a no-op we deliberately swallow instead of mutating (and racing
+    // on the index lock of) the caller's worktree.
+    try {
+      execSync("git add .", { cwd: workflowsDir, stdio: "ignore" });
+    } catch {
+      // workflowsDir is not inside a git repo — nothing to stage.
+    }
   }
 
   return { updated, skipped };

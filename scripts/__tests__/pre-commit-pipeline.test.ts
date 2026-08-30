@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile, readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { testDir } from "./test-utils";
 import { rmSync, existsSync } from "node:fs";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-pre-commit-pipeline");
+const TEST_DIR = testDir("pre-commit-pipeline");
 const PACKAGES_DIR = join(TEST_DIR, "packages");
 const WORKFLOWS_DIR = join(TEST_DIR, ".github", "workflows");
 

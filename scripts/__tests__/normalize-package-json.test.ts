@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { testDir } from "./test-utils";
 import { rmSync, existsSync } from "node:fs";
 import { normalizePackageJson, normalizeAllPackages } from "../normalize-package-json";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-normalize");
+const TEST_DIR = testDir("normalize");
 const PACKAGES_DIR = join(TEST_DIR, "packages");
 
 async function setup() {
