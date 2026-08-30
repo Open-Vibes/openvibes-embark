@@ -1,6 +1,8 @@
 import { describe, it, expect } from "bun:test";
 import {
+  AGENTOP_HOSTED_COUNT,
   CONTAINMENT_STATES,
+  FULLY_CONTAINED_COUNT,
   HARNESS_CONTAINMENT,
   INVESTIGATED_HARNESS_IDS,
   READER_BUCKETS,
@@ -121,5 +123,13 @@ describe("harness compatibility ledger — transcription of aipe's three-state m
 describe("the four-id dispatch/pricer union stays untouched by this ledger", () => {
   it("HARNESS_IDS from ./harness is still exactly the four adapter-backed ids", () => {
     expect(HARNESS_IDS).toEqual(["claude-code", "gemini", "codex", "copilot"]);
+  });
+});
+
+describe("host × contain counts — the honest smaller number, no percentage in sight", () => {
+  it("agentop hosts all ten; AIPe fully contains only the shipped-and-proven-capable two", () => {
+    expect(AGENTOP_HOSTED_COUNT).toBe(10);
+    expect(FULLY_CONTAINED_COUNT).toBe(2);
+    expect(AGENTOP_HOSTED_COUNT).toBeGreaterThan(FULLY_CONTAINED_COUNT);
   });
 });

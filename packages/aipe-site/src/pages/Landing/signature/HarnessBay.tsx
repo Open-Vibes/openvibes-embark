@@ -1,26 +1,21 @@
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { motion } from "framer-motion";
-import { isSessionEligible, sessionRejectReason, type HarnessId } from "../../../domain/harness";
 import {
-  AGENTOP_HOSTED_COUNT,
-  CAPABILITY_KEYS,
-  COMPAT_HARNESSES,
-  FULLY_CONTAINED_COUNT,
-  compatDispatchLine,
-  compatPercent,
-  isFullyContained,
-  type CapabilityKey,
-  type CompatHarness,
-} from "../../../domain/harnessCompat";
+  HARNESS_IDS,
+  HARNESSES,
+  isSessionEligible,
+  sessionRejectReason,
+  type HarnessId,
+} from "../../../domain/harness";
+import { AGENTOP_HOSTED_COUNT, FULLY_CONTAINED_COUNT } from "../../../domain/harnessCompat";
 import { useReducedMotion } from "../../../lib/useReducedMotion";
 import { useI18n } from "../../../i18n";
 
 /**
- * The exact mono line `aipe dispatch validate` prints for a session-mode dispatch
- * to one of the FOUR adapter harnesses. The truth (OK vs reject) comes entirely
- * from the domain module (`sessionRejectReason`), never hardcoded here. Kept as a
- * stable, tested contract even though the accordion now renders through
- * `compatDispatchLine` — the two must agree for any adapter id.
+ * The exact mono line `aipe dispatch validate` prints for a session-mode
+ * dispatch to a harness. This is the presentation contract owned by this
+ * component; the *truth* (whether it's OK or a reject) comes entirely from the
+ * domain module via `sessionRejectReason`, never hardcoded here.
  */
 export interface DispatchOutcome {
   ok: boolean;
@@ -35,39 +30,58 @@ export function dispatchOutcome(id: HarnessId): DispatchOutcome {
   return { ok: true, line: `aipe dispatch --mode session --harness ${id} validate → OK` };
 }
 
-function panelId(id: string): string {
-  return `compat-panel-${id}`;
-}
-function headerId(id: string): string {
-  return `compat-header-${id}`;
+const WORKSPACE_LABEL: Record<HarnessId, string> = {
+  "claude-code": "available",
+  gemini: "coming-soon",
+  codex: "coming-soon",
+  copilot: "coming-soon",
+};
+
+function tabId(id: HarnessId): string {
+  return `harness-tab-${id}`;
 }
 
-/** The five-check ruler: filled pips are the checks this harness passes. */
-function Ruler({ caps }: { caps: CompatHarness["caps"] }) {
-  return (
-    <span className="inline-flex items-center gap-1" aria-hidden="true">
-      {CAPABILITY_KEYS.map((k) => (
-        <span
-          key={k}
-          className={[
-            "h-1.5 w-4 rounded-full",
-            caps[k] ? "bg-brand" : "bg-line",
-          ].join(" ")}
-        />
-      ))}
-    </span>
-  );
+function panelId(id: HarnessId): string {
+  return `harness-panel-${id}`;
 }
 
 export default function HarnessBay() {
   const reduced = useReducedMotion();
   const { t } = useI18n();
   const b = t.harnessBay;
-  const [open, setOpen] = useState<string>("claude-code");
+  const [selected, setSelected] = useState<HarnessId>("claude-code");
+
+  const info = HARNESSES[selected];
+  const eligible = isSessionEligible(selected);
+  const outcome = dispatchOutcome(selected);
+
+  const onTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    const currentIndex = HARNESS_IDS.indexOf(selected);
+    let nextIndex: number | null = null;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      nextIndex = (currentIndex + 1) % HARNESS_IDS.length;
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      nextIndex = (currentIndex - 1 + HARNESS_IDS.length) % HARNESS_IDS.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = HARNESS_IDS.length - 1;
+    }
+    if (nextIndex === null) return;
+    event.preventDefault();
+    const next = HARNESS_IDS[nextIndex];
+    if (next === undefined) return;
+    setSelected(next);
+    const el = document.getElementById(tabId(next));
+    if (el) el.focus();
+  };
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Host × contain — the number the agentop print confuses, made explicit. */}
+      {/* Host × contain — the number the agentop print confuses, made explicit.
+          Two plain counts, never a percentage: agentop can HOST a session on
+          ten harnesses; AIPe fully CONTAINS only the ones below, proven by
+          their own docs in the ledger further down the section. */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-line bg-surface-1 p-5">
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-faint">{b.hostContain.hostLabel}</p>
@@ -90,164 +104,154 @@ export default function HarnessBay() {
         </p>
       </div>
 
-      {/* The ruler legend — the criterion the percentage is derived from, on the page. */}
-      <div className="rounded-2xl border border-line-soft bg-surface-1/40 p-5 sm:p-6">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-faint">{b.ruler.title}</p>
-        <ol className="mt-3 grid gap-x-8 gap-y-2 sm:grid-cols-2">
-          {CAPABILITY_KEYS.map((k, i) => (
-            <li key={k} className="flex items-start gap-2.5">
-              <span className="mt-0.5 h-1.5 w-4 shrink-0 rounded-full bg-brand" aria-hidden="true" />
-              <span className="text-[13px] leading-snug text-muted">
-                <span className="font-semibold text-text">{b.ruler.caps[k]}</span>
-                {" — "}
-                {b.ruler.hints[k]}
-              </span>
-              <span className="sr-only">{`check ${i + 1} of ${CAPABILITY_KEYS.length}`}</span>
-            </li>
-          ))}
-        </ol>
-      </div>
-
-      {/* One accordion row per harness — the PDD ten, honestly. */}
+      {/* Lane picker for the four adapter-backed harnesses — a real tablist. Each
+          lane already tells its own truth: the ✓/✕ session marker and the
+          workspace tag, so the reader sees the differentiation before selecting.
+          The full ten-harness, three-state breakdown (with sources) is the
+          ledger further down this section — this widget is the live "try it"
+          demo for the four AIPe has an adapter for today. */}
       <div className="overflow-hidden rounded-2xl border border-line bg-surface-1">
-        <ul className="divide-y divide-line">
-          {COMPAT_HARNESSES.map((h) => {
-            const active = open === h.id;
-            const contained = isFullyContained(h);
-            const pct = compatPercent(h);
-            const line = compatDispatchLine(h);
-            const okLine = h.adapter !== null && isSessionEligible(h.adapter);
-            const c = b.copy[h.copyKey];
+        <div
+          role="tablist"
+          aria-label="Harness lanes"
+          aria-orientation="horizontal"
+          className="grid grid-cols-1 gap-px border-b border-line bg-line sm:grid-cols-2 lg:grid-cols-4"
+        >
+          {HARNESS_IDS.map((id) => {
+            const laneEligible = isSessionEligible(id);
+            const active = id === selected;
             return (
-              <li key={h.id}>
-                <h4>
-                  <button
-                    type="button"
-                    id={headerId(h.id)}
-                    aria-expanded={active}
-                    aria-controls={panelId(h.id)}
-                    onClick={() => setOpen(active ? "" : h.id)}
-                    className={[
-                      "flex w-full items-center gap-4 px-4 py-4 text-left transition-colors sm:px-5",
-                      reduced ? "transition-none" : "",
-                      active ? "bg-surface-2" : "hover:bg-surface-2/50",
-                    ].join(" ")}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={[
-                        "shrink-0 text-faint transition-transform",
-                        reduced ? "transition-none" : "",
-                        active ? "rotate-90" : "",
-                      ].join(" ")}
-                    >
-                      ▸
+              <button
+                key={id}
+                id={tabId(id)}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                aria-controls={panelId(id)}
+                tabIndex={active ? 0 : -1}
+                onClick={() => setSelected(id)}
+                onKeyDown={onTabKeyDown}
+                className={[
+                  "group flex flex-col gap-2 px-4 py-3.5 text-left transition-colors",
+                  reduced ? "transition-none" : "",
+                  active ? "bg-surface-2" : "bg-surface-1 hover:bg-surface-2/60",
+                ].join(" ")}
+              >
+                <span className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-sm text-text">{id}</span>
+                  {active ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-brand/15 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-brand-strong">
+                      <span aria-hidden="true">●</span>{b.selected}
                     </span>
-
-                    <span className="min-w-0 flex-1">
-                      <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                        <span className="font-display text-base font-semibold text-text">{h.label}</span>
-                        <span className="font-mono text-[11px] text-faint">
-                          {b.row.hostedAs} {h.agentopName}
-                        </span>
-                        {contained ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-state-verified/15 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-state-verified">
-                            <span aria-hidden="true">✓</span>
-                            {b.row.fullyContained}
-                          </span>
-                        ) : h.adapter !== null ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-state-running/15 px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-state-running">
-                            {b.row.adapterNotContained}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-line px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-faint">
-                            {b.row.notVerified}
-                          </span>
-                        )}
-                      </span>
-                    </span>
-
-                    <span className="flex shrink-0 flex-col items-end gap-1">
-                      <span
-                        className={[
-                          "font-display text-lg font-semibold tabular-nums",
-                          contained ? "text-state-verified" : "text-text",
-                        ].join(" ")}
-                      >
-                        {pct}%
-                      </span>
-                      <Ruler caps={h.caps} />
-                    </span>
-                  </button>
-                </h4>
-
-                {active && (
-                  <motion.div
-                    id={panelId(h.id)}
-                    role="region"
-                    aria-labelledby={headerId(h.id)}
-                    initial={reduced ? false : { opacity: 0, height: 0 }}
-                    animate={reduced ? {} : { opacity: 1, height: "auto" }}
-                    transition={reduced ? { duration: 0 } : { duration: 0.22, ease: "easeOut" }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-4 px-4 pb-5 pt-1 sm:px-5">
-                      <p className="max-w-3xl text-sm leading-relaxed text-muted">
-                        <span className="font-semibold text-text">
-                          {contained ? b.row.whyContainedLabel : b.row.whyNotLabel}
-                        </span>{" "}
-                        {c.why}
-                      </p>
-
-                      {!contained && (
-                        <p className="max-w-3xl text-sm leading-relaxed text-muted">
-                          <span className="font-semibold text-text">{b.row.whatsMissingLabel}</span>{" "}
-                          {"missing" in c ? c.missing : ""}
-                        </p>
-                      )}
-
-                      <div
-                        className={[
-                          "overflow-x-auto rounded-lg border px-3.5 py-2.5",
-                          okLine
-                            ? "border-state-verified/25 bg-state-verified/10"
-                            : "border-state-failed/25 bg-state-failed/10",
-                        ].join(" ")}
-                      >
-                        <code
-                          className={[
-                            "block whitespace-pre font-mono text-[12.5px] leading-relaxed",
-                            okLine ? "text-state-verified" : "text-state-failed",
-                          ].join(" ")}
-                        >
-                          {okLine ? line : `✕ ${line}`}
-                        </code>
-                      </div>
-
-                      {!contained && (
-                        <div className="rounded-lg border border-state-running/25 bg-state-running/[0.07] px-4 py-3.5">
-                          <p className="text-sm leading-relaxed text-muted">
-                            <span className="font-semibold text-text">{b.row.howAnywayLabel}</span>{" "}
-                            {b.degraded.howAnyway}
-                          </p>
-                          <p className="mt-2 flex items-start gap-2 text-sm leading-relaxed text-muted">
-                            <span
-                              className="mt-px shrink-0 rounded-sm bg-state-running/20 px-1.5 font-mono text-[10px] font-bold uppercase text-state-running"
-                              aria-hidden="true"
-                            >
-                              {b.row.tradeoff}
-                            </span>
-                            <span>{b.degraded.lose}</span>
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </li>
+                  ) : null}
+                </span>
+                <span
+                  className={[
+                    "inline-flex w-fit items-center gap-1.5 font-sans text-[11px] font-medium",
+                    laneEligible ? "text-state-verified" : "text-state-failed",
+                  ].join(" ")}
+                >
+                  <span aria-hidden="true" className="text-xs leading-none">
+                    {laneEligible ? "✓" : "✕"}
+                  </span>
+                  {laneEligible ? b.sessionEligible : b.notContainable}
+                </span>
+                <span className="font-mono text-[10px] text-faint">
+                  {b.workspacePrefix} {WORKSPACE_LABEL[id]}
+                </span>
+              </button>
             );
           })}
-        </ul>
+        </div>
+
+        {/* Detail for the selected lane. Content is always present (default is
+            claude-code → a full green panel), so there is never an empty box; the
+            fade is purely decorative and off under reduced motion. */}
+        <motion.div
+          key={selected}
+          id={panelId(selected)}
+          role="tabpanel"
+          aria-labelledby={tabId(selected)}
+          tabIndex={0}
+          initial={reduced ? false : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={reduced ? { duration: 0 } : { duration: 0.22, ease: "easeOut" }}
+          className="p-5 sm:p-6"
+        >
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span className="font-mono text-sm text-muted">
+              {info.id} <span className="text-faint">·</span> bin{" "}
+              <span className="text-text">{info.bin}</span>
+            </span>
+            {eligible ? (
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-state-verified/40 bg-state-verified/12 px-2.5 py-1 font-sans text-xs font-semibold text-state-verified">
+                <span aria-hidden="true">✓</span> {b.sessionEligible}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-state-failed/40 bg-state-failed/12 px-2.5 py-1 font-sans text-xs font-semibold text-state-failed">
+                <span aria-hidden="true">✕</span> {b.sessionRejected}
+              </span>
+            )}
+          </div>
+
+          {/* Containment mechanism / rejection reason, straight from domain `why`. */}
+          <p className="mt-4 max-w-2xl font-sans text-sm leading-relaxed text-muted">
+            <span className="font-semibold text-text">
+              {eligible ? b.containment : b.whyNotContained}
+            </span>
+            {info.why}
+          </p>
+
+          {/* The mono result line — the honest OK vs the honest reject. */}
+          <div
+            className={[
+              "mt-4 overflow-x-auto rounded-lg border px-3.5 py-2.5",
+              eligible
+                ? "border-state-verified/25 bg-state-verified/10"
+                : "border-state-failed/25 bg-state-failed/10",
+            ].join(" ")}
+          >
+            <code
+              className={[
+                "block whitespace-pre font-mono text-[13px] leading-relaxed",
+                eligible ? "text-state-verified" : "text-state-failed",
+              ].join(" ")}
+            >
+              {eligible ? (
+                outcome.line
+              ) : (
+                <>
+                  <span aria-hidden="true">✕ </span>
+                  {outcome.line}
+                </>
+              )}
+            </code>
+          </div>
+
+          {/* Secondary: workspace-harness status, distinct from unit session-eligibility. */}
+          <div className="mt-5 border-t border-line-soft pt-4">
+            <p className="font-sans text-xs leading-relaxed text-faint">
+              <span className="font-semibold uppercase tracking-wide text-muted">
+                {b.workspaceHarnessAt}{" "}
+                <span className="font-mono normal-case tracking-normal">aipe start</span>:
+              </span>{" "}
+              <span
+                className={
+                  info.workspaceStatus === "available" ? "text-state-verified" : "text-state-running"
+                }
+              >
+                {info.workspaceStatus}
+              </span>
+              {selected === "gemini" ? (
+                <>
+                  {b.geminiNoteBefore}
+                  <em className="not-italic text-muted">{b.geminiNoteEmphasis}</em>
+                  {b.geminiNoteAfter}
+                </>
+              ) : null}
+            </p>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

@@ -20,6 +20,23 @@
  * technical analysis, not marketing copy, and translating a citation risks
  * quietly changing what it proves. Only the UI chrome around this data
  * (headings, group labels, field labels) goes through i18n.
+ *
+ * All TEN harnesses `agentop` can host get a row here — the same axis a prior
+ * pass at this page (#21) got right and this module keeps: INSTALL CONTENT ×
+ * CONTAIN SESSION. Any harness that reads a file can install AIPe's content;
+ * that is why the wider host list (and, on the PDD, ten harnesses) is easy to
+ * reach. AIPe asks for more — it has to CONTAIN the session, which needs an
+ * interception hook trusted with no human present (aipe/src/harness/types.ts:
+ * "A harness whose adapter returns null cannot be contained — and is
+ * therefore NOT eligible for session-mode dispatch."). Modelling all ten
+ * instead of only the four with an adapter is the point: it keeps the gap
+ * between "can host" and "AIPe can contain" legible instead of hidden behind
+ * the smaller number. What #21 got wrong was collapsing that gap into a
+ * single five-check percentage, which reads a docs-proven-capable-but-
+ * unadapted harness (e.g. factory-droid) as identical to a docs-proven-
+ * INcapable one (cursor) — both landed at the same 40%. Three states, cited
+ * to primary sources, replace that percentage; see the coordinator's ruling
+ * in this journey's ledger (task gate-pr23) for why.
  */
 
 /** The three states, ordered strong → weak → open. */
@@ -319,3 +336,9 @@ export function bucketFor(h: HarnessContainment): ReaderBucket {
   if (h.state === "non-containable-proven") return "proven-limit";
   return h.adapterId !== null ? "shipped" : "backlog";
 }
+
+/** How many harnesses agentop can HOST a session on (the bigger, host-axis number). */
+export const AGENTOP_HOSTED_COUNT = HARNESS_CONTAINMENT.length;
+
+/** How many AIPe fully CONTAINS today — shipped adapter, proven capable (the smaller, honest number). */
+export const FULLY_CONTAINED_COUNT = HARNESS_CONTAINMENT.filter((h) => bucketFor(h) === "shipped").length;

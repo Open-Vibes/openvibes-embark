@@ -301,7 +301,7 @@ const en = {
   harnessSection: {
     eyebrow: "Multi-harness",
     title: "Ten harnesses can host it. Two, AIPe can fully contain. Both numbers are honest.",
-    lead: "agentop can run an AIPe session on any of ten agent CLIs — the same ten the PDD reaches. But session mode needs true containment, and only claude-code and gemini clear that bar today. Here's every harness, what's missing, and how to run AIPe on it anyway.",
+    lead: "agentop can run an AIPe session on any of ten agent CLIs — the same ten the PDD reaches. But session mode needs true containment, and only claude-code and gemini clear that bar today. See the honest count below, try the live dispatch check, then read the full three-state ledger — every claim sourced — further down.",
   },
 
   harnessBay: {
@@ -316,58 +316,17 @@ const en = {
       body: "The PDD reaches ten harnesses because it installs CONTENT — skills and prompts. Any agent that can read a file passes. AIPe asks for more: it has to CONTAIN the session, which needs a hook that blocks a command before it runs and is trusted with no human present. Installing is easy; containing is the promise — and it's why AIPe's fully-supported number is smaller. Not less capable, more accountable.",
       rule: "aipe/src/harness/types.ts — “A harness whose adapter returns null cannot be contained — and is therefore NOT eligible for session-mode dispatch. That is the whole eligibility rule: AIPe never starts a session it cannot govern.”",
     },
-    ruler: {
-      title: "How the percentage is measured — five checks, each verifiable in aipe/src/harness",
-      caps: {
-        contentInstall: "installs content",
-        agentopHost: "agentop host",
-        dedicatedAdapter: "dedicated adapter",
-        interceptionHook: "interception hook",
-        headlessContainment: "trusted headless",
-      },
-      hints: {
-        contentInstall: "AIPe can write its personas and skills here — natively, or via the generic AGENTS.md path.",
-        agentopHost: "agentop can start and host a session on this harness.",
-        dedicatedAdapter: "a native aipe adapter exists, not just the generic fallback.",
-        interceptionHook: "that adapter writes a block-before-execute hook (PreToolUse / BeforeTool).",
-        headlessContainment: "the hook holds with no human present — the decisive check for session dispatch.",
-      },
-    },
-    row: {
-      hostedAs: "agentop:",
-      fullyContained: "fully contained",
-      adapterNotContained: "adapter · not contained",
-      notVerified: "not verified",
-      whyContainedLabel: "Why it's contained:",
-      whyNotLabel: "Why it isn't contained:",
-      whatsMissingLabel: "What's missing:",
-      howAnywayLabel: "Use it anyway:",
-      tradeoff: "trade-off",
-    },
-    degraded: {
-      howAnyway: "AIPe still installs the personas and skills. Run the specialist as a subagent inside a contained parent session, or let a person start the session and accept the harness's trust prompt once.",
-      lose: "You lose the guarantee AIPe otherwise enforces — that the agent can't step outside its worktree. That guarantee becomes yours to hold.",
-    },
-    copy: {
-      "claude-code": {
-        why: "AIPe writes a PreToolUse hook into .claude/settings.json. It's trusted with no human present, so an unattended dispatch is fully governed — the reference containment every other adapter is measured against.",
-      },
-      gemini: {
-        why: "AIPe writes a BeforeTool hook into .gemini/settings.json. Gemini's folder-trust is disabled by default, so a fresh worktree loads the hook with no prompt — containable, and it's what unlocks cross-model QA.",
-      },
-      codex: {
-        missing: "A file-declarable trust path, so the hook AIPe already writes is honoured without someone running /hooks by hand.",
-        why: "Codex trusts a hook only when a human runs /hooks interactively — trust is per-hook-hash, with no config-file way to self-declare it, and dispatch is non-interactive. AIPe writes the hook; it stays present, well-formed, and never trusted, so containmentHook() returns null on purpose.",
-      },
-      copilot: {
-        missing: "A workspace-scoped, non-interactive directory trust a fresh worktree can satisfy without a prompt.",
-        why: "Copilot CLI asks you to trust any directory it hasn't seen, and every worktree is new by construction. The one file-declarable trust list (~/.copilot/config.json) is global, outlives the worktree, and isn't confirmed to gate hook-loading — so AIPe won't rely on it. containmentHook() returns null.",
-      },
-      "no-adapter": {
-        missing: "A dedicated aipe adapter. The path exists (the generic mode); the native integration that would make it contain-ready does not.",
-        why: "agentop can host a session here, and the generic AGENTS.md path can install AIPe's instructions — but there is no dedicated adapter in aipe/src/harness yet, and the generic path hasn't been validated in a live session.",
-      },
-    },
+    selected: "selected",
+    sessionEligible: "session-eligible",
+    notContainable: "not containable",
+    workspacePrefix: "workspace:",
+    sessionRejected: "session dispatch rejected",
+    containment: "Containment: ",
+    whyNotContained: "Why it can't be contained: ",
+    workspaceHarnessAt: "Workspace harness at",
+    geminiNoteBefore: " — still session-eligible as a ",
+    geminiNoteEmphasis: "unit",
+    geminiNoteAfter: " dispatch harness, which is what enables cross-model QA.",
   },
 
   harnessCompat: {
