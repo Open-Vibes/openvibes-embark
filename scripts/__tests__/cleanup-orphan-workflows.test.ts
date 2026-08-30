@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
+import { testDir } from "./test-utils";
 import { rmSync } from "node:fs";
 import {
   getPackageNames,
@@ -9,7 +10,7 @@ import {
   cleanOrphanWorkflows,
 } from "../cleanup-orphan-workflows";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-cleanup");
+const TEST_DIR = testDir("cleanup");
 const TEST_PACKAGES_DIR = join(TEST_DIR, "packages");
 const TEST_WORKFLOWS_DIR = join(TEST_DIR, ".github", "workflows");
 

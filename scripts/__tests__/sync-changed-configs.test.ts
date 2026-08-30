@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { testDir } from "./test-utils";
 import { rmSync, existsSync } from "node:fs";
 import { syncWorkflowForPackage } from "../sync-changed-configs";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-sync-changed");
+const TEST_DIR = testDir("sync-changed");
 const PACKAGES_DIR = join(TEST_DIR, "packages");
 const WORKFLOWS_DIR = join(TEST_DIR, "workflows");
 

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { mkdir, writeFile, rm } from "node:fs/promises";
 import { execSync } from "node:child_process";
 import { join } from "node:path";
+import { testDir } from "./test-utils";
 import {
   fileExists,
   removeDemoArtifacts,
@@ -12,7 +13,7 @@ import {
   syncUpstream,
 } from "../sync-upstream";
 
-const TEST_DIR = join(import.meta.dirname, "../..", ".test-sync-upstream");
+const TEST_DIR = testDir("sync-upstream");
 
 async function setupTest() {
   await mkdir(TEST_DIR, { recursive: true });
