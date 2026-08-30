@@ -1,173 +1,344 @@
 /**
- * Harness COMPATIBILITY — the honest, per-harness accordion truth.
+ * Harness containment ledger — a manual transcription for the landing page.
  *
- * This is a *presentation* model (the pricer's `HarnessId`/`HARNESSES` in
- * ./harness.ts stays the 4-id adapter union it always was — envelope pricing and
- * the dispatch law depend on that union and must not change). Here we answer a
- * different question, the one the PE asked: for EACH harness the agentop print
- * lists, how compatible is it with AIPe, what is missing, why, and how do you
- * run AIPe on it anyway?
+ * Source of truth: the `aipe` repo, `src/harness/compat.ts` (branch `dev`,
+ * merged to `dev` via PR #57, commit 0ff1d2b). `aipe` and `aipe-site` are
+ * separate repos with no shared package boundary, so this is a transcription,
+ * not an import — it classifies the SAME ten harnesses `agentop` can host, in
+ * the SAME three states, citing the SAME primary sources. If the upstream
+ * ledger changes, this file has to be updated by hand; it cannot drift
+ * silently the way a shared import could, but nothing here re-verifies the
+ * claims — that verification lives in `aipe`.
  *
- * The row set is the ten harnesses agentop can HOST a session on — the same list
- * the PDD reaches (Claude Code, Codex, Cursor, GitHub Copilot, Gemini CLI,
- * Antigravity, Factory Droid, Kimi Code, OpenCode, Pi). Modelling all ten is the
- * point: it makes the host × contain gap legible instead of hiding the smaller
- * number.
+ * This is presentation data. It is deliberately disjoint from `HARNESS_IDS` in
+ * ./harness.ts — the four-id union the envelope pricer and the dispatch law
+ * depend on. Nothing in this file may be used to widen or touch that union.
  *
- * INSTALL CONTENT × CONTAIN SESSION — the axis the whole section teaches. The
- * PDD reaches ten because it installs *content* (skills, prompts): any harness
- * that reads a file passes. AIPe must *contain the session*, and containment
- * needs an interception hook that is trusted with NO human present — the rule is
- * written verbatim in aipe/src/harness/types.ts:40-42: "A harness whose adapter
- * returns null cannot be contained — and is therefore NOT eligible for
- * session-mode dispatch. That is the whole eligibility rule: AIPe never starts a
- * session it cannot govern."
+ * `headline`, `caveat`, and every `quote` are kept English-only in both
+ * locales, matching how `HarnessInfo.why` in ./harness.ts already renders
+ * regardless of locale: these are primary-source citations and close
+ * technical analysis, not marketing copy, and translating a citation risks
+ * quietly changing what it proves. Only the UI chrome around this data
+ * (headings, group labels, field labels) goes through i18n.
  *
- * Every boolean below is a fact checkable in aipe/src/harness — never a vibe.
- * The five capability checks ARE the visible ruler the percentage is derived
- * from; a number without a ruler is a guess wearing a data costume.
+ * All TEN harnesses `agentop` can host get a row here — the same axis a prior
+ * pass at this page (#21) got right and this module keeps: INSTALL CONTENT ×
+ * CONTAIN SESSION. Any harness that reads a file can install AIPe's content;
+ * that is why the wider host list (and, on the PDD, ten harnesses) is easy to
+ * reach. AIPe asks for more — it has to CONTAIN the session, which needs an
+ * interception hook trusted with no human present (aipe/src/harness/types.ts:
+ * "A harness whose adapter returns null cannot be contained — and is
+ * therefore NOT eligible for session-mode dispatch."). Modelling all ten
+ * instead of only the four with an adapter is the point: it keeps the gap
+ * between "can host" and "AIPe can contain" legible instead of hidden behind
+ * the smaller number. What #21 got wrong was collapsing that gap into a
+ * single five-check percentage, which reads a docs-proven-capable-but-
+ * unadapted harness (e.g. factory-droid) as identical to a docs-proven-
+ * INcapable one (cursor) — both landed at the same 40%. Three states, cited
+ * to primary sources, replace that percentage; see the coordinator's ruling
+ * in this journey's ledger (task gate-pr23) for why.
  */
 
-import { HARNESSES, isSessionEligible, sessionRejectReason, type HarnessId } from "./harness";
-
-export type CompatId =
-  | "claude-code"
-  | "codex"
-  | "cursor"
-  | "copilot"
-  | "gemini"
-  | "antigravity"
-  | "factory-droid"
-  | "kimi-code"
-  | "opencode"
-  | "pi";
-
-/**
- * The five verifiable capabilities the compatibility percentage is built from.
- * In ascending order of what they demand — the first two are the PDD-parity
- * floor (content install + a host), the last is the AIPe-only bar (containment
- * that holds unattended). Shown on the page as the ruler.
- */
-export const CAPABILITY_KEYS = [
-  "contentInstall",
-  "agentopHost",
-  "dedicatedAdapter",
-  "interceptionHook",
-  "headlessContainment",
+/** The three states, ordered strong → weak → open. */
+export const CONTAINMENT_STATES = [
+  // A reliable interception hook that blocks a command with NO human present —
+  // proven against the tool's own docs.
+  "containable-proven",
+  // The mechanism needs a human (trust/approval), or does not exist at all —
+  // proven against the tool's own docs.
+  "non-containable-proven",
+  // Nobody has verified, or the documentation does not answer.
+  "unestablished",
 ] as const;
-export type CapabilityKey = (typeof CAPABILITY_KEYS)[number];
 
-/** How the row's copy is sourced: a per-harness block, or the shared no-adapter one. */
-export type CompatCopyKey = HarnessId | "no-adapter";
+export type ContainmentState = (typeof CONTAINMENT_STATES)[number];
 
-export interface CompatHarness {
-  id: CompatId;
-  /** Display name from the PDD list — a proper noun, identical in both locales. */
+export interface ContainmentSource {
+  /** Primary source: the tool's OWN documentation, never a third-party blog. */
+  url: string;
+  /** ISO date the page was read (YYYY-MM-DD). */
+  accessed: string;
+  /** Verbatim from the source — the sentence that carries the claim. */
+  quote: string;
+}
+
+export interface HarnessContainment {
+  /** The id `agentop` hosts this harness under. */
+  id: string;
   label: string;
-  /** The name agentop knows it by (the HOST axis). Every row has one — all ten are hosted. */
-  agentopName: string;
-  /** The aipe adapter id backing this row, or null when only the generic path reaches it. */
-  adapter: HarnessId | null;
-  /** The five capability facts, each checkable in aipe/src/harness. */
-  caps: Record<CapabilityKey, boolean>;
-  /** Which i18n copy block explains this row (`why` / `missing` / `howAnyway` / `lose`). */
-  copyKey: CompatCopyKey;
+  /** The `aipe` adapter id when one exists, else null — a real AIPe adapter. */
+  adapterId: string | null;
+  state: ContainmentState;
+  /** One plain-language line: the verdict and, for `unestablished`, why. */
+  headline: string;
+  /** Primary sources. Non-empty for any `*-proven` state. */
+  sources: ContainmentSource[];
+  /** A documented reservation that qualifies an otherwise-proven state. */
+  caveat?: string;
 }
 
-/** A harness with a dedicated aipe adapter. `caps` derives from the real adapter facts. */
-function adapterRow(
-  id: CompatId & HarnessId,
-  label: string,
-  agentopName: string,
-): CompatHarness {
-  const contained = isSessionEligible(id);
-  return {
-    id,
-    label,
-    agentopName,
-    adapter: id,
-    caps: {
-      contentInstall: true, // installIntegration writes personas/flow-skills
-      agentopHost: true, // agentopHarness !== null
-      dedicatedAdapter: true, // present in aipe/src/harness/registry.ts
-      interceptionHook: true, // the adapter writes a PreToolUse/BeforeTool hook…
-      headlessContainment: contained, // …but only claude-code/gemini's is trusted with no human
-    },
-    copyKey: id,
-  };
+const D = "2026-08-30"; // the day the aipe investigation read every source below
+
+export const HARNESS_CONTAINMENT: readonly HarnessContainment[] = [
+  {
+    id: "claude-code",
+    label: "Claude Code",
+    adapterId: "claude-code",
+    state: "containable-proven",
+    headline:
+      "PreToolUse hook denies a command from settings.json; user-level hooks run with no trust prompt. The reference adapter.",
+    sources: [
+      {
+        url: "https://code.claude.com/docs/en/hooks",
+        accessed: D,
+        quote:
+          'Exit 2 means a blocking error. On events that can block, exit 2 blocks whether or not you print JSON: even a JSON permissionDecision of "allow" can\'t override it.',
+      },
+    ],
+  },
+  {
+    id: "gemini",
+    label: "Gemini CLI",
+    adapterId: "gemini",
+    state: "containable-proven",
+    headline:
+      "BeforeTool hook blocks run_shell_command; folder trust is disabled by default, so a fresh worktree loads .gemini/settings.json with no prompt.",
+    sources: [
+      {
+        url: "https://google-gemini.github.io/gemini-cli/docs/cli/trusted-folders.html",
+        accessed: D,
+        quote: "The Trusted Folders feature is disabled by default.",
+      },
+    ],
+  },
+  {
+    id: "codex",
+    label: "OpenAI Codex CLI",
+    adapterId: "codex",
+    state: "non-containable-proven",
+    headline:
+      "A non-managed hook is inert until a human trusts it via /hooks (trust is per-hook-hash). Reconfirmed 2026-08-30 — unchanged.",
+    sources: [
+      {
+        url: "https://learn.chatgpt.com/docs/hooks",
+        accessed: D,
+        quote:
+          "Before a non-managed hook can run, Codex requires you to review and trust the exact hook definition. Codex records trust against the hook's current hash, so new or changed hooks are marked for review and skipped until trusted.",
+      },
+      {
+        url: "https://learn.chatgpt.com/docs/hooks",
+        accessed: D,
+        quote:
+          "For one-off automation that already vets hook sources outside Codex, pass --dangerously-bypass-hook-trust to run enabled hooks without requiring persisted hook trust for that invocation.",
+      },
+    ],
+    caveat:
+      "The only non-interactive path is an admin-managed hook via requirements.toml, or the per-invocation --dangerously-bypass-hook-trust flag — neither is a workspace-relative hook AIPe can self-declare. No `codex hooks trust request` command appears in the official docs (only in third-party writeups and a GitHub feature request).",
+  },
+  {
+    id: "copilot",
+    label: "GitHub Copilot CLI",
+    adapterId: "copilot",
+    state: "non-containable-proven",
+    headline:
+      "Default-on directory trust gates a fresh worktree, and repository hooks are not stated to be exempt. Reconfirmed 2026-08-30 — unchanged.",
+    sources: [
+      {
+        url: "https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/configure-copilot-cli",
+        accessed: D,
+        quote:
+          "When you start a GitHub Copilot CLI session, you'll be asked to confirm that you trust the files in, and below, the directory from which you launched the CLI.",
+      },
+      {
+        url: "https://docs.github.com/en/copilot/reference/hooks-reference",
+        accessed: D,
+        quote: "Policy hooks are available regardless of folder trust state.",
+      },
+    ],
+    caveat:
+      "Only policy hooks are singled out as exempt from folder trust, which implies repository-level hooks (what AIPe writes to .github/hooks/aipe.json) are subject to it. GitHub's own docs do not state whether -p/programmatic mode skips the trust prompt; the only claim to that effect is a third-party blog.",
+  },
+  {
+    id: "cursor",
+    label: "Cursor",
+    adapterId: null,
+    state: "non-containable-proven",
+    headline:
+      "beforeShellExecution can deny a command, but project hooks load only in a trusted workspace — a human trust step a fresh worktree does not clear.",
+    sources: [
+      {
+        url: "https://cursor.com/docs/hooks",
+        accessed: D,
+        quote:
+          "When team members open the project in a trusted workspace, Cursor automatically loads and runs the project hooks.",
+      },
+      {
+        url: "https://cursor.com/docs/hooks",
+        accessed: D,
+        quote: "User-level hooks (~/.cursor/hooks.json) are not available in cloud agents.",
+      },
+    ],
+    caveat:
+      'The deny mechanism (beforeShellExecution → permission "deny", or exit code 2) is real, but its documented auto-load path is gated on workspace trust; the only trust-free path, user-level hooks, is explicitly unavailable to cloud agents, and no doc confirms headless --print enforcement.',
+  },
+  {
+    id: "antigravity",
+    label: "Antigravity",
+    adapterId: null,
+    state: "unestablished",
+    headline:
+      'A genuine candidate: docs show a config-file PreToolUse decision:"deny" hard-block with NO documented trust gate — but they do not confirm the hooks file loads under an unattended headless run. NOT proven non-containable.',
+    sources: [
+      {
+        url: "https://antigravity.google/docs/ide/hooks/",
+        accessed: D,
+        quote: '"deny": Hard blocks execution immediately.',
+      },
+      {
+        url: "https://antigravity.google/docs/ide/hooks/",
+        accessed: D,
+        quote:
+          "Hooks are configured in a hooks.json file located in your customization directory (e.g., .agents/ in your workspace or ~/.gemini/config/).",
+      },
+    ],
+    caveat:
+      'Unlike Codex/Copilot/Cursor, no human-trust precondition is documented, and "deny" is an automatic decision distinct from the interactive "ask"/"force_ask" — so the mechanism reads as non-interactive by construction. What the docs do NOT state: whether hooks.json loads automatically or needs a manual activation/enable step, and whether it runs in a fully headless no-human session. That gap is the reason the state is `unestablished` rather than `containable-proven`. This is the answer to the PE\'s flag: the documentation does not fully resolve it, but it is a real adapter candidate, not the same as the proven-non-containable harnesses it was lumped with.',
+  },
+  {
+    id: "factory-droid",
+    label: "Factory Droid",
+    adapterId: null,
+    state: "containable-proven",
+    headline:
+      "commandBlocklist can never run — no approval prompt, holds even under --skip-permissions-unsafe — plus a PreToolUse deny hook in .factory/hooks.json.",
+    sources: [
+      {
+        url: "https://docs.factory.ai/autonomy-and-safety/auto-run",
+        accessed: D,
+        quote:
+          "Blocklist entries can never run: there is no approval prompt, and the block holds even under full autonomy, auto-run, or --skip-permissions-unsafe.",
+      },
+      {
+        url: "https://docs.factory.ai/reference/hooks-reference",
+        accessed: D,
+        quote:
+          'The PreToolUse event runs "After Droid builds tool parameters and before the tool runs"; exit code 2 blocks the tool call, or permissionDecision "deny" blocks it.',
+      },
+    ],
+    caveat:
+      "The airtight, explicitly-headless guarantee is the commandBlocklist (a static denylist, verified to hold under --skip-permissions-unsafe). The PreToolUse hook meets every other bar (config-file, automatic, deny-before-execution, no trust step) but the docs do not verbatim state it fires during `droid exec` headless runs. Not yet AIPe-verified end-to-end.",
+  },
+  {
+    id: "kimi-code",
+    label: "Kimi CLI",
+    adapterId: null,
+    state: "containable-proven",
+    headline:
+      "PreToolUse hook in ~/.kimi-code/config.toml blocks before the tool runs (exit 2 / permissionDecision deny), with no trust gate — but the design is fail-open.",
+    sources: [
+      {
+        url: "https://moonshotai.github.io/kimi-code/en/customization/hooks",
+        accessed: D,
+        quote: "Triggered before a tool call (before permission checks); the tool will not execute if blocked.",
+      },
+      {
+        url: "https://moonshotai.github.io/kimi-code/en/customization/hooks",
+        accessed: D,
+        quote: "Exit code: 2 means block, other non-zero values default to allow.",
+      },
+    ],
+    caveat:
+      'Fail-open by design: only exit code 2 (or an explicit JSON deny) blocks — every other outcome, including a crash or timeout, defaults to allow, and Moonshot itself warns the hook "should not be used as the sole security barrier." A correctly-authored deny hook blocks reliably and headlessly; containment is only as strong as the hook script\'s robustness. Not yet AIPe-verified end-to-end.',
+  },
+  {
+    id: "opencode",
+    label: "opencode",
+    adapterId: null,
+    state: "containable-proven",
+    headline:
+      'permission "deny" blocks a bash command and stays enforced under --auto; config and plugins auto-load at startup with no trust step.',
+    sources: [
+      {
+        url: "https://opencode.ai/docs/permissions",
+        accessed: D,
+        quote: '"deny" — block the action.',
+      },
+      {
+        url: "https://opencode.ai/docs/permissions",
+        accessed: D,
+        quote: 'Explicit "deny" rules are still enforced. Auto mode only changes requests that would otherwise ask for approval.',
+      },
+    ],
+    caveat:
+      'Default-permissive: most permissions default to allow, and under --auto only *explicitly* denied commands are blocked. Reliable containment requires authoring an explicit default-deny-plus-allowlist (e.g. `"bash": { "*": "deny", ... }`), not relying on defaults. Not yet AIPe-verified end-to-end.',
+  },
+  {
+    id: "pi",
+    label: "pi (earendil-works/pi)",
+    adapterId: null,
+    state: "containable-proven",
+    headline:
+      "beforeToolCall/tool_call hook blocks a Bash command before it executes; user/global and -e extensions load with no trust gate.",
+    sources: [
+      {
+        url: "https://github.com/earendil-works/pi/blob/main/packages/coding-agent/docs/extensions.md",
+        accessed: D,
+        quote: "Fired after tool_execution_start, before the tool executes. Can block.",
+      },
+      {
+        url: "https://github.com/earendil-works/pi/blob/main/packages/agent/README.md",
+        accessed: D,
+        quote:
+          'It can block execution and attach terminate: true to the blocked result (e.g. { block: true, reason: "bash is disabled", terminate: true }).',
+      },
+    ],
+    caveat:
+      'Containment holds only if the deny hook ships as a global/user (~/.pi/agent/extensions/) or CLI `-e` extension: project-local .pi/extensions are gated behind interactive project-trust resolution. "pi" identified as the open-source terminal agent earendil-works/pi (a.k.a. badlogic/pi-mono). Not yet AIPe-verified end-to-end.',
+  },
+] as const;
+
+/** The ten ids, in ledger order. A distinct set from HARNESS_IDS in ./harness. */
+export const INVESTIGATED_HARNESS_IDS: readonly string[] = HARNESS_CONTAINMENT.map((h) => h.id);
+
+export function containmentFor(id: string): HarnessContainment | undefined {
+  return HARNESS_CONTAINMENT.find((h) => h.id === id);
 }
 
-/** A harness agentop hosts but aipe has NO dedicated adapter for — the generic path only. */
-function genericOnlyRow(id: CompatId, label: string, agentopName: string): CompatHarness {
-  return {
-    id,
-    label,
-    agentopName,
-    adapter: null,
-    caps: {
-      contentInstall: true, // the generic AGENTS.md adapter installs content anywhere a file is read…
-      agentopHost: true, // …and agentop lists it as a host
-      dedicatedAdapter: false, // but no native adapter in aipe/src/harness/registry.ts
-      interceptionHook: false,
-      headlessContainment: false,
-    },
-    copyKey: "no-adapter",
-  };
+export function harnessesInState(state: ContainmentState): HarnessContainment[] {
+  return HARNESS_CONTAINMENT.filter((h) => h.state === state);
 }
 
 /**
- * The ten rows, in the PDD list's own order so a reader comparing the two lists
- * lands on the same sequence. The four adapter rows carry real adapter truth;
- * the six generic-only rows are marked as such and never dressed up as supported.
+ * The reader-facing grouping this page actually renders. It is a stricter cut
+ * than `state` alone: `state` answers "can the tool be contained", but a
+ * reader also needs "has AIPe built it" kept as a separate axis, or backlog
+ * work (a real adapter simply not written yet) reads as the same kind of gap
+ * as a proven human-trust limitation. Four buckets, never collapsed:
+ *
+ * - `shipped` — an AIPe adapter exists and its own docs prove it holds.
+ * - `proven-limit` — proven non-containable. Building an adapter would not
+ *   change this; the tool itself needs a human present.
+ * - `backlog` — no AIPe adapter yet, but the tool's own docs already show a
+ *   headless deny mechanism. This is unfinished work, not a real limit.
+ * - `open-question` — neither proven capable nor proven incapable.
  */
-export const COMPAT_HARNESSES: readonly CompatHarness[] = [
-  adapterRow("claude-code", "Claude Code", "claude"),
-  adapterRow("codex", "Codex", "codex"),
-  genericOnlyRow("cursor", "Cursor", "cursor"),
-  adapterRow("copilot", "GitHub Copilot", "copilot"),
-  adapterRow("gemini", "Gemini CLI", "gemini"),
-  genericOnlyRow("antigravity", "Antigravity", "antigravity"),
-  genericOnlyRow("factory-droid", "Factory Droid", "factory-droid"),
-  genericOnlyRow("kimi-code", "Kimi Code", "kimi"),
-  genericOnlyRow("opencode", "OpenCode", "opencode"),
-  genericOnlyRow("pi", "Pi", "pi"),
-] as const;
+export type ReaderBucket = "shipped" | "proven-limit" | "backlog" | "open-question";
 
-/** The compatibility percentage: how many of the five ruler checks this harness passes. */
-export function compatPercent(h: CompatHarness): number {
-  const passed = CAPABILITY_KEYS.filter((k) => h.caps[k]).length;
-  return Math.round((passed / CAPABILITY_KEYS.length) * 100);
-}
+export const READER_BUCKETS: readonly ReaderBucket[] = [
+  "shipped",
+  "proven-limit",
+  "backlog",
+  "open-question",
+];
 
-/** True once the harness clears the decisive check — a session AIPe can contain unattended. */
-export function isFullyContained(h: CompatHarness): boolean {
-  return h.caps.headlessContainment;
-}
-
-/** The `aipe dispatch validate` line this harness would print in session mode. */
-export function compatDispatchLine(h: CompatHarness): string {
-  if (h.adapter === null) {
-    return `harness-not-adapted ${h.id} — generic path only`;
-  }
-  const reject = sessionRejectReason(h.adapter);
-  return reject ?? `aipe dispatch --mode session --harness ${h.adapter} validate → OK`;
+export function bucketFor(h: HarnessContainment): ReaderBucket {
+  if (h.state === "unestablished") return "open-question";
+  if (h.state === "non-containable-proven") return "proven-limit";
+  return h.adapterId !== null ? "shipped" : "backlog";
 }
 
 /** How many harnesses agentop can HOST a session on (the bigger, host-axis number). */
-export const AGENTOP_HOSTED_COUNT = COMPAT_HARNESSES.length;
+export const AGENTOP_HOSTED_COUNT = HARNESS_CONTAINMENT.length;
 
-/** How many AIPe can fully CONTAIN in session mode (the smaller, honest number). */
-export const FULLY_CONTAINED_COUNT = COMPAT_HARNESSES.filter(isFullyContained).length;
-
-/** How many carry a dedicated aipe adapter (contain-ready or not). */
-export const ADAPTER_COUNT = COMPAT_HARNESSES.filter((h) => h.adapter !== null).length;
-
-/**
- * Guard: the site's contained set must never drift from the pricer's domain
- * truth. If aipe/src/harness flips a `containmentHook()`, `HARNESSES[...]`
- * changes, `isSessionEligible` changes, and this stays in lockstep because the
- * adapter rows read it directly. The compat test asserts exactly this.
- */
-export function containedAdapterIds(): HarnessId[] {
-  return (Object.keys(HARNESSES) as HarnessId[]).filter(isSessionEligible);
-}
+/** How many AIPe fully CONTAINS today — shipped adapter, proven capable (the smaller, honest number). */
+export const FULLY_CONTAINED_COUNT = HARNESS_CONTAINMENT.filter((h) => bucketFor(h) === "shipped").length;

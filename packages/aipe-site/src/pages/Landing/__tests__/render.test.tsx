@@ -18,28 +18,33 @@ import ConsoleSection from "../ConsoleSection";
 const render = (node: unknown) => renderToStaticMarkup(h(I18nProvider, null, node as never) as never);
 
 describe("landing render — j-20260829-b3 surfaces execute", () => {
-  it("HarnessSection shows all ten PDD harnesses, the ruler %, and the host/contain split", () => {
+  it("HarnessSection shows all ten PDD harnesses, the three-state ledger, and the host/contain split — no percentage", () => {
     const html = render(h(HarnessSection));
-    for (const label of [
-      "Claude Code",
-      "Codex",
-      "Cursor",
-      "GitHub Copilot",
-      "Gemini CLI",
-      "Antigravity",
-      "Factory Droid",
-      "Kimi Code",
-      "OpenCode",
-      "Pi",
+    for (const id of [
+      "claude-code",
+      "codex",
+      "cursor",
+      "copilot",
+      "gemini",
+      "antigravity",
+      "factory-droid",
+      "kimi-code",
+      "opencode",
+      "pi",
     ]) {
-      expect(html, `harness "${label}" is not rendered`).toContain(label);
+      expect(html, `harness "${id}" is not rendered`).toContain(`>${id}<`);
     }
-    expect(html).toContain("fully contained");
-    expect(html).toContain("100%");
-    expect(html).toContain("80%");
-    expect(html).toContain("40%");
+    // The three states, cited sources, and the reader-facing buckets — the
+    // ledger that replaced the collapsing five-check percentage (task gate-pr23).
+    expect(html).toContain("containable-proven");
+    expect(html).toContain("non-containable-proven");
+    expect(html).toContain("unestablished");
+    expect(html).toContain("Not yet AIPe-verified end-to-end");
+    expect(html).toContain("AIPe fully contains");
     expect(html).toContain("agentop hosts");
     expect(html).toContain("AIPe never starts a session it cannot govern");
+    // No percentage-based compatibility score survives anywhere in the section.
+    expect(html).not.toMatch(/\d+%/);
   });
 
   it("Statement (the rhythm break) renders its thesis line", () => {
