@@ -31,6 +31,9 @@ const LABELS: FlowFloorLabels = {
   fixing: "fixing",
   reviewing: "reviewing",
   approved: "approved",
+  spec: "spec",
+  mainBranch: "main",
+  conn: { dispatch: "dispatch", review: "review", promote: "promote", reject: "sent back" },
   caption: "all merged · immutable",
   previousCycle: (merged, repos) => `last cycle: ${merged} merged across ${repos} repos`,
 };

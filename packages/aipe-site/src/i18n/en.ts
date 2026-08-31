@@ -60,7 +60,7 @@ const en = {
       eyebrow: "Watch it run",
       title: "Dispatch, review, reject, fix, promote — the whole story.",
       lead:
-        "Not a diagram of how it works — the thing working, start to finish. The coordinator hands a demand to three specialists across two repositories; the dispatch law lets them run at once; a QA per repo gates the work; one gets rejected and fixed on the spot; approved work merges into `dev`, then a separate PR promotes it to `main`. It loops on its own — there is nothing to press.",
+        "Not a diagram of how it works — the thing working, start to finish. The coordinator hands a demand to three specialists across two repositories; the dispatch law lets them run at once; a QA gate reviews each delivery — one reviewer per unit, not per repo; one gets rejected and fixed on the spot; approved work merges into `dev`, then a separate PR promotes it to `main`. It loops on its own — there is nothing to press.",
     },
     terminalHeader: "coordinator — console",
     labels: {
@@ -85,6 +85,15 @@ const en = {
       fixing: "fixing",
       reviewing: "reviewing",
       approved: "approved",
+      spec: "spec",
+      mainBranch: "main",
+    },
+    // Micro-labels naming each drawn connector (the visible hand-off links).
+    conn: {
+      dispatch: "dispatch",
+      review: "review",
+      promote: "promote",
+      reject: "sent back",
     },
     captions: {
       demand: "the coordinator takes the demand",
@@ -95,7 +104,7 @@ const en = {
       work: "three worktrees, working in parallel",
       deliver: "each agent delivers its evidence",
       "pr-dev": "each delivery opens a PR into dev",
-      "qa-review": "one QA per repo starts reviewing",
+      "qa-review": "one QA gate per delivery reviews",
       "qa-reject": "one QA rejects — fix needed",
       "dev-fix": "the same dev fixes it, on dev",
       "qa-approve": "QA re-reviews and approves it",
@@ -111,7 +120,7 @@ const en = {
     previousCycle: (merged: number, repos: number) => `last cycle: ${merged} merged across ${repos} repos`,
     aria: {
       label:
-        "AIPe dispatching three agents across two repositories, one at a time: Lawson on openvibes-embark/aipe-site, then Marco on openvibes-embark/embark-site, then Jane on agentistics/web, all running in parallel once dispatched, each on its own harness and model tier. Each agent opens a pull request into dev; a QA reviewer for each repository gates the work; one PR is rejected and the same developer fixes it on the same branch, never the QA; the QA then approves and the PRs merge into dev; a separate promotion pull request carries dev to main and merges, closing the ledger. The scene loops, carrying forward a summary of what just finished instead of erasing it.",
+        "AIPe dispatching three agents across two repositories, one at a time: Lawson on openvibes-embark/aipe-site, then Marco on openvibes-embark/embark-site, then Jane on agentistics/web, all running in parallel once dispatched, each on its own harness and model tier. Each agent opens a pull request into dev; a QA gate reviews each delivery — one gate per unit, so a repo with two deliveries has two gates carrying the same reviewer; one PR is rejected and the same developer fixes it on the same branch, never the QA; the gate then approves and the PRs merge into dev; a separate promotion pull request carries dev to main and merges, closing the ledger. The scene loops, carrying forward a summary of what just finished instead of erasing it.",
     },
   },
 

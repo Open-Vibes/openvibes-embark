@@ -54,42 +54,63 @@ describe("flow facts — parallelism proven by the real law", () => {
   });
 });
 
-/* -------------------------------------------------------- QA per repo, derived */
+/* ---------------------------------------------- QA per DELIVERY, derived (v3) */
 
-describe("QA team — derived PER REPO from the real facts, never a fixed headcount", () => {
-  it("one QA per distinct repo — 2 repos in, 2 QAs out", () => {
+describe("QA team — one gate PER DELIVERY (in-flight unit), never per repo, never fixed", () => {
+  it("3 units in flight → 3 QA gates out, even though there are only 2 repos", () => {
     const facts = buildFlowFacts();
+    expect(facts.agents).toHaveLength(3);
     expect(facts.repos).toHaveLength(2);
-    expect(facts.qaTeam).toHaveLength(2);
+    // The v3 crux: NOT one-per-repo (that would be 2). One gate per delivery.
+    expect(facts.qaTeam).toHaveLength(3);
   });
 
-  it("deriveQaTeam's count tracks the LENGTH of the repo list it's given, generically", () => {
-    // This is the anti-hardcode proof: change the number of repos in the input
-    // and the number of QAs must follow, for arbitrary repo counts.
+  it("deriveQaTeam's count tracks the NUMBER OF UNITS it's given, generically", () => {
+    // Anti-hardcode proof: change how many units ship and the gate count follows,
+    // for arbitrary unit counts — the number does NOT come from the repo count.
     for (const n of [1, 2, 3, 5]) {
-      const repos = Array.from({ length: n }, (_, i) => `repo-${i}`);
-      expect(deriveQaTeam(repos)).toHaveLength(n);
+      const units = Array.from({ length: n }, (_, i) => ({ id: `u${i}`, repo: `repo-${i % 2}` }));
+      expect(deriveQaTeam(units)).toHaveLength(n);
     }
   });
 
-  it("a batch built from a 3-repo seed derives 3 QAs, and a 1-repo seed derives 1", () => {
-    const threeRepoSeed = [
-      { id: "a", persona: "A", role: "dev-fullstack", repo: "repo-x", package: "pkg", sessionId: "1" },
-      { id: "b", persona: "B", role: "dev-fullstack", repo: "repo-y", package: "pkg", sessionId: "2" },
-      { id: "c", persona: "C", role: "dev-fullstack", repo: "repo-z", package: "pkg", sessionId: "3" },
-    ];
-    const oneRepoSeed = [{ id: "a", persona: "A", role: "dev-fullstack", repo: "repo-x", package: "pkg", sessionId: "1" }];
+  it("5 units across 2 repos derives 5 gates (not 2); 1 unit derives 1", () => {
+    const fiveUnitSeed = Array.from({ length: 5 }, (_, i) => ({
+      id: `a${i}`,
+      persona: `A${i}`,
+      role: "dev-fullstack",
+      repo: i < 3 ? "repo-x" : "repo-y",
+      package: `pkg-${i}`,
+      sessionId: `${i}`,
+    }));
+    const oneUnitSeed = [{ id: "a", persona: "A", role: "dev-fullstack", repo: "repo-x", package: "pkg", sessionId: "1" }];
 
-    expect(buildFlowFacts(threeRepoSeed).qaTeam).toHaveLength(3);
-    expect(buildFlowFacts(oneRepoSeed).qaTeam).toHaveLength(1);
+    expect(buildFlowFacts(fiveUnitSeed).qaTeam).toHaveLength(5);
+    expect(buildFlowFacts(fiveUnitSeed).repos).toHaveLength(2); // still 2 repos, 5 gates
+    expect(buildFlowFacts(oneUnitSeed).qaTeam).toHaveLength(1);
   });
 
-  it("each QA is scoped to exactly one repo, and no repo has more than one QA", () => {
+  it("each gate reviews exactly one delivery; two deliveries in one repo carry the SAME persona in two DISTINCT gates", () => {
     const facts = buildFlowFacts();
-    const repoCounts = new Map<string, number>();
-    for (const qa of facts.qaTeam) repoCounts.set(qa.repo, (repoCounts.get(qa.repo) ?? 0) + 1);
-    for (const count of repoCounts.values()) expect(count).toBe(1);
-    expect(new Set(facts.qaTeam.map((q) => q.repo))).toEqual(new Set(facts.repos));
+    // Every gate names a real in-flight unit, one-to-one.
+    expect(facts.qaTeam.map((q) => q.unitId).sort()).toEqual(facts.agents.map((a) => a.id).sort());
+    // openvibes-embark ships two devs → two gates, same reviewer persona, different units.
+    const oveGates = facts.qaTeam.filter((q) => q.repo === "openvibes-embark");
+    expect(oveGates).toHaveLength(2);
+    expect(new Set(oveGates.map((q) => q.persona)).size).toBe(1); // same persona
+    expect(new Set(oveGates.map((q) => q.unitId)).size).toBe(2); // distinct deliveries
+  });
+
+  it("a gate's persona is its repo's reviewer, distinct from the other repo's reviewer", () => {
+    const facts = buildFlowFacts();
+    const personaByRepo = new Map<string, Set<string>>();
+    for (const q of facts.qaTeam) {
+      (personaByRepo.get(q.repo) ?? personaByRepo.set(q.repo, new Set()).get(q.repo)!).add(q.persona);
+    }
+    // one persona per repo, and the two repos' personas differ.
+    const personas = [...personaByRepo.values()].map((s) => [...s]);
+    for (const p of personas) expect(p).toHaveLength(1);
+    expect(new Set(personas.flat()).size).toBe(personaByRepo.size);
   });
 });
 
@@ -110,7 +131,7 @@ describe("actor envelopes — harness+tier come from the REAL registry, not lite
 
   it("the flow's actors carry at least THREE distinct harness+tier combinations", () => {
     const facts = buildFlowFacts();
-    const combos = new Set([
+    const combos = new Set<string>([
       ...facts.agents.map((a) => `${a.envelope.harness}:${a.envelope.tier}`),
       ...facts.qaTeam.map((q) => `${q.envelope.harness}:${q.envelope.tier}`),
     ]);
@@ -178,13 +199,16 @@ describe("flow fold — cumulative, and complete at the end", () => {
     expect(prDev.entityCount).toBeGreaterThan(deliver.entityCount);
   });
 
-  it("QA enters at qa-review, one per repo, after the dev PRs are open", () => {
+  it("QA enters at qa-review, one gate PER DELIVERY, after the dev PRs are open", () => {
     const prDev = foldFlow(FLOW_PHASE_IDS.indexOf("pr-dev"));
-    expect(prDev.groups.every((g) => g.qa === null)).toBe(true);
+    expect(prDev.groups.every((g) => g.qaGates.every((gate) => gate === null))).toBe(true);
 
     const qaReview = foldFlow(FLOW_PHASE_IDS.indexOf("qa-review"));
-    expect(qaReview.groups.every((g) => g.qa !== null)).toBe(true);
-    expect(qaReview.groups).toHaveLength(2);
+    // one gate per agent (delivery), aligned to the agents array in each group.
+    expect(qaReview.groups.every((g) => g.qaGates.length === g.agents.length)).toBe(true);
+    expect(qaReview.groups.every((g) => g.qaGates.every((gate) => gate !== null))).toBe(true);
+    const gates = qaReview.groups.flatMap((g) => g.qaGates).filter(Boolean);
+    expect(gates).toHaveLength(3); // 3 deliveries → 3 gates, though only 2 repos
     expect(qaReview.entityCount).toBeGreaterThan(prDev.entityCount);
   });
 });
@@ -194,19 +218,28 @@ describe("flow fold — cumulative, and complete at the end", () => {
 describe("rejection — visible, and fixed by the SAME dev, never the QA", () => {
   const facts = buildFlowFacts();
   const rejected = facts.agents.find((a) => a.id === FLOW_REJECTED_AGENT_ID)!;
-  const rejectedRepoQa = facts.qaTeam.find((q) => q.repo === rejected.repo)!;
+  const rejectedGate = facts.qaTeam.find((q) => q.unitId === rejected.id)!;
 
-  it("the rejected agent exists and its repo's QA persona differs from every dev persona", () => {
+  /** The gate object for a given agent id in a folded scene (aligned to agents). */
+  const gateFor = (s: ReturnType<typeof foldFlow>, agentId: string) => {
+    for (const g of s.groups) {
+      const i = g.agents.findIndex((a) => a.id === agentId);
+      if (i >= 0) return g.qaGates[i];
+    }
+    return null;
+  };
+
+  it("the rejected agent's gate reviews that exact delivery, and its persona is a QA, not a dev", () => {
     expect(rejected).toBeDefined();
-    for (const a of facts.agents) expect(rejectedRepoQa.persona).not.toBe(a.persona);
+    expect(rejectedGate.unitId).toBe(rejected.id);
+    for (const a of facts.agents) expect(rejectedGate.persona).not.toBe(a.persona);
   });
 
-  it("at qa-reject, the rejected agent's state is 'rejected' — a real, distinct instant", () => {
+  it("at qa-reject, the rejected agent's state is 'rejected' and ITS gate reads 'rejected'", () => {
     const s = foldFlow(FLOW_PHASE_IDS.indexOf("qa-reject"), facts);
     const agent = s.groups.flatMap((g) => g.agents).find((a) => a.id === rejected.id)!;
     expect(agent.state).toBe("rejected");
-    const group = s.groups.find((g) => g.repo === rejected.repo)!;
-    expect(group.qa!.verdict).toBe("rejected");
+    expect(gateFor(s, rejected.id)!.verdict).toBe("rejected");
   });
 
   it("at dev-fix, the SAME dev (not the QA) is the one shown fixing", () => {
@@ -214,7 +247,7 @@ describe("rejection — visible, and fixed by the SAME dev, never the QA", () =>
     const agent = s.groups.flatMap((g) => g.agents).find((a) => a.id === rejected.id)!;
     expect(agent.state).toBe("fixing");
     expect(agent.persona).toBe(rejected.persona);
-    expect(agent.persona).not.toBe(rejectedRepoQa.persona);
+    expect(agent.persona).not.toBe(rejectedGate.persona);
   });
 
   it("the other two agents (not rejected) are never shown as rejected or fixing", () => {
@@ -225,17 +258,22 @@ describe("rejection — visible, and fixed by the SAME dev, never the QA", () =>
     }
   });
 
-  it("after qa-approve, the rejected agent is verified — same as everyone else", () => {
+  it("after qa-approve, the rejected agent is verified and every gate reads 'approved'", () => {
     const s = foldFlow(FLOW_PHASE_IDS.indexOf("qa-approve"), facts);
     const agents = s.groups.flatMap((g) => g.agents);
     expect(agents.every((a) => a.state === "verified")).toBe(true);
-    expect(s.groups.every((g) => g.qa!.verdict === "approved")).toBe(true);
+    expect(s.groups.flatMap((g) => g.qaGates).every((gate) => gate!.verdict === "approved")).toBe(true);
   });
 
-  it("a repo with no rejection approves independently, without waiting on the other repo's fix", () => {
+  it("the OTHER delivery in the SAME repo approves independently, without waiting on the rejected one's fix", () => {
     const s = foldFlow(FLOW_PHASE_IDS.indexOf("qa-reject"), facts);
-    const cleanGroup = s.groups.find((g) => g.repo !== rejected.repo)!;
-    expect(cleanGroup.qa!.verdict).toBe("approved");
+    // a sibling delivery in the rejected agent's own repo (per-delivery gates are independent).
+    const sibling = facts.agents.find((a) => a.repo === rejected.repo && a.id !== rejected.id)!;
+    expect(sibling).toBeDefined();
+    expect(gateFor(s, sibling.id)!.verdict).toBe("approved");
+    // and the clean repo's delivery too.
+    const cleanUnit = facts.agents.find((a) => a.repo !== rejected.repo)!;
+    expect(gateFor(s, cleanUnit.id)!.verdict).toBe("approved");
   });
 });
 
@@ -280,7 +318,7 @@ describe("flow fold — the settled end and its progression", () => {
     expect(agents).toHaveLength(3);
     expect(agents.every((a) => a.state === "merged")).toBe(true);
     expect(agents.every((a) => a.prDevVisible && a.prDevMerged)).toBe(true);
-    expect(s.groups.every((g) => g.qa !== null && g.qa.verdict === "approved")).toBe(true);
+    expect(s.groups.flatMap((g) => g.qaGates).every((gate) => gate !== null && gate.verdict === "approved")).toBe(true);
     expect(s.groups.every((g) => g.promotion.visible && g.promotion.merged)).toBe(true);
     expect(s.ledger).toEqual(["dispatched", "delivered", "verified", "merged"]);
   });

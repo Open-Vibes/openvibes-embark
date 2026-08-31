@@ -56,7 +56,7 @@ const pt: Translations = {
       eyebrow: "Veja rodando",
       title: "Despacho, revisão, reprovação, conserto, promoção — a história inteira.",
       lead:
-        "Não um diagrama de como funciona — a coisa funcionando, do início ao fim. O coordenador entrega uma demanda a três especialistas em dois repositórios; a lei de despacho deixa os três rodarem de uma vez; um QA por repo gateia o trabalho; um deles é reprovado e consertado na hora; o que é aprovado mescla em `dev`, e depois um PR separado promove para `main`. Roda sozinho — não há nada para apertar.",
+        "Não um diagrama de como funciona — a coisa funcionando, do início ao fim. O coordenador entrega uma demanda a três especialistas em dois repositórios; a lei de despacho deixa os três rodarem de uma vez; um QA gateia cada entrega — um revisor por unidade, não por repo; um deles é reprovado e consertado na hora; o que é aprovado mescla em `dev`, e depois um PR separado promove para `main`. Roda sozinho — não há nada para apertar.",
     },
     terminalHeader: "coordenador — console",
     labels: {
@@ -81,6 +81,15 @@ const pt: Translations = {
       fixing: "consertando",
       reviewing: "revisando",
       approved: "aprovado",
+      spec: "spec",
+      mainBranch: "main",
+    },
+    // Micro-rótulos que nomeiam cada conector desenhado (os vínculos visíveis).
+    conn: {
+      dispatch: "despacho",
+      review: "revisão",
+      promote: "promoção",
+      reject: "devolvido",
     },
     captions: {
       demand: "o coordenador recebe a demanda",
@@ -91,7 +100,7 @@ const pt: Translations = {
       work: "três worktrees, trabalhando em paralelo",
       deliver: "cada agente entrega sua evidência",
       "pr-dev": "cada entrega abre um PR em dev",
-      "qa-review": "um QA por repo começa a revisar",
+      "qa-review": "um QA por entrega começa a revisar",
       "qa-reject": "um QA reprova — precisa de conserto",
       "dev-fix": "o mesmo dev conserta, no ramo dev",
       "qa-approve": "o QA revisa de novo e aprova",
@@ -107,7 +116,7 @@ const pt: Translations = {
     previousCycle: (merged: number, repos: number) => `ciclo anterior: ${merged} mesclados em ${repos} repos`,
     aria: {
       label:
-        "A AIPe despachando três agentes em dois repositórios, um de cada vez: Lawson em openvibes-embark/aipe-site, depois Marco em openvibes-embark/embark-site, depois Jane em agentistics/web, todos rodando em paralelo uma vez despachados, cada um no seu próprio harness e tier de modelo. Cada agente abre um pull request em dev; um QA por repositório gateia o trabalho; um PR é reprovado e o mesmo desenvolvedor conserta no mesmo ramo, nunca o QA; o QA então aprova e os PRs mesclam em dev; um pull request de promoção separado leva dev para main e mescla, fechando o ledger. A cena roda em loop, carregando adiante um resumo do que acabou de terminar em vez de apagá-lo.",
+        "A AIPe despachando três agentes em dois repositórios, um de cada vez: Lawson em openvibes-embark/aipe-site, depois Marco em openvibes-embark/embark-site, depois Jane em agentistics/web, todos rodando em paralelo uma vez despachados, cada um no seu próprio harness e tier de modelo. Cada agente abre um pull request em dev; um QA gateia cada entrega — um gate por unidade, então um repo com duas entregas tem dois gates com o mesmo revisor; um PR é reprovado e o mesmo desenvolvedor conserta no mesmo ramo, nunca o QA; o gate então aprova e os PRs mesclam em dev; um pull request de promoção separado leva dev para main e mescla, fechando o ledger. A cena roda em loop, carregando adiante um resumo do que acabou de terminar em vez de apagá-lo.",
     },
   },
 
