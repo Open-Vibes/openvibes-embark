@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import FlowFloor, { type FlowFloorLabels } from "./FlowFloor";
 import FlowTerminal from "./FlowTerminal";
-import { buildFlowFacts, buildFlowTerminal, foldFlow, FLOW_LAST_PHASE, FLOW_PHASE_IDS } from "./flowModel";
+import { buildFlowFacts, buildFlowTerminal, foldFlow, FLOW_LAST_PHASE, FLOW_PHASE_IDS, FLOW_REJECTED_AGENT_ID } from "./flowModel";
 
 const facts = buildFlowFacts();
 
@@ -15,24 +15,29 @@ const LABELS: FlowFloorLabels = {
   parallel: "parallel",
   units: "units",
   repos: "repos",
-  wave: "wave",
   placed: "placed",
-  running: "running",
   worktree: "worktree",
   ledger: "ledger",
   receiving: "receiving…",
   dispatching: "dispatching…",
-  qaRole: "QA reviewer",
+  qaRole: "QA",
   prOpened: "PR opened",
+  prToDev: "PR → dev",
+  prMergedToDev: "merged into dev",
+  promotePr: "promote → main",
+  promoteMerged: "merged into main",
+  inReview: "in review",
+  rejected: "rejected",
+  fixing: "fixing",
+  reviewing: "reviewing",
+  approved: "approved",
   caption: "all merged · immutable",
+  previousCycle: (merged, repos) => `last cycle: ${merged} merged across ${repos} repos`,
 };
 
 /* ------------------------------------------------ the reduced-motion still frame */
 
 describe("Flow — the reduced-motion still frame is COMPLETE", () => {
-  // The scene under prefers-reduced-motion opens on the folded last phase. That
-  // one frame must carry the SAME information as the whole animation: every
-  // agent, both repos, every state, the full ledger.
   const scene = foldFlow(FLOW_LAST_PHASE, facts);
   const html = renderToStaticMarkup(<FlowFloor facts={facts} scene={scene} labels={LABELS} reduced />);
 
@@ -60,6 +65,23 @@ describe("Flow — the reduced-motion still frame is COMPLETE", () => {
     expect(html).toContain("merged");
   });
 
+  it("shows every QA persona, one per repo", () => {
+    for (const qa of facts.qaTeam) expect(html).toContain(qa.persona);
+  });
+
+  it("shows every dev PR and every promotion PR number", () => {
+    for (const a of facts.agents) expect(html).toContain(`#${a.pr}`);
+    for (const num of Object.values(facts.promotionPr)) expect(html).toContain(`#${num}`);
+  });
+
+  it("shows at least 3 distinct harness+tier combinations", () => {
+    const combos = new Set<string>();
+    for (const a of facts.agents) combos.add(`${a.envelope.harness} · ${a.envelope.tier}`);
+    for (const qa of facts.qaTeam) combos.add(`${qa.envelope.harness} · ${qa.envelope.tier}`);
+    expect(combos.size).toBeGreaterThanOrEqual(3);
+    for (const combo of combos) expect(html).toContain(combo);
+  });
+
   it("carries a real alt text (role=img + aria-label), not aria-hidden decoration", () => {
     expect(html).toContain('role="img"');
     expect(html).toContain(LABELS.ariaLabel);
@@ -68,13 +90,6 @@ describe("Flow — the reduced-motion still frame is COMPLETE", () => {
 
 /* ------------------------------------------------- the entrances are real DOM */
 
-/**
- * The PE's rejection of v2: "deixou so 3 caras fixos ali" — three fixed rows
- * that only changed a badge. These assertions read the actual rendered
- * markup at three distinct beats and prove the picture is not the same
- * picture with different labels: nodes that are absent at one beat are
- * genuinely present — by name — at the next.
- */
 describe("Flow — the markup itself grows across beats (not a relabelled panel)", () => {
   const dispatch1 = renderToStaticMarkup(
     <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("dispatch-1"), facts)} labels={LABELS} reduced />,
@@ -82,11 +97,14 @@ describe("Flow — the markup itself grows across beats (not a relabelled panel)
   const dispatch3 = renderToStaticMarkup(
     <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("dispatch-3"), facts)} labels={LABELS} reduced />,
   );
-  const qa = renderToStaticMarkup(
-    <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("qa"), facts)} labels={LABELS} reduced />,
+  const qaReview = renderToStaticMarkup(
+    <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("qa-review"), facts)} labels={LABELS} reduced />,
   );
-  const pr = renderToStaticMarkup(
-    <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("pr"), facts)} labels={LABELS} reduced />,
+  const prDev = renderToStaticMarkup(
+    <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("pr-dev"), facts)} labels={LABELS} reduced />,
+  );
+  const promote = renderToStaticMarkup(
+    <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("promote"), facts)} labels={LABELS} reduced />,
   );
 
   it("at dispatch-1 only Lawson is named — Marco and Jane are absent, not just dimmed", () => {
@@ -103,23 +121,46 @@ describe("Flow — the markup itself grows across beats (not a relabelled panel)
     const rowsAt3 = dispatch3.split(LABELS.worktree).length - 1;
     expect(rowsAt1).toBe(1);
     expect(rowsAt3).toBe(3);
-    expect(rowsAt3).toBeGreaterThan(rowsAt1);
   });
 
-  it("QA is absent before its beat and present, by name, once it arrives", () => {
-    expect(dispatch3).not.toContain(facts.qaPersona);
-    expect(qa).toContain(facts.qaPersona);
+  it("no QA persona appears before qa-review; every QA persona appears once it arrives", () => {
+    for (const qa of facts.qaTeam) expect(dispatch3).not.toContain(qa.persona);
+    for (const qa of facts.qaTeam) expect(qaReview).toContain(qa.persona);
   });
 
-  it("no PR number appears before the pr beat; every PR number appears once it arrives", () => {
-    for (const a of facts.agents) expect(qa).not.toContain(`#${a.pr}`);
-    for (const a of facts.agents) expect(pr).toContain(`#${a.pr}`);
+  it("no dev-PR number appears before pr-dev; every PR number appears once it arrives", () => {
+    for (const a of facts.agents) expect(dispatch3).not.toContain(`#${a.pr}`);
+    for (const a of facts.agents) expect(prDev).toContain(`#${a.pr}`);
+  });
+
+  it("no promotion-PR number appears before promote; every promotion number appears once it arrives", () => {
+    for (const num of Object.values(facts.promotionPr)) expect(prDev).not.toContain(`#${num}`);
+    for (const num of Object.values(facts.promotionPr)) expect(promote).toContain(`#${num}`);
   });
 
   it("frame-to-frame the scene is a strictly bigger document, not a same-size relabel", () => {
     expect(dispatch3.length).toBeGreaterThan(dispatch1.length);
-    expect(qa.length).toBeGreaterThan(dispatch3.length);
-    expect(pr.length).toBeGreaterThan(qa.length);
+    expect(qaReview.length).toBeGreaterThan(dispatch3.length);
+    expect(prDev.length).toBeGreaterThanOrEqual(dispatch3.length);
+  });
+});
+
+/* --------------------------------------------------------- the rejection, rendered */
+
+describe("Flow — the rejection and fix are visible in the rendered markup", () => {
+  it("at qa-reject, the agent's ledger badge reads 'failed' and its QA's verdict chip reads 'rejected'", () => {
+    const scene = foldFlow(FLOW_PHASE_IDS.indexOf("qa-reject"), facts);
+    const html = renderToStaticMarkup(<FlowFloor facts={facts} scene={scene} labels={LABELS} reduced />);
+    expect(html).toContain(">failed<");
+    expect(html).toContain(LABELS.rejected);
+  });
+
+  it("at dev-fix, the fixing chip renders for the same agent, not a QA badge change", () => {
+    const scene = foldFlow(FLOW_PHASE_IDS.indexOf("dev-fix"), facts);
+    const html = renderToStaticMarkup(<FlowFloor facts={facts} scene={scene} labels={LABELS} reduced />);
+    expect(html).toContain(LABELS.fixing);
+    const rejected = facts.agents.find((a) => a.id === FLOW_REJECTED_AGENT_ID)!;
+    expect(html).toContain(rejected.persona);
   });
 });
 

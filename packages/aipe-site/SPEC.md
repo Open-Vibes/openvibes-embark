@@ -319,3 +319,65 @@ containment, and `aipe handoff` really writes `CLAUDE.md`).
 ### Evidence
 `bun test` 136/136 · `tsc --noEmit` clean · `vite build` clean · no new dependency
 (hero is Canvas 2D). Driven in the browser, both themes, both locales.
+
+## Journey j-20260830-58 — the Flow tells the whole method, not the happy path
+
+`aipe skill match --task-type frontend --size medium` still returns
+`matched=0 of 0` (no SDD kit), so the sdd-lite floor applies — this addendum
+is the hand-authored spec. Scope is `packages/aipe-site/src/pages/Landing/flow/`
+only (`FlowSection`, out of scope elsewhere: Hero, ConsoleSection, `dispatchLaw.ts`).
+
+The PE reviewed the v3 Flow (merged as PR #27, **without a QA gate** — see
+that journey's note in the ledger) and named three defects and two demands, in
+this sequencing: (2) QA must be per repo, derived from the same law that
+already derives the devs and repos — not a fixed reviewer box, which
+contradicted the scene's own `2 repos` header; (3) the flow stopped at "PR
+opened" and needs the real lifecycle through a QA **rejection**, the same dev
+fixing on the same branch (never the QA), approval, a merge into `dev`, and a
+**separate** promotion PR into `main`; (5), sequenced alongside 3 because the
+new reject/promote actors need an envelope anyway, every actor (dev or QA)
+must carry a distinct harness+model drawn from the real containment/tier
+registries, never a literal per-actor string; (1), last because it depends on
+how the now-longer cycle ends, the loop must keep looping but not erase its
+prior cycle in a way that reads as a crash.
+
+Full design rationale, the exact phase-by-phase model, and the verification
+narrative (including the one real-Chrome boundary hit) are in
+`src/pages/Landing/flow/README.md`'s "v4" section — this addendum only
+records the acceptance mapping:
+
+- **QA derived, not hardcoded**: `deriveQaTeam(repos)` — `flowModel.test.ts`
+  proves the QA count tracks an arbitrary repo-count input (1/2/3/5 synthetic
+  repos), not just the shipped 2-repo case.
+- **Rejection visible, fixed by the same dev**: `FLOW_REJECTED_AGENT_ID`
+  (Marco) goes `verified-track → rejected → fixing → verified`; its repo's QA
+  (a different persona) goes `reviewing → rejected → approved`. Asserted at
+  the phase-fold level and diffed in the rendered markup.
+- **Two distinct PRs**: a dev-PR chip per agent (`PR → dev #41`) and a
+  separate promotion chip per repo (`promote → main #141`), numbered from
+  disjoint ranges, the promotion invisible until every dev PR in that repo
+  has merged.
+- **Harness+model from the real registry**: `envelopePool()` is the
+  cross-product of `HARNESS_IDS.filter(isSessionEligible)` (`domain/harness.ts`)
+  and the offered tiers (`fast`/`standard`/`reasoning` — `frontier` excluded
+  as policy-gated); widening the harness list passed in changes the pool,
+  proving it's derived, not literal. ≥3 distinct combinations ship.
+- **No reset seco**: `FlowState.previousCycle` carries the prior cycle's
+  `{merged, repos}` into the next cycle's opening fold and renders as a
+  pinned header line; rows exit via `AnimatePresence` instead of a full
+  card remount. Verified live in a real Chrome tab across two loop
+  wraps, in both locales.
+- **Progression preserved**: `entityCount` still strictly grows across ≥3
+  distinct beats (now more, with the QA/PR/promotion entrances) — the v3
+  criterion is unregressed.
+- **Zero interactivity preserved**: the same source-scan + rendered-markup
+  tests, now also covering the QA, promotion, and fixing states.
+
+### Evidence
+`bun test` 224/224 (up from 193; flow suite 76/76, up from 45) · `tsc --noEmit`
+clean · `bun run build` clean. Driven live in a real Chrome tab over Tailscale
+(both locales): confirmed the QA-per-repo split, the rejection/fix/approve
+sequence with the correct actors, ≥3 live harness·tier combinations, the two
+distinct PR artifacts, and the "last cycle" header line surviving into the
+next two loop cycles, with no console errors and no horizontal overflow. This
+repo has no PR CI; the exact commands and full output are in the PR body.
