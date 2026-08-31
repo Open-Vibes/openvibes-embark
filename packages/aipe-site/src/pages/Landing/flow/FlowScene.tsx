@@ -111,6 +111,9 @@ export default function FlowScene() {
     fixing: f.labels.fixing,
     reviewing: f.labels.reviewing,
     approved: f.labels.approved,
+    spec: f.labels.spec,
+    mainBranch: f.labels.mainBranch,
+    conn: f.conn,
     caption: f.captions[scene.captionKey],
     previousCycle: f.previousCycle,
   };

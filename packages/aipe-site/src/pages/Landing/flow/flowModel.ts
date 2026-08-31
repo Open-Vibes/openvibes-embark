@@ -172,22 +172,36 @@ export interface FlowQaFact {
   persona: string;
   role: string;
   repo: string;
+  /** The delivery (in-flight unit) this gate reviews. */
+  unitId: string;
   envelope: ActorEnvelope;
 }
 
 /**
- * One QA per repo — derived from the repo list itself, not a fixed headcount.
- * Change the number of distinct repos in the input and this list's length
- * changes with it; nothing here hard-codes "2".
+ * One QA gate PER DELIVERY — one per in-flight unit, NOT one per repo. A repo
+ * has a single QA persona, but she gates EACH unit delivered into that repo, so
+ * two devs in one repo produce two DISTINCT gates carrying the same persona,
+ * each with its own PR and its own verdict — exactly how the real gate runs
+ * (the same reviewer took PR #100 and then PR #103, two separate tasks). The
+ * COUNT therefore tracks the number of in-flight UNITS and is derived from the
+ * agents list: change how many agents ship and the number of gates follows.
+ * Nothing here hard-codes a headcount or a repo count (v3 fix, j-20260831-4w —
+ * the spec's "QA per repo" was wrong; the gate is per delivery).
  */
-export function deriveQaTeam(repos: readonly string[], envelopeOffset: number = 0): FlowQaFact[] {
-  return repos.map((repo, i) => ({
-    id: `qa-${i}`,
-    persona: QA_PERSONA_POOL[i % QA_PERSONA_POOL.length]!,
-    role: "qa",
-    repo,
-    envelope: envelopeForActor(envelopeOffset + i),
-  }));
+export function deriveQaTeam(agents: readonly { id: string; repo: string }[], envelopeOffset: number = 0): FlowQaFact[] {
+  const personaOfRepo = new Map<string, string>();
+  let nextPersona = 0;
+  return agents.map((a, i) => {
+    if (!personaOfRepo.has(a.repo)) personaOfRepo.set(a.repo, QA_PERSONA_POOL[nextPersona++ % QA_PERSONA_POOL.length]!);
+    return {
+      id: `qa-${a.id}`,
+      persona: personaOfRepo.get(a.repo)!,
+      role: "qa",
+      repo: a.repo,
+      unitId: a.id,
+      envelope: envelopeForActor(envelopeOffset + i),
+    };
+  });
 }
 
 export interface FlowFacts {
@@ -199,7 +213,7 @@ export interface FlowFacts {
   /** The lawful waves — one wave, because the three keys are distinct. */
   waves: Wave[];
   agents: FlowAgentFact[];
-  /** One QA per distinct repo, derived from `repos`. */
+  /** One QA gate per delivery (in-flight unit), derived from `agents`. */
   qaTeam: FlowQaFact[];
   /** Distinct repos, in first-seen order. */
   repos: string[];
@@ -236,7 +250,7 @@ export function buildFlowFacts(seed: readonly FlowSeed[] = FLOW_SEED): FlowFacts
     joinPhase: AGENT_JOIN_PHASE[i] ?? "dispatch-3",
   }));
 
-  const qaTeam = deriveQaTeam(repos, agents.length);
+  const qaTeam = deriveQaTeam(agents, agents.length);
   const rejectedAgentId = agents.some((a) => a.id === FLOW_REJECTED_AGENT_ID) ? FLOW_REJECTED_AGENT_ID : null;
   const promotionPr: Record<string, number> = {};
   repos.forEach((repo, i) => {
@@ -351,7 +365,8 @@ export function buildFlowTerminal(facts: FlowFacts = buildFlowFacts(), script: F
   if (!lawson || !marco || !jane) return [];
   const ids = facts.agents.map((a) => a.id).join(",");
   const rejected = facts.agents.find((a) => a.id === facts.rejectedAgentId) ?? marco;
-  const rejectedQa = facts.qaTeam.find((q) => q.repo === rejected.repo) ?? facts.qaTeam[0];
+  const rejectedQa = facts.qaTeam.find((q) => q.unitId === rejected.id) ?? facts.qaTeam[0];
+  const unitOf = (id: string) => facts.agents.find((a) => a.id === id);
 
   const lines: FlowLine[] = [
     { phase: "demand", tone: "prompt", text: script.demand },
@@ -387,8 +402,9 @@ export function buildFlowTerminal(facts: FlowFacts = buildFlowFacts(), script: F
   }
 
   for (const qa of facts.qaTeam) {
-    lines.push({ phase: "qa-review", tone: "info", text: `$ aipe journey record --repo ${qa.repo} --by ${qa.persona}   # ${script.reviewAfter}` });
-    lines.push({ phase: "qa-review", tone: "ok", text: `~ ${qa.persona} reviewing  ${qa.repo}` });
+    const unit = unitOf(qa.unitId);
+    lines.push({ phase: "qa-review", tone: "info", text: `$ aipe journey record --repo ${qa.repo} --by ${qa.persona} --unit ${qa.unitId}   # ${script.reviewAfter}` });
+    lines.push({ phase: "qa-review", tone: "ok", text: `~ ${qa.persona} gating  ${unit ? `${unit.package}--${unit.id}` : qa.unitId}` });
   }
 
   if (rejectedQa) {
@@ -400,8 +416,9 @@ export function buildFlowTerminal(facts: FlowFacts = buildFlowFacts(), script: F
   lines.push({ phase: "dev-fix", tone: "info", text: `$ git -C ${rejected.repo} push origin dev` });
 
   for (const qa of facts.qaTeam) {
-    lines.push({ phase: "qa-approve", tone: "info", text: `$ aipe journey record --status verified --repo ${qa.repo} --by ${qa.persona}` });
-    lines.push({ phase: "qa-approve", tone: "verified", text: `✓ verified  ${qa.repo} ×${facts.agents.filter((a) => a.repo === qa.repo).length}` });
+    const unit = unitOf(qa.unitId);
+    lines.push({ phase: "qa-approve", tone: "info", text: `$ aipe journey record --status verified --repo ${qa.repo} --by ${qa.persona} --unit ${qa.unitId}` });
+    lines.push({ phase: "qa-approve", tone: "verified", text: `✓ verified  ${unit ? `${unit.package}--${unit.id}` : qa.unitId}` });
   }
 
   for (const a of facts.agents) {
@@ -455,13 +472,17 @@ export interface FlowPromotionState {
 export interface FlowRepoGroup {
   repo: string;
   agents: FlowAgentState[];
-  qa: FlowQaVisibleState | null;
+  /** Per-delivery QA gates, aligned index-for-index with `agents` (null until
+   *  each gate enters at qa-review). One gate per in-flight unit, not per repo. */
+  qaGates: (FlowQaVisibleState | null)[];
   promotion: FlowPromotionState;
 }
 
 export interface FlowQaVisibleState {
   persona: string;
   repo: string;
+  /** The delivery this gate reviews — same as its agent's id. */
+  unitId: string;
   envelope: ActorEnvelope;
   verdict: QaVerdict;
 }
@@ -509,11 +530,12 @@ function agentStateAt(agent: FlowAgentFact, order: number, rejectedAgentId: stri
   return "merged";
 }
 
-/** The per-repo QA's verdict — independent repos approve independently. */
-function qaVerdictAt(repoHasRejection: boolean, order: number): QaVerdict {
+/** A single delivery's gate verdict — every gate approves independently, even
+ *  two gates on the same repo (one dev bounces, the other passes untouched). */
+function qaVerdictAt(deliveryRejected: boolean, order: number): QaVerdict {
   const o = phaseOrder;
   if (order <= o("qa-review")) return "reviewing";
-  if (repoHasRejection) return order < o("qa-approve") ? "rejected" : "approved";
+  if (deliveryRejected) return order < o("qa-approve") ? "rejected" : "approved";
   return "approved";
 }
 
@@ -557,42 +579,46 @@ export function foldFlow(phaseIndex: number, facts: FlowFacts = buildFlowFacts()
   const promoteOrder = phaseOrder("promote");
   const mergeMainOrder = phaseOrder("merge-main");
 
+  const qaVisible = order >= phaseOrder("qa-review");
   const groups: FlowRepoGroup[] = [];
   for (const repo of facts.repos) {
-    const agents: FlowAgentState[] = facts.agents
-      .filter((a) => a.repo === repo && order >= phaseOrder(a.joinPhase))
-      .map((a) => ({
-        id: a.id,
-        persona: a.persona,
-        role: a.role,
-        repo: a.repo,
-        package: a.package,
-        fqid: a.fqid,
-        pr: a.pr,
-        wave: a.wave,
-        envelope: a.envelope,
-        worktree: true,
-        state: agentStateAt(a, order, facts.rejectedAgentId),
-        prDevVisible: order >= prDevOrder,
-        prDevMerged: order >= mergeDevOrder,
-      }));
-    if (agents.length === 0) continue;
+    const repoAgents = facts.agents.filter((a) => a.repo === repo && order >= phaseOrder(a.joinPhase));
+    if (repoAgents.length === 0) continue;
 
-    const qaFact = facts.qaTeam.find((q) => q.repo === repo) ?? null;
-    const qaVisible = qaFact !== null && order >= phaseOrder("qa-review");
-    const qa: FlowQaVisibleState | null = qaVisible
-      ? {
-          persona: qaFact!.persona,
-          repo: qaFact!.repo,
-          envelope: qaFact!.envelope,
-          verdict: qaVerdictAt(repo === facts.agents.find((a) => a.id === facts.rejectedAgentId)?.repo, order),
-        }
-      : null;
+    const agents: FlowAgentState[] = repoAgents.map((a) => ({
+      id: a.id,
+      persona: a.persona,
+      role: a.role,
+      repo: a.repo,
+      package: a.package,
+      fqid: a.fqid,
+      pr: a.pr,
+      wave: a.wave,
+      envelope: a.envelope,
+      worktree: true,
+      state: agentStateAt(a, order, facts.rejectedAgentId),
+      prDevVisible: order >= prDevOrder,
+      prDevMerged: order >= mergeDevOrder,
+    }));
+
+    // One gate PER delivery, aligned to `agents`. A gate is absent until qa-review.
+    const qaGates: (FlowQaVisibleState | null)[] = repoAgents.map((a) => {
+      if (!qaVisible) return null;
+      const gate = facts.qaTeam.find((q) => q.unitId === a.id);
+      if (!gate) return null;
+      return {
+        persona: gate.persona,
+        repo: gate.repo,
+        unitId: a.id,
+        envelope: gate.envelope,
+        verdict: qaVerdictAt(a.id === facts.rejectedAgentId, order),
+      };
+    });
 
     groups.push({
       repo,
       agents,
-      qa,
+      qaGates,
       promotion: {
         number: facts.promotionPr[repo] ?? 0,
         visible: order >= promoteOrder,
@@ -602,7 +628,7 @@ export function foldFlow(phaseIndex: number, facts: FlowFacts = buildFlowFacts()
   }
 
   const visibleAgents = groups.reduce((n, g) => n + g.agents.length, 0);
-  const visibleQas = groups.reduce((n, g) => n + (g.qa ? 1 : 0), 0);
+  const visibleQas = groups.reduce((n, g) => n + g.qaGates.filter(Boolean).length, 0);
   const visibleDevPrs = groups.reduce((n, g) => n + g.agents.filter((a) => a.prDevVisible).length, 0);
   const visiblePromotions = groups.reduce((n, g) => n + (g.promotion.visible ? 1 : 0), 0);
 

@@ -381,3 +381,73 @@ sequence with the correct actors, ≥3 live harness·tier combinations, the two
 distinct PR artifacts, and the "last cycle" header line surviving into the
 next two loop cycles, with no console errors and no horizontal overflow. This
 repo has no PR CI; the exact commands and full output are in the PR body.
+
+## Journey j-20260831-4w — the card DEITADO, communication made visible, QA per delivery
+
+Scope is `packages/aipe-site/src/pages/Landing/flow/` only (Hero, ConsoleSection
+and `dispatchLaw.ts` are out of scope; the law is consumed, never redefined). The
+PE reviewed the published v4 Flow (PR #28) on a wide desktop and rejected it: the
+per-agent card was "ultra espremido" — a narrow vertical column crammed against
+the right edge, with the QA verdict badges overflowing their own cards — and the
+artifacts merely coexisted instead of visibly talking to each other. A mid-journey
+spec correction (v3) also landed: the QA gate is **per delivery**, not per repo.
+
+**1. The card lies down (`FlowFloor.tsx`, full rewrite of the view).** On wide
+screens (≥ `lg`, 1024px) the scene is a left-to-right assembly line: coordinator on
+the left, then one row per running unit flowing rightward
+`specialist → (review) → its own QA gate`, converging to the repo's promotion into
+`main`. Each specialist card is *deitado* — identity on the left, the work it
+produces (env · worktree · harness · tier · work bar · spec · PR) flowing right —
+so the eye reads the decision advancing. Below `lg` it collapses to the same clean
+vertical stack the mobile v4 already had (no regression there). The wasted
+left-hand void and the badge overflow are both gone; useful specialist width at
+1440 went from ~305px (crammed 2-col grid) to ~600px (full-width lane).
+
+**2. Real-time flow of decisions.** The scene still runs on its own looping clock;
+what changed is that the *frontier* now moves left-to-right — connectors light and
+pulse in phase order (dispatch → spec/PR → review → reject → approve → promote), so
+it reads as a decision happening live, not a finished record.
+
+**3. Communication is drawn, not implied.** Every hand-off is an explicit
+directional `Connector` (arrowhead + a pulse that runs along it while its beat is
+active), never mere proximity. The six links the acceptance names:
+`coordinator→specialist` (the dispatch bus), `specialist→spec` and `specialist→PR`
+(inline arrows to the agent's own artifact chips), `PR→QA` (the review gutter into
+that delivery's gate), `QA→specialist` (the SAME gutter flipped **red** and pointing
+back, plus the agent card turning red/`failed`), and `promotion→main` (the promote
+gutter into the main node). Because the gate is per delivery, the rejection return
+is a short hop straight back to the dev's own adjacent card — the most legible form
+of "who sent what back to whom".
+
+**4. No badge overlaps, at any instant.** The QA / promote / main stations are
+**reserved grid columns** from the first frame, so every artifact *fades* into a
+slot that already exists — nothing reflows. Entrances/exits are opacity + shrink
+only (never translate, and no framer `layout`), so an animating element never
+reaches past its final box. Proven by measuring the live DOM bounding boxes of
+every badge vs. every neighbouring node continuously across a full cycle (≥250
+samples per width), at 320 · 390 · 768 · 1440 · 1920 — zero intersections.
+
+**QA per delivery — the v3 correction, still derived (`flowModel.ts`).**
+`deriveQaTeam` now maps over the **agents** (in-flight units), not the repos: one
+gate per delivery, its persona the repo's QA reviewer, so a repo with two devs
+yields two distinct gates carrying the *same* persona. The count tracks the number
+of units, never a headcount — `flowModel.test.ts` feeds 1/2/3/5 synthetic units and
+proves the gate count follows, and the default (3 devs, 2 repos) derives **3** gates.
+Each gate's verdict is independent, so two deliveries in one repo can split
+(one rejected, one approved) — which is what actually happens.
+
+**Nothing v4 won regressed:** the rejection with the same dev fixing on its own
+branch (never the QA), two distinct PR artifacts (dev PR + separate promotion PR),
+harness·tier from the real registry (≥3 combinations), no `key={cycle}` reset (rows
+leave via `AnimatePresence`, the previous cycle's summary rides into the next open),
+the entityCount progression, the complete reduced-motion still frame, and **zero
+interactivity** (the mutation test still bites — no button, anchor, handler,
+`cursor-pointer`, or player anywhere in the scene sources).
+
+### Evidence
+`bun test` 225/225 · `tsc --noEmit` clean · `bun run build` clean. Verified in a
+real headless-Chromium browser (Playwright) at 320/390/768/1440/1920: continuous
+badge-overlap measurement across a full animation cycle showed **zero** badge
+intersections at every width; the rejection beat, per-delivery gates, and live
+connector pulses were captured on screen; desktop breathing shown at 1440 and 1920.
+This repo has no PR CI; the exact commands and full output are in the PR body.
