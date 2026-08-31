@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { useI18n } from "../../../i18n";
 import { useInView } from "../../../lib/useInView";
 import { useReducedMotion } from "../../../lib/useReducedMotion";
@@ -9,9 +8,11 @@ import {
   buildFlowFacts,
   buildFlowTerminal,
   foldFlow,
+  summarizeCycle,
   FLOW_PHASES,
   FLOW_PHASE_IDS,
   FLOW_LAST_PHASE,
+  type FlowCarry,
 } from "./flowModel";
 
 /**
@@ -24,6 +25,16 @@ import {
  * The clock is paused when the scene is off-screen or the tab is hidden (no wasted
  * frames), and it never starts under `prefers-reduced-motion` — there the scene
  * opens on the folded LAST phase, a complete still frame with the same information.
+ *
+ * v4 — "no reset seco": earlier versions remounted the whole card on every loop
+ * (a `key={cycle}` on the wrapper), which tore down and rebuilt every row and
+ * replayed every entrance animation from an empty frame — exactly the abrupt
+ * wipe the PE flagged as reading like a bug. This version keeps `FlowFloor`/
+ * `FlowTerminal` mounted across cycles (rows animate OUT via `AnimatePresence`
+ * inside `FlowFloor` instead of vanishing), and carries a `FlowCarry` summary
+ * of what the JUST-FINISHED cycle closed with into the next cycle's opening
+ * frame (`FlowState.previousCycle`) — so the first frame after a loop is
+ * provably not the same blank picture the very first cycle opened on.
  */
 export default function FlowScene() {
   const { t } = useI18n();
@@ -36,8 +47,8 @@ export default function FlowScene() {
 
   // Reduced motion opens on the complete, settled frame; otherwise from the top.
   const [phaseIndex, setPhaseIndex] = useState(() => (reduced ? FLOW_LAST_PHASE : 0));
-  // Bumped each time the loop wraps, so the whole card crossfades on restart.
-  const [cycle, setCycle] = useState(0);
+  // What the previous cycle closed with — null until the first loop completes.
+  const [previousCycle, setPreviousCycle] = useState<FlowCarry | null>(null);
 
   useEffect(() => {
     if (reduced) setPhaseIndex(FLOW_LAST_PHASE);
@@ -52,24 +63,25 @@ export default function FlowScene() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
-  // The looping clock: one phase per dwell; wrapping from the settled hold back
-  // to the demand triggers a crossfade (the "gentle fade-reset").
+  const scene = useMemo(() => foldFlow(phaseIndex, facts, previousCycle), [phaseIndex, facts, previousCycle]);
+
+  // The looping clock: one phase per dwell. Wrapping from the settled hold
+  // carries this cycle's summary forward before resetting the phase index —
+  // the floor/terminal stay mounted throughout, so nothing is torn down.
   useEffect(() => {
     if (reduced || !inView || !tabVisible) return;
     const dwell = FLOW_PHASES[phaseIndex]?.ms ?? 2000;
     const id = window.setTimeout(() => {
       setPhaseIndex((n) => {
         if (n >= FLOW_LAST_PHASE) {
-          setCycle((c) => c + 1);
+          setPreviousCycle(summarizeCycle(scene));
           return 0;
         }
         return n + 1;
       });
     }, dwell);
     return () => window.clearTimeout(id);
-  }, [phaseIndex, reduced, inView, tabVisible]);
-
-  const scene = useMemo(() => foldFlow(phaseIndex, facts), [phaseIndex, facts]);
+  }, [phaseIndex, reduced, inView, tabVisible, scene]);
 
   const revealedLines = useMemo(() => {
     const order = FLOW_PHASE_IDS.indexOf(scene.phase);
@@ -83,29 +95,30 @@ export default function FlowScene() {
     parallel: f.labels.parallel,
     units: f.labels.units,
     repos: f.labels.repos,
-    wave: f.labels.wave,
     placed: f.labels.placed,
-    running: f.labels.running,
     worktree: f.labels.worktree,
     ledger: f.labels.ledger,
     receiving: f.labels.receiving,
     dispatching: f.labels.dispatching,
     qaRole: f.labels.qaRole,
     prOpened: f.labels.prOpened,
+    prToDev: f.labels.prToDev,
+    prMergedToDev: f.labels.prMergedToDev,
+    promotePr: f.labels.promotePr,
+    promoteMerged: f.labels.promoteMerged,
+    inReview: f.labels.inReview,
+    rejected: f.labels.rejected,
+    fixing: f.labels.fixing,
+    reviewing: f.labels.reviewing,
+    approved: f.labels.approved,
     caption: f.captions[scene.captionKey],
+    previousCycle: f.previousCycle,
   };
 
   return (
     <div ref={ref} className="overflow-hidden rounded-2xl border border-line bg-surface-1">
-      <motion.div
-        key={cycle}
-        initial={reduced ? false : { opacity: 0.5 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: reduced ? 0 : 0.5, ease: "easeOut" }}
-      >
-        <FlowFloor facts={facts} scene={scene} labels={labels} reduced={reduced} />
-        <FlowTerminal header={f.terminalHeader} lines={revealedLines} reduced={reduced} />
-      </motion.div>
+      <FlowFloor facts={facts} scene={scene} labels={labels} reduced={reduced} />
+      <FlowTerminal header={f.terminalHeader} lines={revealedLines} reduced={reduced} />
     </div>
   );
 }

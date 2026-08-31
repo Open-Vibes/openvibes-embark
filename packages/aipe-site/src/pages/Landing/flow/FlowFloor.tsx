@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import StateBadge from "../../../components/StateBadge";
 import type { StateKey } from "../../../domain/states";
 import type { AgentPhase, FlowFacts, FlowState } from "./flowModel";
@@ -10,10 +10,13 @@ import type { AgentPhase, FlowFacts, FlowState } from "./flowModel";
  * the purely decorative travelling rail is `aria-hidden`. Everything is labelled
  * DOM (real repo and agent names, real states), not a canvas.
  *
- * v3: agents, the QA reviewer, and each PR chip are conditionally rendered —
- * absent from the tree until their own beat, not merely re-labelled — so their
- * arrival is a real DOM mount (and a real `entityCount` in `flowModel`), not a
- * cosmetic transition on an element that was there all along.
+ * v4: QA is now ONE PER REPO (derived from `facts.qaTeam`, not a single fixed
+ * reviewer), one dev's PR is REJECTED and fixed on the same branch before the
+ * SAME QA approves, and each repo carries TWO distinct PR artifacts — the dev
+ * PR each agent opens, and a later, separate promotion PR from `dev` to
+ * `main`. Rows that leave the scene (on the loop's reset) animate OUT via
+ * `AnimatePresence` instead of vanishing instantly — part of the "no reset
+ * seco" fix (see `FlowScene.tsx` / `README.md`).
  *
  * Purely presentational and NON-INTERACTIVE: it takes a folded `FlowState` and
  * renders it. There are no callbacks, no buttons, and nothing responds to a
@@ -28,16 +31,24 @@ export interface FlowFloorLabels {
   parallel: string;
   units: string;
   repos: string;
-  wave: string;
   placed: string;
-  running: string;
   worktree: string;
   ledger: string;
   receiving: string;
   dispatching: string;
   qaRole: string;
   prOpened: string;
+  prToDev: string;
+  prMergedToDev: string;
+  promotePr: string;
+  promoteMerged: string;
+  inReview: string;
+  rejected: string;
+  fixing: string;
+  reviewing: string;
+  approved: string;
   caption: string;
+  previousCycle: (merged: number, repos: number) => string;
 }
 
 export interface FlowFloorProps {
@@ -49,19 +60,32 @@ export interface FlowFloorProps {
 
 const LEDGER_RAMP: readonly StateKey[] = ["dispatched", "delivered", "verified", "merged"];
 
-/** How full an agent's work bar reads at each phase. Running fills over the work beat. */
+/** How full an agent's work bar reads at each phase. */
 const PROGRESS: Record<AgentPhase, number> = {
   idle: 0,
   placed: 0.06,
   running: 0.66,
   delivered: 1,
+  "in-review": 1,
+  rejected: 1,
+  fixing: 0.8,
   verified: 1,
   merged: 1,
 };
 
 /** Agent phases that map to a real ledger/session StateBadge. */
 function badgeState(state: AgentPhase): StateKey | null {
-  return state === "running" || state === "delivered" || state === "verified" || state === "merged" ? state : null;
+  switch (state) {
+    case "running":
+    case "delivered":
+    case "verified":
+    case "merged":
+      return state;
+    case "rejected":
+      return "failed";
+    default:
+      return null;
+  }
 }
 
 /* -------------------------------------------------------------------- the rail */
@@ -107,6 +131,10 @@ function Rail({ active, reversed, reduced }: { active: boolean; reversed?: boole
 
 /* ------------------------------------------------------------------ the agent */
 
+const ENTER = { opacity: 0, y: 6, scale: 0.97 };
+const SHOWN = { opacity: 1, y: 0, scale: 1 };
+const EXIT = { opacity: 0, y: -4, scale: 0.97 };
+
 function AgentRow({
   agent,
   labels,
@@ -118,11 +146,14 @@ function AgentRow({
 }) {
   const badge = badgeState(agent.state);
   const target = PROGRESS[agent.state];
+  const statusNote = agent.state === "in-review" ? labels.inReview : agent.state === "fixing" ? labels.fixing : null;
   return (
     <motion.div
+      layout={!reduced}
       className="flex flex-col gap-1.5 rounded-lg border border-line-soft bg-surface-2/40 p-2"
-      initial={reduced ? false : { opacity: 0, y: 6, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={reduced ? false : ENTER}
+      animate={SHOWN}
+      exit={reduced ? undefined : EXIT}
       transition={reduced ? { duration: 0 } : { duration: 0.4, ease: "easeOut" }}
     >
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -140,16 +171,19 @@ function AgentRow({
             <StateBadge state={badge} size="sm" title={false} />
           ) : (
             <span className="rounded-full border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-faint">
-              {labels.placed}
+              {statusNote ?? labels.placed}
             </span>
           )}
         </span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
         <span className="truncate font-mono text-[9.5px] text-faint">{agent.package}</span>
         <span className="font-mono text-[9.5px] text-faint">⌥ {labels.worktree}</span>
+        <span className="font-mono text-[9.5px] text-brand-strong">
+          {agent.envelope.harness} · {agent.envelope.tier}
+        </span>
       </div>
-      {/* Work bar — fills over the running beat, full on delivery. */}
+      {/* Work bar — fills over the running beat, dips a little while fixing. */}
       <div className="h-1 overflow-hidden rounded-full bg-surface-3">
         <motion.div
           className="h-full rounded-full bg-brand"
@@ -158,8 +192,8 @@ function AgentRow({
           transition={reduced ? { duration: 0 } : { duration: agent.state === "running" ? 3 : 0.5, ease: "easeOut" }}
         />
       </div>
-      {/* The PR — a NEW artifact, mounted only once the `pr` beat is reached. */}
-      {agent.prVisible ? (
+      {/* The dev PR — a NEW artifact, mounted only once the `pr-dev` beat is reached. */}
+      {agent.prDevVisible ? (
         <motion.span
           className="inline-flex w-fit items-center gap-1 rounded-md border border-state-delivered/40 bg-state-delivered/10 px-1.5 py-0.5 font-mono text-[10px] text-state-delivered"
           initial={reduced ? false : { opacity: 0, scale: 0.85 }}
@@ -167,7 +201,8 @@ function AgentRow({
           transition={reduced ? { duration: 0 } : { duration: 0.35, ease: "easeOut" }}
         >
           <span aria-hidden="true">▽</span>
-          {labels.prOpened} #{agent.pr}
+          {labels.prToDev} #{agent.pr}
+          {agent.prDevMerged ? <span className="text-state-merged"> · {labels.prMergedToDev}</span> : null}
         </motion.span>
       ) : null}
     </motion.div>
@@ -176,27 +211,85 @@ function AgentRow({
 
 /* --------------------------------------------------------------------- the QA */
 
-/** QA — a distinct reviewer entity, absent until it enters after delivery (never a badge tacked onto a dev row). */
-function QaRow({ persona, role, reduced }: { persona: string; role: string; reduced?: boolean }) {
+/** A repo's QA — a distinct reviewer entity, absent until it enters after delivery. */
+/** The QA's own verdict word, in its own chip — distinct from the ledger badge on the agent's row. */
+const QA_VERDICT_CLASS: Record<"reviewing" | "rejected" | "approved", string> = {
+  reviewing: "border-line bg-surface-2 text-faint",
+  rejected: "border-state-failed/40 bg-state-failed/10 text-state-failed",
+  approved: "border-state-verified/40 bg-state-verified/10 text-state-verified",
+};
+
+function QaRow({
+  qa,
+  labels,
+  reduced,
+}: {
+  qa: NonNullable<FlowState["groups"][number]["qa"]>;
+  labels: FlowFloorLabels;
+  reduced?: boolean;
+}) {
+  const verdictLabel = qa.verdict === "reviewing" ? labels.reviewing : qa.verdict === "rejected" ? labels.rejected : labels.approved;
   return (
     <motion.div
+      layout={!reduced}
       className="flex items-center gap-2 rounded-lg border border-state-verified/40 bg-state-verified/[0.07] p-2"
-      initial={reduced ? false : { opacity: 0, y: 6, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      initial={reduced ? false : ENTER}
+      animate={SHOWN}
+      exit={reduced ? undefined : EXIT}
       transition={reduced ? { duration: 0 } : { duration: 0.4, ease: "easeOut" }}
     >
       <span
         className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-state-verified/15 font-mono text-[10px] font-bold text-state-verified"
         aria-hidden="true"
       >
-        {persona.charAt(0)}
+        {qa.persona.charAt(0)}
       </span>
       <span className="font-mono text-[11.5px] text-text">
-        {persona} <span className="text-faint">· {role}</span>
+        {qa.persona} <span className="text-faint">· {labels.qaRole}</span>
       </span>
-      <span className="ml-auto">
-        <StateBadge state="verified" size="sm" title={false} />
+      <span className="font-mono text-[9.5px] text-brand-strong">
+        {qa.envelope.harness} · {qa.envelope.tier}
       </span>
+      <span
+        className={`ml-auto rounded-full border px-1.5 py-0.5 font-mono text-[10px] ${QA_VERDICT_CLASS[qa.verdict]}`}
+      >
+        {verdictLabel}
+      </span>
+    </motion.div>
+  );
+}
+
+/* --------------------------------------------------------------- the promotion */
+
+/** The dev→main promotion PR — a SEPARATE artifact from any agent's dev PR. */
+function PromotionRow({
+  promotion,
+  labels,
+  reduced,
+}: {
+  promotion: FlowState["groups"][number]["promotion"];
+  labels: FlowFloorLabels;
+  reduced?: boolean;
+}) {
+  if (!promotion.visible) return null;
+  return (
+    <motion.div
+      layout={!reduced}
+      className="flex items-center gap-2 rounded-lg border border-brand/40 bg-brand/[0.06] p-2"
+      initial={reduced ? false : ENTER}
+      animate={SHOWN}
+      exit={reduced ? undefined : EXIT}
+      transition={reduced ? { duration: 0 } : { duration: 0.4, ease: "easeOut" }}
+    >
+      <span aria-hidden="true" className="text-brand">
+        ⇢
+      </span>
+      <span className="font-mono text-[11px] text-brand-strong">
+        {labels.promotePr} #{promotion.number}
+      </span>
+      {promotion.merged ? (
+        <span className="ml-auto font-mono text-[10px] text-state-merged">{labels.promoteMerged}</span>
+      ) : null}
     </motion.div>
   );
 }
@@ -205,12 +298,20 @@ function QaRow({ persona, role, reduced }: { persona: string; role: string; redu
 
 export default function FlowFloor({ facts, scene, labels, reduced }: FlowFloorProps) {
   const dispatchActive = scene.phase === "dispatch-1" || scene.phase === "dispatch-2" || scene.phase === "dispatch-3" || scene.phase === "work";
-  const returnActive = scene.phase === "deliver" || scene.phase === "qa" || scene.phase === "pr";
+  const returnActive =
+    scene.phase === "deliver" ||
+    scene.phase === "pr-dev" ||
+    scene.phase === "qa-review" ||
+    scene.phase === "qa-reject" ||
+    scene.phase === "dev-fix" ||
+    scene.phase === "qa-approve" ||
+    scene.phase === "merge-dev" ||
+    scene.phase === "promote";
   const anyAgentVisible = scene.groups.length > 0;
 
   return (
     <div role="img" aria-label={labels.ariaLabel} className="flex flex-col">
-      {/* Header: the coordinator, the journey, and the LAW's real verdict. */}
+      {/* Header: the coordinator, the journey, the LAW's real verdict, and what the previous cycle closed with. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-line-soft bg-surface-2/40 px-3.5 py-2.5">
         <span className="flex items-center gap-1.5">
           <span aria-hidden="true" className="text-brand">◆</span>
@@ -219,16 +320,21 @@ export default function FlowFloor({ facts, scene, labels, reduced }: FlowFloorPr
         </span>
         <span className="font-mono text-[10px] text-faint">{facts.journey}</span>
         {scene.validated ? (
-          <span className="ml-auto inline-flex items-center gap-1.5 rounded-md border border-state-verified/40 bg-state-verified/10 px-2 py-0.5">
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-state-verified/40 bg-state-verified/10 px-2 py-0.5">
             <span aria-hidden="true" className="text-state-verified">✓</span>
             <span className="font-mono text-[10px] text-state-verified">
               {labels.dispatchLaw}: {labels.parallel} · {scene.verdict.batch} {labels.units} · {scene.verdict.repos} {labels.repos}
             </span>
           </span>
         ) : null}
+        {scene.previousCycle ? (
+          <span className="ml-auto font-mono text-[9.5px] text-faint">
+            {labels.previousCycle(scene.previousCycle.merged, scene.previousCycle.repos)}
+          </span>
+        ) : null}
       </div>
 
-      {/* The fan: coordinator core → rail → repo groups → QA. Stacks on mobile. */}
+      {/* The fan: coordinator core → rail → repo groups → PR/promotion. Stacks on mobile. */}
       <div className="relative overflow-hidden p-3.5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
           {/* Coordinator core */}
@@ -256,21 +362,17 @@ export default function FlowFloor({ facts, scene, labels, reduced }: FlowFloorPr
                         <span aria-hidden="true" className="text-faint">▸</span>
                         <span className="truncate font-mono text-[11px] font-semibold text-brand-strong">{group.repo}</span>
                       </div>
-                      {group.agents.map((agent) => (
-                        <AgentRow key={agent.id} agent={agent} labels={labels} reduced={reduced} />
-                      ))}
+                      <AnimatePresence initial={false}>
+                        {group.agents.map((agent) => (
+                          <AgentRow key={agent.id} agent={agent} labels={labels} reduced={reduced} />
+                        ))}
+                        {group.qa ? <QaRow key={`qa-${group.repo}`} qa={group.qa} labels={labels} reduced={reduced} /> : null}
+                        {group.promotion.visible ? (
+                          <PromotionRow key={`promo-${group.repo}`} promotion={group.promotion} labels={labels} reduced={reduced} />
+                        ) : null}
+                      </AnimatePresence>
                     </div>
                   ))}
-                  {/* QA — a NEW actor, mounted only once it enters, after delivery. */}
-                  {scene.qa.visible ? (
-                    <div className="flex min-w-0 flex-col gap-2 rounded-xl border border-state-verified/30 bg-state-verified/[0.04] p-2.5 sm:col-span-2">
-                      <div className="flex items-center gap-1.5">
-                        <span aria-hidden="true" className="text-faint">▸</span>
-                        <span className="truncate font-mono text-[11px] font-semibold text-state-verified">{labels.qaRole}</span>
-                      </div>
-                      <QaRow persona={scene.qa.persona} role={labels.qaRole} reduced={reduced} />
-                    </div>
-                  ) : null}
                 </div>
 
                 <Rail active={returnActive} reversed reduced={reduced} />

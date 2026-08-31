@@ -18,6 +18,7 @@ const TONE_CLASS: Record<FlowLineTone, string> = {
   work: "text-state-running",
   delivered: "text-state-delivered",
   verified: "text-state-verified",
+  failed: "text-state-failed",
   merged: "text-state-merged",
 };
 

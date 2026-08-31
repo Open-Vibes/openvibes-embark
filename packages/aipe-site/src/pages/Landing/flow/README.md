@@ -267,23 +267,142 @@ motion.span` primitives already exercised at every breakpoint the CSS
 targets. A QA pass on a real phone remains the right next gate for that one
 specific claim.
 
+## v4 (j-20260830-58) — the whole method, not the happy path
+
+The PE's own words, reviewing the v3 flow that shipped as PR #27:
+
+> "no site do aipe quando o fluxo terminar nao deve resetar toda a animacao
+> e, ta demonstrando 2 repos mas so apareceu 1 qa. eu quero um fluxo de ponta
+> a ponta, p.e coordenador dev(s) qa(s) report de reprove do qa, aprove, pr
+> em dev qa pr na main. […] e quero que sejam harnesses e modelos diferentes
+> no fluxo"
+
+Five things, addressed in the order they were sequenced (2 first — the visible
+contradiction between the header and the scene; then 3 and 5 together, since
+the new reject/promote actors need an envelope anyway; 1 last, since the
+"no reset" fix depends on how the now-longer cycle ends):
+
+### 1. QA is derived PER REPO, never a fixed headcount
+
+v3 hard-set one QA persona (`Viola`) for the whole batch, even while the
+header's own `dispatch law` verdict said `2 repos`. `deriveQaTeam(repos)` now
+returns one QA per DISTINCT repo — a pure function of the repo list, not a
+literal count. `buildFlowFacts` derives `repos` from the same seed that feeds
+`scheduleWaves`/`validateBatch`, so a third repo in the input yields a third
+QA with no code change at the call site. `flowModel.test.ts` proves this
+generically (1, 2, 3, 5 synthetic repos in → that many QAs out), not just for
+the shipped 2-repo case.
+
+### 2. The whole method: PR into `dev`, a QA gate, a REJECTION, a fix, a promotion
+
+The scene now plays the real ten-step lifecycle end to end, not just to "PR
+opened": dispatch → parallel work → each agent opens its **own PR into
+`dev`** (`pr-dev`) → its repo's QA reviews (`qa-review`) → **one PR is
+REJECTED** (`qa-reject`) → **the SAME dev fixes it, on the SAME branch**
+(`dev-fix` — the QA that rejected never touches the fix) → the QA re-reviews
+and approves (`qa-approve`) → approved PRs merge into `dev` (`merge-dev`) →
+a **separate, later** promotion PR carries `dev` to `main` (`promote`) → it
+merges and the ledger closes (`merge-main`). Marco's PR is the one rejected
+(`FLOW_REJECTED_AGENT_ID`) — a fixed dramatization choice, not something that
+needs to be derived, since the aceite only asks for one real instance of the
+reject→fix loop with the right actors. Repos with nothing to reject (Jane's
+`agentistics`) approve on their own beat instead of waiting on the other
+repo's fix — QA is per repo, so its pacing is too.
+
+The **two PRs are two distinct artifacts**, not one box that changes label: a
+`▽ PR → dev #41` chip on the agent's own row, and later a separate `⇢ promote
+→ main #141` chip at the repo-group level, which becomes visible only once
+every dev PR in that repo has already merged into `dev` — `flowModel.test.ts`
+asserts the promotion is invisible before `merge-dev` and the dev-PR chips are
+still present (not replaced) once the promotion appears.
+
+### 3. Harness + model, distinct per actor, from the real containment registry
+
+`envelopePool()` is the cross-product of `HARNESS_IDS.filter(isSessionEligible)`
+(from `domain/harness.ts` — the same truth the Harness Bay renders) and the
+tiers actually offered ambiently (`fast`/`standard`/`reasoning` —
+`frontier` is excluded because `DEFAULT_POLICY.gatedTiers` gates it behind
+the PE's signature, so an ambient scene assigning it unattended would be a
+lie). `envelopeForActor(index)` cycles that pool, so every dev and every QA
+carries its own `harness · tier` line, and the pool is provably NOT a literal
+per-agent list: passing a wider harness list into `envelopePool` changes the
+combinations produced (`flowModel.test.ts`), and the shipped scene already
+shows ≥3 distinct combinations among five actors (two harnesses × three
+tiers, cycling from index 0).
+
+### 4. No reset seco — the loop keeps going, but doesn't erase what it built
+
+v3 remounted the whole card every loop (`key={cycle}` on the wrapper), which
+tore down and rebuilt every row and replayed every entrance from an empty
+frame — exactly the "recomeça do vazio" the PE flagged as reading like a bug.
+Two changes fix it without turning the loop into a freeze-on-last-frame (the
+PE explicitly ruled that out too):
+
+- `FlowFloor`/`FlowTerminal` now stay mounted across cycles. Rows that leave
+  the scene when the phase resets to `demand` animate OUT via
+  `AnimatePresence` (a fade+scale-down) instead of being torn down instantly
+  by a parent remount.
+- `FlowState.previousCycle` (a `FlowCarry` of `{ merged, repos }`, produced by
+  `summarizeCycle` on the just-settled frame) rides forward into the NEXT
+  cycle's fold and renders as a small pinned line in the header ("last cycle:
+  3 merged across 2 repos"). The stage itself still opens empty — the
+  fan-out genuinely restarts, that's the point of the scene — but the first
+  frame of cycle 2 is provably not the same picture as cycle 1's true first
+  frame: `flowModel.test.ts` folds both with and without a carry and asserts
+  `previousCycle` differs (`null` vs. the real numbers) even though `groups`
+  is empty in both. Verified live in a real Chrome tab (see below): the
+  chip is visible and correct through cycle 2 and cycle 3 without the card
+  ever going blank.
+
+### How v4 was verified
+
+`tsc --noEmit` clean; the full flow suite is 76/76 (up from 45 in v3), the
+whole package suite 224/224; `bun run build` clean. Verified live in a real
+Chrome tab (over Tailscale, the same method prior versions used): the tab
+was backgrounded by Chrome under this host's usual multi-session load
+(`document.hidden === true`, the same documented limitation v2/v3 hit) — the
+perf-pause held the clock correctly, exactly as designed, and forcing
+`document.hidden`/`visibilitychange` to simulate a visible tab let the clock
+run. Sampled live across two full cycles: three distinct harness·tier
+combinations on screen at once (`claude-code · fast`, `gemini · fast`,
+`claude-code · standard` on the devs, plus `gemini · standard` and
+`claude-code · reasoning` on the two QAs), Marco genuinely shown
+`consertando` (fixing) while Viola (the repo's QA, a different actor) showed
+`reprovado` (rejected), Cliff's independent `agentistics` QA already
+`aprovado` in the same frame, a separate `promove → main` chip distinct from
+the `PR → dev` chips, and the `ciclo anterior` / `last cycle` header line
+present and correct going into cycle 2 and cycle 3, in both PT and EN, with
+no console errors and no horizontal overflow
+(`document.documentElement.scrollWidth === clientWidth`). The 320/390px
+real-device measurement remains the same unmet boundary v2/v3 already
+declared honestly (this host's screen can't be constrained below its own
+width); nothing in v4 changes the mobile-first construction that boundary
+rested on.
+
 ## Files
 
 - `flowModel.ts` — pure, framework‑free model: derives the 3‑agent/2‑repo facts
-  from the **real** dispatch law, defines the ten ambient phases (three of them
-  one per agent's own dispatch beat), and folds a phase index into a
-  cumulative `FlowState` — including `entityCount`, the actor/artifact tally
-  that proves the scene is a progression. No React.
+  and the per-repo QA team from the **real** dispatch law, assigns every actor
+  a harness+tier envelope from the **real** containment registry, defines the
+  fifteen ambient phases (dispatch, work, a PR into `dev`, a QA gate, one
+  rejection and its fix, approval, a merge into `dev`, a separate promotion
+  PR, and the final merge), and folds a phase index (plus the previous
+  cycle's carry) into a cumulative `FlowState` — including `entityCount`, the
+  actor/artifact tally that proves the scene is a progression. No React.
 - `FlowFloor.tsx` — presentational: coordinator → repo groups → agent rows
-  (each mounted only from its own beat) → QA row (mounted only after
-  delivery) → PR chips (mounted only at the `pr` beat), the travelling
-  dispatch/PR rail, progress and state. No handlers.
+  (each mounted only from its own beat, later showing its own dev-PR chip) →
+  a per-repo QA row (mounted after delivery, its own verdict chip) → a
+  per-repo promotion row (mounted only after that repo's dev PRs have
+  merged), the travelling dispatch/PR rail, progress and state. Rows exit via
+  `AnimatePresence` on loop reset. No handlers.
 - `FlowTerminal.tsx` — presentational: the auto‑scrolling, non‑interactive log.
 - `FlowScene.tsx` — the ambient orchestrator: owns the looping clock, gates on
-  in‑view + reduced‑motion, stacks the floor above the terminal. No controls.
+  in‑view + reduced‑motion, carries the previous cycle's summary forward, and
+  keeps the floor/terminal mounted across loops (no full remount). No controls.
 - `FlowSection.tsx` — the landing section wrapper (heading, lead, the scene).
-- `*.test.ts(x)` — the law/parallelism, the fold completeness (including the
-  entrance-progression proof), the EN/PT caption parity, and the
-  zero‑interactivity proofs — `flow.render.test.tsx` additionally diffs the
-  rendered markup across beats to prove agents/QA/PRs are actually absent
-  before their turn, not just relabelled.
+- `*.test.ts(x)` — the law/parallelism, the per-repo QA derivation, the
+  harness/tier registry proof, the fold completeness (including the
+  entrance-progression and no-reset-seco proofs), the EN/PT caption parity,
+  and the zero‑interactivity proofs — `flow.render.test.tsx` additionally
+  diffs the rendered markup across beats to prove agents/QA/PRs/promotions
+  are actually absent before their turn, not just relabelled.
