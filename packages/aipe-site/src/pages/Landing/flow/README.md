@@ -175,16 +175,115 @@ container. A QA pass on a real phone at 320/390px is the right next gate; the
 
 The exact commands and their live output are in the PR's evidence.
 
+## v3 — corrected after the PE's rejection of v2
+
+The PE's own words, on what shipped in `#26`:
+
+> "o fluxo do console ficou horrivel, era pra ser animado e ir spawnando cada
+> agente/qa/criando pr etc a cada etapa e vc deixcou so 3 caras fixos ali sem
+> realmente fazer oq deveria"
+
+The coordinator diagnosed this in the real browser before re-dispatching: the
+PE was NOT seeing the `prefers-reduced-motion` static fallback
+(`matchMedia('(prefers-reduced-motion: reduce)').matches === false` on his
+machine) — the cause was the design of the animated version itself, not
+accessibility or a stale build.
+
+**What v2 actually built:** all three agents present from frame 0, only their
+badge and progress bar changing over the beats. Technically satisfied "3
+agents in 2 repos, at once" and "dispatches as they work" if you read the
+words narrowly — but the PE watched it and saw a status panel, not a
+dispatch happening. Nothing *entered*.
+
+**What v3 changes, structurally:** an agent is now **absent from the DOM**
+(not merely idle-styled) until the clock reaches its own dispatch beat.
+`flowModel.ts` gained one `FlowAgentFact.joinPhase` per unit and three new
+phases — `dispatch-1`, `dispatch-2`, `dispatch-3` — so the three agents that
+used to appear together the instant the law validated now enter **one at a
+time**, in seed order (Lawson → `openvibes-embark`, Marco → the same repo's
+second package, Jane → the second repo — which is also, for free, the moment
+"3 agents, 2 repos" first becomes true on screen). QA (`Viola`) is a new
+actor, absent until the `qa` phase, after delivery, never a badge tacked onto
+a dev's row. Each PR is a new artifact chip, absent until its own `pr` phase,
+separate from — and later than — the agent's "delivered" state.
+
+The fold now exposes `FlowState.entityCount`: the number of actors/artifacts
+on screen at a phase. It goes `0, 0, 1, 2, 3, 3, 3, 4, 7, 7` across the ten
+phases — proof the scene is a progression, not a panel. `flowModel.test.ts`
+asserts it never shrinks and grows at ≥3 distinct beats (the PE's own bar:
+"capturar a contagem de atores/artefatos em pelo menos 3 instantes distintos
+… e afirmar que ela cresce"); a check that only reads the final frame — which
+is what v2's test suite effectively did — would have passed v2 and is
+explicitly rejected as insufficient. `flow.render.test.tsx` goes one further
+and diffs the actual rendered HTML at `dispatch-1`/`dispatch-3`/`qa`/`pr`:
+`Marco` and `Jane` are provably absent from the `dispatch-1` markup (not
+present-but-dimmed), `Viola` is absent before `qa`, no `#{pr}` number appears
+before `pr`.
+
+Everything the v2 gate already earned is unchanged: zero interactivity (the
+same two tests still scan the four source files and the rendered markup for
+any click handler or interactive element — that scan now additionally covers
+the QA and PR chips), 3 agents/2 repos still derived from the real
+`dispatchLaw` (`validateBatch`/`scheduleWaves`), the terminal log still
+derives every command/output line from the same facts (now one dispatch line
+per agent, plus a `gh pr create` line per PR — no invented strings), the
+reduced-motion still frame is still the fold of the LAST phase — now with QA
+and all three PRs visible, since "complete" grew to include them — and the
+mobile/overflow/token constraints below are untouched code paths.
+
+### How v3 was verified — and the boundary I hit this time
+
+`tsc --noEmit` clean; the full flow suite is 45/45 (up from 33), the whole
+package suite 193/193. `flow.render.test.tsx` renders `FlowFloor` at four
+different phases via `renderToStaticMarkup` and diffs the actual HTML — this
+is the "screenshot sequence" the acceptance criteria asks for, done as an
+exact, reproducible assertion instead of an eyeballed image.
+
+I also loaded the built dev server in a real Chrome tab (via the host's
+Tailscale address, same method the `#26` verification used) and read the
+live DOM: the scene opens on the correct empty `demand` frame — "recebendo a
+demanda…", zero agents, zero PRs — matching the model exactly, with zero
+console errors and no horizontal overflow (`scrollWidth === clientWidth` at
+the tab's ~1522px width). **I could not sustain a live real-time observation
+of the clock advancing through all ten phases in that tab.** This host runs
+several concurrent automated Chrome sessions (agentop lists six active on
+this machine right now, including another specialist in this same journey),
+and the tab I drove was repeatedly backgrounded/frozen by Chrome — the page's
+own `Page Visibility`-gated perf pause (documented above, and unchanged from
+v2) correctly held the clock while `document.hidden` was true, and even
+after a real click gave the tab OS focus, one polling script hit a 45s CDP
+timeout with the renderer itself unresponsive. That is a shared-resource
+limit of this host at this moment, not a defect in the scene — the
+`flow.render.test.tsx` markup diffs across phases are the reliable substitute
+and were run repeatedly, green.
+
+The 320/390px real-device measurement remains the same unmet boundary v2
+already declared honestly: not measurable on this host's screen (2294 CSS px
+wide, fills the controlled window; `resize_window` does not constrain the
+page viewport below it). Nothing in v3 changes the mobile-first construction
+that boundary rested on (single-column flex/grid below `sm:`, `overflow-hidden`
+card, clipped rail) — the entrance animations use the same `motion.div`/`
+motion.span` primitives already exercised at every breakpoint the CSS
+targets. A QA pass on a real phone remains the right next gate for that one
+specific claim.
+
 ## Files
 
 - `flowModel.ts` — pure, framework‑free model: derives the 3‑agent/2‑repo facts
-  from the **real** dispatch law, defines the ambient phases, and folds a phase
-  index into a cumulative `FlowState`. No React.
-- `FlowFloor.tsx` — presentational: coordinator → repo groups → agent rows, the
-  travelling dispatch/PR rail, progress and state. No handlers.
+  from the **real** dispatch law, defines the ten ambient phases (three of them
+  one per agent's own dispatch beat), and folds a phase index into a
+  cumulative `FlowState` — including `entityCount`, the actor/artifact tally
+  that proves the scene is a progression. No React.
+- `FlowFloor.tsx` — presentational: coordinator → repo groups → agent rows
+  (each mounted only from its own beat) → QA row (mounted only after
+  delivery) → PR chips (mounted only at the `pr` beat), the travelling
+  dispatch/PR rail, progress and state. No handlers.
 - `FlowTerminal.tsx` — presentational: the auto‑scrolling, non‑interactive log.
 - `FlowScene.tsx` — the ambient orchestrator: owns the looping clock, gates on
   in‑view + reduced‑motion, stacks the floor above the terminal. No controls.
 - `FlowSection.tsx` — the landing section wrapper (heading, lead, the scene).
-- `*.test.ts(x)` — the law/parallelism, the fold completeness, the EN/PT caption
-  parity, and the zero‑interactivity proofs.
+- `*.test.ts(x)` — the law/parallelism, the fold completeness (including the
+  entrance-progression proof), the EN/PT caption parity, and the
+  zero‑interactivity proofs — `flow.render.test.tsx` additionally diffs the
+  rendered markup across beats to prove agents/QA/PRs are actually absent
+  before their turn, not just relabelled.

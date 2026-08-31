@@ -75,14 +75,20 @@ const en = {
       worktree: "worktree",
       ledger: "ledger",
       receiving: "receiving the demand…",
+      dispatching: "dispatching…",
+      qaRole: "QA reviewer",
+      prOpened: "PR opened",
     },
     captions: {
       demand: "the coordinator takes the demand",
       validate: "two repos → the law runs them in parallel",
-      dispatch: "three agents dispatched at once",
+      "dispatch-1": "agent 1 of 3 dispatched — enters the scene",
+      "dispatch-2": "agent 2 of 3 dispatched — joins the work",
+      "dispatch-3": "agent 3 of 3 — 3 agents, 2 repos, at once",
       work: "three worktrees, working in parallel",
-      deliver: "PRs return · each with its evidence",
-      review: "review arrives after · QA verifies",
+      deliver: "each agent delivers its evidence",
+      qa: "QA arrives — a new reviewer steps in",
+      pr: "each delivery opens its own PR",
       merged: "all merged · immutable",
     },
     script: {
@@ -91,7 +97,7 @@ const en = {
     },
     aria: {
       label:
-        "AIPe dispatching three agents across two repositories in parallel: Lawson on openvibes-embark/aipe-site, Marco on openvibes-embark/embark-site, and Jane on agentistics/web. The dispatch law accepts the batch as one parallel wave; the agents run in isolated worktrees, return pull requests each carrying evidence, are verified by QA review, and all merge. The scene runs on a loop.",
+        "AIPe dispatching three agents across two repositories, one at a time: Lawson on openvibes-embark/aipe-site, then Marco on openvibes-embark/embark-site, then Jane on agentistics/web, all running in parallel once dispatched. QA — Viola — enters as a new reviewer after delivery; each agent then opens its own pull request as a new artifact; all three merge. The scene runs on a loop, starting empty each time.",
     },
   },
 
