@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import FlowFloor, { type FlowFloorLabels } from "./FlowFloor";
 import FlowTerminal from "./FlowTerminal";
-import { buildFlowFacts, buildFlowTerminal, foldFlow, FLOW_LAST_PHASE, FLOW_PHASE_IDS, FLOW_REJECTED_AGENT_ID } from "./flowModel";
+import { buildFlowFacts, buildFlowTerminal, foldFlow, FLOW_LAST_PHASE, FLOW_PHASE_IDS, FLOW_REJECTED_AGENT_ID, type FlowPhaseId } from "./flowModel";
 
 const facts = buildFlowFacts();
 
@@ -31,6 +31,8 @@ const LABELS: FlowFloorLabels = {
   fixing: "fixing",
   reviewing: "reviewing",
   approved: "approved",
+  inProgress: "in progress",
+  landsIn: "lands in",
   spec: "spec",
   mainBranch: "main",
   conn: { dispatch: "dispatch", review: "review", promote: "promote", reject: "sent back" },
@@ -164,6 +166,88 @@ describe("Flow — the rejection and fix are visible in the rendered markup", ()
     expect(html).toContain(LABELS.fixing);
     const rejected = facts.agents.find((a) => a.id === FLOW_REJECTED_AGENT_ID)!;
     expect(html).toContain(rejected.persona);
+  });
+});
+
+/* ---------------------------------------- item 1: the amber in-progress signal */
+
+describe("Flow — a unit in progress is amber, from the --st-running token, and labelled", () => {
+  const at = (phase: FlowPhaseId) =>
+    renderToStaticMarkup(<FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf(phase), facts)} labels={LABELS} reduced />);
+
+  it("at work, running units carry the labelled amber in-progress marker (not colour alone)", () => {
+    const html = at("work");
+    expect(html).toContain(LABELS.inProgress); // the word — legible without colour
+    expect(html).toContain("data-flow-inprogress");
+    expect(html).toContain("state-running"); // the canonical token, not a typed value
+    // …and it is NOT the escalation amber (that token is reserved for the gate).
+    expect(html).not.toContain("state-escalated");
+  });
+
+  it("a STOPPED unit (delivered, awaiting review) shows no in-progress marker — the two are distinguishable", () => {
+    const html = at("deliver");
+    expect(html).not.toContain("data-flow-inprogress");
+  });
+
+  it("the token drives the colour: swapping --st-running would repaint every in-progress mark", () => {
+    // Every amber affordance binds to the token via the `state-running` utility;
+    // none hard-codes a hex/rgb. (Proven structurally — the class is the binding.)
+    const html = at("work");
+    const runningClasses = html.match(/state-running/g) ?? [];
+    expect(runningClasses.length).toBeGreaterThanOrEqual(2);
+    expect(html).not.toMatch(/#[0-9a-fA-F]{6}/); // no literal hex colour in the floor markup
+  });
+
+  it("fixing is IN PROGRESS (amber), rejected is a STOP (red) — the two never share a colour", () => {
+    const reject = at("qa-reject");
+    expect(reject).toContain(">failed<"); // the bounce is red
+    expect(reject).not.toContain("data-flow-inprogress"); // nobody is working at the bounce instant
+
+    const fix = at("dev-fix");
+    expect(fix).toContain("data-flow-inprogress"); // the same dev, now amber, working the fix
+    expect(fix).toContain(LABELS.fixing);
+  });
+});
+
+/* -------------------------------- item 3: two branches, one destination repo */
+
+describe("Flow — the promotion: one repo, two arrows, each carrying repo · branch", () => {
+  const scene = foldFlow(FLOW_LAST_PHASE, facts);
+  const html = renderToStaticMarkup(<FlowFloor facts={facts} scene={scene} labels={LABELS} reduced />);
+
+  it("the destination repo appears as its own node, once per repo", () => {
+    const repoNodes = html.match(/data-flow-node="repo"/g) ?? [];
+    expect(repoNodes.length).toBe(facts.repos.length);
+  });
+
+  it("EVERY card has its own arrow to the repo — no card left without a destination", () => {
+    // Each landing arrow is a connector; once landed its tone is `verified`.
+    const landingArrows = html.match(/data-flow-conn="verified"/g) ?? [];
+    expect(landingArrows.length).toBe(facts.agents.length);
+  });
+
+  it("each arrow's label is repo · branch, DERIVED — two same-repo cards show two DISTINCT branches", () => {
+    for (const a of facts.agents) expect(html).toContain(a.branch);
+    const ove = facts.agents.filter((a) => a.repo === "openvibes-embark");
+    expect(ove).toHaveLength(2);
+    expect(new Set(ove.map((a) => a.branch)).size).toBe(2);
+    // the branch text is present alongside its repo (the "repo · branch" label).
+    expect(html).toContain("data-flow-branch");
+    for (const a of ove) {
+      expect(html).toContain(a.branch);
+      expect(a.branch).not.toBe("dev");
+      expect(a.branch).not.toBe("main");
+    }
+  });
+
+  it("independence is legible in the promotion too: an approved branch is green while a bounced one is amber", () => {
+    const fix = renderToStaticMarkup(
+      <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("dev-fix"), facts)} labels={LABELS} reduced />,
+    );
+    // at dev-fix, the clean sibling has already landed (a verified landing arrow)…
+    expect((fix.match(/data-flow-conn="verified"/g) ?? []).length).toBeGreaterThanOrEqual(1);
+    // …while the bounced unit's landing arrow is still amber (running), not yet landed.
+    expect(fix).toContain('data-flow-conn="running"');
   });
 });
 

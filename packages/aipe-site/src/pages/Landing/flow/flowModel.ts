@@ -135,6 +135,11 @@ export interface FlowAgentFact {
   package: string;
   fqid: string;
   worktree: string;
+  /** The head branch this unit pushes — derived from the same structure as the
+   *  worktree (`aipe/<journey>/<package>--<id>`), NEVER a literal `dev`/`main`.
+   *  Two units in the SAME repo therefore carry DIFFERENT branches, which is the
+   *  whole point of item 3: distinct branches converging on one repo. */
+  branch: string;
   sessionId: string;
   harness: HarnessId;
   envelope: ActorEnvelope;
@@ -242,6 +247,7 @@ export function buildFlowFacts(seed: readonly FlowSeed[] = FLOW_SEED): FlowFacts
     package: s.package,
     fqid: `${s.repo}/${s.package}--${s.id}`,
     worktree: `${s.repo}/.worktrees/${FLOW_JOURNEY}-${s.package}--${s.id}`,
+    branch: `aipe/${FLOW_JOURNEY}/${s.package}--${s.id}`,
     sessionId: s.sessionId,
     harness: HARNESS,
     envelope: envelopeForActor(i),
@@ -452,6 +458,8 @@ export interface FlowAgentState {
   repo: string;
   package: string;
   fqid: string;
+  /** The head branch this unit sends — derived, distinct per unit (see fact). */
+  branch: string;
   pr: number;
   wave: number;
   envelope: ActorEnvelope;
@@ -459,7 +467,13 @@ export interface FlowAgentState {
   state: AgentPhase;
   /** This agent's dev PR (into `dev`) has entered the scene. */
   prDevVisible: boolean;
-  /** That dev PR has merged into `dev` — distinct from, and before, promotion. */
+  /**
+   * That dev PR has merged into `dev` — i.e. this unit has LANDED in its
+   * destination repo. Derived PER UNIT, not by a global merge beat: an approved
+   * unit lands the moment its own gate clears, so a clean sibling is already in
+   * the repo while the rejected one is still bouncing/fixing (item 2 — the
+   * independence IS the product). Distinct from, and before, promotion.
+   */
   prDevMerged: boolean;
 }
 
@@ -539,6 +553,23 @@ function qaVerdictAt(deliveryRejected: boolean, order: number): QaVerdict {
   return "approved";
 }
 
+/**
+ * Has this unit LANDED in its destination repo (its dev PR merged) by `order`?
+ *
+ * Item 2, the crux: a unit lands the instant ITS OWN gate clears — it does not
+ * wait for a sibling. A clean delivery clears at `qa-reject` (the same beat the
+ * bounced sibling is being rejected), so it is already merged while the rejected
+ * one is still `rejected`/`fixing`. The rejected delivery lands only once its own
+ * re-review passes (`qa-approve`). With NO rejection in the batch nothing is
+ * bounced, so every unit lands together at `qa-reject` — the scene never invents
+ * a wait. Aligned to `qaVerdictAt`: a unit lands exactly when its verdict is
+ * `approved`.
+ */
+function agentLandedAt(agentId: string, order: number, rejectedAgentId: string | null): boolean {
+  const clearedAt = agentId === rejectedAgentId ? phaseOrder("qa-approve") : phaseOrder("qa-reject");
+  return order >= clearedAt;
+}
+
 /** Which ledger stations are lit by the time the clock reaches `phase`. */
 function ledgerAt(order: number): LedgerStatus[] {
   const o = phaseOrder;
@@ -575,7 +606,6 @@ export function foldFlow(phaseIndex: number, facts: FlowFacts = buildFlowFacts()
   const phase = FLOW_PHASE_IDS[clamped]!;
   const order = phaseOrder(phase);
   const prDevOrder = phaseOrder("pr-dev");
-  const mergeDevOrder = phaseOrder("merge-dev");
   const promoteOrder = phaseOrder("promote");
   const mergeMainOrder = phaseOrder("merge-main");
 
@@ -592,13 +622,14 @@ export function foldFlow(phaseIndex: number, facts: FlowFacts = buildFlowFacts()
       repo: a.repo,
       package: a.package,
       fqid: a.fqid,
+      branch: a.branch,
       pr: a.pr,
       wave: a.wave,
       envelope: a.envelope,
       worktree: true,
       state: agentStateAt(a, order, facts.rejectedAgentId),
       prDevVisible: order >= prDevOrder,
-      prDevMerged: order >= mergeDevOrder,
+      prDevMerged: agentLandedAt(a.id, order, facts.rejectedAgentId),
     }));
 
     // One gate PER delivery, aligned to `agents`. A gate is absent until qa-review.

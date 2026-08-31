@@ -111,6 +111,8 @@ export default function FlowScene() {
     fixing: f.labels.fixing,
     reviewing: f.labels.reviewing,
     approved: f.labels.approved,
+    inProgress: f.labels.inProgress,
+    landsIn: f.labels.landsIn,
     spec: f.labels.spec,
     mainBranch: f.labels.mainBranch,
     conn: f.conn,
