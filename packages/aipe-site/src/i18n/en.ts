@@ -85,6 +85,8 @@ const en = {
       fixing: "fixing",
       reviewing: "reviewing",
       approved: "approved",
+      inProgress: "in progress",
+      landsIn: "lands in",
       spec: "spec",
       mainBranch: "main",
     },
@@ -120,7 +122,7 @@ const en = {
     previousCycle: (merged: number, repos: number) => `last cycle: ${merged} merged across ${repos} repos`,
     aria: {
       label:
-        "AIPe dispatching three agents across two repositories, one at a time: Lawson on openvibes-embark/aipe-site, then Marco on openvibes-embark/embark-site, then Jane on agentistics/web, all running in parallel once dispatched, each on its own harness and model tier. Each agent opens a pull request into dev; a QA gate reviews each delivery — one gate per unit, so a repo with two deliveries has two gates carrying the same reviewer; one PR is rejected and the same developer fixes it on the same branch, never the QA; the gate then approves and the PRs merge into dev; a separate promotion pull request carries dev to main and merges, closing the ledger. The scene loops, carrying forward a summary of what just finished instead of erasing it.",
+        "AIPe dispatching three agents across two repositories, one at a time: Lawson on openvibes-embark/aipe-site, then Marco on openvibes-embark/embark-site, then Jane on agentistics/web, all running in parallel once dispatched, each on its own harness and model tier. Each agent opens a pull request into dev on its own branch; a QA gate reviews each delivery — one gate per unit, so a repo with two deliveries has two gates carrying the same reviewer; one PR is rejected and the same developer fixes it on the same branch, never the QA. The approved deliveries do not wait: they merge into their destination repo while the rejected one is still being fixed, each arriving on its own distinct branch, so two units land on the same repository from different branches at once. A separate promotion pull request then carries dev to main and merges, closing the ledger. The scene loops, carrying forward a summary of what just finished instead of erasing it.",
     },
   },
 

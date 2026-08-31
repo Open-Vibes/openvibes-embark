@@ -308,6 +308,89 @@ describe("two distinct PRs — the dev PR and the promotion are different artifa
   });
 });
 
+/* ------------------------------------ item 2: independence IS the product */
+
+describe("unit independence — an approved unit lands without waiting on a bounced sibling", () => {
+  const facts = buildFlowFacts();
+  const rejected = facts.agents.find((a) => a.id === FLOW_REJECTED_AGENT_ID)!;
+  const sibling = facts.agents.find((a) => a.repo === rejected.repo && a.id !== rejected.id)!;
+  const cleanRepoUnit = facts.agents.find((a) => a.repo !== rejected.repo)!;
+  const agentIn = (s: ReturnType<typeof foldFlow>, id: string) => s.groups.flatMap((g) => g.agents).find((a) => a.id === id)!;
+
+  it("has a same-repo sibling and a clean-repo unit to compare against", () => {
+    expect(sibling).toBeDefined();
+    expect(sibling.repo).toBe(rejected.repo);
+    expect(cleanRepoUnit.repo).not.toBe(rejected.repo);
+  });
+
+  // The crux the aceite demands: TWO facts true at the SAME instant.
+  for (const phase of ["qa-reject", "dev-fix"] as FlowPhaseId[]) {
+    it(`at ${phase}: the approved units are ALREADY merged into their repo while the bounced one is not`, () => {
+      const s = foldFlow(FLOW_PHASE_IDS.indexOf(phase), facts);
+      // approved units have LANDED (dev PR merged) — sent to the destination repo…
+      expect(agentIn(s, sibling.id).prDevMerged).toBe(true);
+      expect(agentIn(s, cleanRepoUnit.id).prDevMerged).toBe(true);
+      // …at the SAME instant the bounced unit has NOT landed and is still bouncing/fixing.
+      expect(agentIn(s, rejected.id).prDevMerged).toBe(false);
+      expect(["rejected", "fixing"]).toContain(agentIn(s, rejected.id).state);
+    });
+  }
+
+  it("the bounced unit only lands once its OWN re-review clears (qa-approve), never before", () => {
+    expect(agentIn(foldFlow(FLOW_PHASE_IDS.indexOf("dev-fix"), facts), rejected.id).prDevMerged).toBe(false);
+    expect(agentIn(foldFlow(FLOW_PHASE_IDS.indexOf("qa-approve"), facts), rejected.id).prDevMerged).toBe(true);
+  });
+
+  it("with NO rejection in the batch the scene invents no wait — nothing bounces, all land together", () => {
+    const cleanSeed = [
+      { id: "ada", persona: "Ada", role: "dev-fullstack", repo: "openvibes-embark", package: "aipe-site", sessionId: "1" },
+      { id: "boone", persona: "Boone", role: "dev-fullstack", repo: "openvibes-embark", package: "embark-site", sessionId: "2" },
+      { id: "cleo", persona: "Cleo", role: "dev-fullstack", repo: "agentistics", package: "web", sessionId: "3" },
+    ];
+    const clean = buildFlowFacts(cleanSeed);
+    expect(clean.rejectedAgentId).toBeNull();
+
+    // No unit is EVER shown rejected or fixing, at any beat.
+    for (let i = 0; i <= FLOW_LAST_PHASE; i++) {
+      const agents = foldFlow(i, clean).groups.flatMap((g) => g.agents);
+      for (const a of agents) expect(a.state === "rejected" || a.state === "fixing").toBe(false);
+    }
+    // And every approved unit lands together at qa-reject — no dev-fix detour.
+    const atReject = foldFlow(FLOW_PHASE_IDS.indexOf("qa-reject"), clean);
+    expect(atReject.groups.flatMap((g) => g.agents).every((a) => a.prDevMerged)).toBe(true);
+  });
+});
+
+/* --------------------------------- item 3: distinct branches, one destination */
+
+describe("branches — each unit sends its own head branch, distinct within a repo", () => {
+  const facts = buildFlowFacts();
+
+  it("every branch is derived from the unit's own structure, never a literal dev/main", () => {
+    for (const a of facts.agents) {
+      expect(a.branch).toContain(a.package);
+      expect(a.branch).toContain(a.id);
+      expect(a.branch).not.toBe("dev");
+      expect(a.branch).not.toBe("main");
+      expect(a.branch.startsWith("aipe/")).toBe(true);
+    }
+  });
+
+  it("the two units in the SAME repo carry DIFFERENT branches — the point of the two-arrow promotion", () => {
+    const ove = facts.agents.filter((a) => a.repo === "openvibes-embark");
+    expect(ove).toHaveLength(2);
+    expect(new Set(ove.map((a) => a.branch)).size).toBe(2);
+  });
+
+  it("the folded agent state carries the branch through to the view layer", () => {
+    const s = foldFlow(FLOW_LAST_PHASE, facts);
+    for (const a of facts.agents) {
+      const folded = s.groups.flatMap((g) => g.agents).find((x) => x.id === a.id)!;
+      expect(folded.branch).toBe(a.branch);
+    }
+  });
+});
+
 /* ------------------------------------------------------------- the settled end */
 
 describe("flow fold — the settled end and its progression", () => {

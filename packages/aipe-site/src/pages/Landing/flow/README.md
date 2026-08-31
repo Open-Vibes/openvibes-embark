@@ -379,6 +379,93 @@ declared honestly (this host's screen can't be constrained below its own
 width); nothing in v4 changes the mobile-first construction that boundary
 rested on.
 
+## v6 (j-20260831-p1) — in-progress colour, unit independence, the two-arrow promotion
+
+The PE's own words, on the v5 flow that shipped as PR #29:
+
+> "quando a tarefa esta em andamento (independente do step) deveria ficar num
+> amarelo/laranja pra indicar em andamento. 2° as tarefas que haviam sido
+> aprovadas poderiam ja ter sido enviadas pro repo de destino, nao precisavam
+> ficar esperando o QA que reprovou e o especialista que ta arrumando. e a
+> promocao do grupo 1 so o de cima ta apontando pra um repo o de baixo n aponta
+> pra nenhum lugar, o repo deveria ficar no meio ali na frente e duas setas
+> ligam eles ao repo, dai tem que ter o nome do repo + branch que cada um ta
+> mandando"
+
+Three fidelity/form fixes, sequenced 2 → 3 → 1 (independence first, because it
+changes who is on screen when; then the promotion, whose geometry depends on it;
+then the colour, which applies to whatever the other two leave).
+
+### 2. Independence IS the product — an approved unit does not wait on a bounced sibling
+
+v5 held every merge to a single global `merge-dev` beat, so the approved units sat
+as `verified` waiting until the rejected one was fixed and re-approved — the scene
+was teaching a synchronous batch, the exact opposite of what AIPe is. It happened
+literally in this workspace the day of the demand: `aipe-site` PR #29 merged while
+`agentistics` PR #260 was still rejected and being fixed.
+
+`agentLandedAt` (in `flowModel.ts`) now derives each unit's landing PER UNIT: a
+clean delivery lands (its dev PR merges into its destination repo) the instant its
+OWN gate clears — at `qa-reject`, the very beat its sibling is bounced — while the
+rejected unit lands only once its own re-review passes at `qa-approve`. So at
+`dev-fix` the scene shows Lawson **`merged into dev`** and Jane **`merged into
+dev`** at the same instant Marco is `rejected`/`fixing` and has NOT landed
+(`flowModel.test.ts` asserts both facts hold together, at `qa-reject` AND
+`dev-fix`). Feed a seed with no rejected id and nothing is ever `rejected`/`fixing`
+and every unit lands together at `qa-reject` — the scene invents no wait (also
+asserted). The dev→main promotion stays a separate, later per-repo beat (the two
+distinct PRs are unchanged).
+
+### 3. The promotion of a group: one repo, in front, with an arrow from EACH card
+
+v5 drew a single promote connector centred between a lane's rows into one `main`
+node, so a two-card group read as "only the top card points anywhere". Now each
+card has its OWN `LandingArrow` (one grid column per row) converging on a single
+`RepoNode` that spans the lane's rows — the destination repo sitting in front of
+both cards, with two arrows arriving and no card left without a destination. Each
+card sends its OWN head branch, `aipe/<journey>/<package>--<id>`, DERIVED from the
+same structure as the worktree (`FlowAgentFact.branch`), so the two units in
+`openvibes-embark` carry two DISTINCT branches converging on one repo — the repo
+node lists them, `repo · branch`, one line per incoming arrow. `flowModel.test.ts`
+proves the two same-repo branches differ and are never literal `dev`/`main`;
+`flow.render.test.tsx` proves the repo node appears once per repo and there is one
+landing arrow per card.
+
+### 1. In progress is amber — from the running token, NOT the escalation amber
+
+The brief pointed at `--st-escalated` for the amber but flagged the trap: that
+token is the **gate/escalation** amber elsewhere in the system, so reusing it for
+"in progress" would collide two different meanings on one hue. The palette already
+has a better fit: **`--st-running`** — the canonical "the session is alive /
+running" token, itself amber (light `168 106 8`, dark `245 172 60`), semantically
+*exactly* "it is happening now". Using it keeps the two ambers apart (progress ≠
+escalation) and invents no colour. A unit is amber whenever work is actively
+advancing on it — a dev `running` or `fixing`, a gate `reviewing` — across
+whichever step that falls on. It is never carried by hue alone: a labelled,
+pulsing **`in progress`** pill (`InProgressPill`) rides with the amber everywhere,
+and `fixing` is now amber (in progress) where it used to be red — `rejected` stays
+red (a STOP), so the reject→fix loop reads as "failed, then working again" instead
+of "red twice". `flow.render.test.tsx` proves the mark is amber from
+`state-running` (no hex in the floor markup), is absent on a stopped unit, and
+never uses `state-escalated`.
+
+### How v6 was verified
+
+`bun run typecheck` clean; `bun run build` clean; the full package suite is
+**241/241** (flow suite 85, up from 55). Measured in a **real headless Chromium
+(Playwright, deviceScaleFactor 2)** at the actual sub-640 viewports the earlier
+rounds could not reach on this host — **320 / 390 / 768 / 1440 / 1920, both
+themes**: horizontal overflow is `0` at every width and theme, and there is **zero
+`[data-flow-badge]` bounding-box overlap** — at the reduced-motion **peak** (the
+settled frame, 16 badges — the new branch labels + repo nodes + promotion chips
+included, the larger population the brief warned about) AND across a full live
+cycle (24 samples per width, `0/24` overlapping at every width). Screenshots at
+1440 and 1920 (both themes) and a `dev-fix` frame show all three items at once:
+Marco amber and `fixing` while Lawson and Jane are already `merged into dev`, and
+the repo node in front of both cards with two branch-labelled arrows. Reduced
+motion opens on the complete settled frame; the zero-interactivity scans still bite
+(no handler, no `<button>`/`<a>`, no `cursor-pointer` anywhere in the scene).
+
 ## Files
 
 - `flowModel.ts` — pure, framework‑free model: derives the 3‑agent/2‑repo facts

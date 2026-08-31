@@ -81,6 +81,8 @@ const pt: Translations = {
       fixing: "consertando",
       reviewing: "revisando",
       approved: "aprovado",
+      inProgress: "em andamento",
+      landsIn: "entra em",
       spec: "spec",
       mainBranch: "main",
     },
@@ -116,7 +118,7 @@ const pt: Translations = {
     previousCycle: (merged: number, repos: number) => `ciclo anterior: ${merged} mesclados em ${repos} repos`,
     aria: {
       label:
-        "A AIPe despachando três agentes em dois repositórios, um de cada vez: Lawson em openvibes-embark/aipe-site, depois Marco em openvibes-embark/embark-site, depois Jane em agentistics/web, todos rodando em paralelo uma vez despachados, cada um no seu próprio harness e tier de modelo. Cada agente abre um pull request em dev; um QA gateia cada entrega — um gate por unidade, então um repo com duas entregas tem dois gates com o mesmo revisor; um PR é reprovado e o mesmo desenvolvedor conserta no mesmo ramo, nunca o QA; o gate então aprova e os PRs mesclam em dev; um pull request de promoção separado leva dev para main e mescla, fechando o ledger. A cena roda em loop, carregando adiante um resumo do que acabou de terminar em vez de apagá-lo.",
+        "A AIPe despachando três agentes em dois repositórios, um de cada vez: Lawson em openvibes-embark/aipe-site, depois Marco em openvibes-embark/embark-site, depois Jane em agentistics/web, todos rodando em paralelo uma vez despachados, cada um no seu próprio harness e tier de modelo. Cada agente abre um pull request em dev no seu próprio ramo; um QA gateia cada entrega — um gate por unidade, então um repo com duas entregas tem dois gates com o mesmo revisor; um PR é reprovado e o mesmo desenvolvedor conserta no mesmo ramo, nunca o QA. As entregas aprovadas não esperam: elas mesclam no repo de destino enquanto a reprovada ainda está sendo consertada, cada uma chegando no seu próprio ramo distinto, de modo que duas unidades pousam no mesmo repositório a partir de ramos diferentes ao mesmo tempo. Um pull request de promoção separado então leva dev para main e mescla, fechando o ledger. A cena roda em loop, carregando adiante um resumo do que acabou de terminar em vez de apagá-lo.",
     },
   },
 

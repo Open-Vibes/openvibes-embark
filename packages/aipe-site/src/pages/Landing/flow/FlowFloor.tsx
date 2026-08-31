@@ -62,9 +62,15 @@ export interface FlowFloorLabels {
   fixing: string;
   reviewing: string;
   approved: string;
+  /** The amber "it is happening right now" marker (item 1). Never carried by
+   *  colour alone — this label rides with the `--st-running` amber everywhere a
+   *  unit or gate is actively working. */
+  inProgress: string;
   caption: string;
   spec: string;
   mainBranch: string;
+  /** "→ <repo>" prefix for the destination node that both cards point at (item 3). */
+  landsIn: string;
   conn: { dispatch: string; review: string; promote: string; reject: string };
   previousCycle: (merged: number, repos: number) => string;
 }
@@ -115,6 +121,38 @@ function specVisible(state: AgentPhase): boolean {
   return state !== "idle" && state !== "placed" && state !== "running";
 }
 
+/**
+ * Item 1 — "em andamento". A unit is IN PROGRESS when work is actively advancing
+ * on it at this beat: a dev coding (`running`) or a dev re-working a bounce
+ * (`fixing`). This is the moment the PE wanted flagged amber, in ANY step. It is
+ * deliberately distinct from `rejected` (a stop — red `--st-failed`) and from a
+ * resting state (delivered/verified/merged awaiting the next hand-off).
+ *
+ * The amber comes from `--st-running` — the palette's canonical "the session is
+ * alive / running" token — NOT from `--st-escalated`, the amber reserved for the
+ * gate/escalation elsewhere in the system. Using the running token keeps the two
+ * ambers semantically apart (progress ≠ escalation) and never invents a colour.
+ * The state stays legible without the colour: an `in progress` label always rides
+ * with it (see `InProgressPill`).
+ */
+function agentInProgress(state: AgentPhase): boolean {
+  return state === "running" || state === "fixing";
+}
+
+/** The amber, labelled, pulsing "in progress" marker — colour + glyph + word, so
+ *  the state never depends on hue alone. `reduced` drops only the pulse. */
+function InProgressPill({ label, reduced }: { label: string; reduced?: boolean }) {
+  return (
+    <span
+      data-flow-inprogress
+      className="inline-flex items-center gap-1 rounded-full border border-state-running/50 bg-state-running/10 px-1.5 py-0.5 font-mono text-[10px] text-state-running"
+    >
+      <span aria-hidden="true" className={`inline-block h-1.5 w-1.5 rounded-full bg-state-running ${reduced ? "" : "animate-pulse"}`} />
+      {label}
+    </span>
+  );
+}
+
 /* --------------------------------------------------------------- connectors */
 
 /**
@@ -130,18 +168,21 @@ const TONE_LINE: Record<string, string> = {
   delivered: "bg-state-delivered/55",
   verified: "bg-state-verified/55",
   failed: "bg-state-failed/70",
+  running: "bg-state-running/60",
 };
 const TONE_DOT: Record<string, string> = {
   brand: "bg-brand",
   delivered: "bg-state-delivered",
   verified: "bg-state-verified",
   failed: "bg-state-failed",
+  running: "bg-state-running",
 };
 const TONE_TEXT: Record<string, string> = {
   brand: "text-brand",
   delivered: "text-state-delivered",
   verified: "text-state-verified",
   failed: "text-state-failed",
+  running: "text-state-running",
 };
 
 function Connector({
@@ -234,10 +275,17 @@ const CHIP_SHOWN = { opacity: 1, scale: 1 };
 function AgentCard({ agent, labels, reduced }: { agent: Agent; labels: FlowFloorLabels; reduced?: boolean }) {
   const badge = badgeState(agent.state);
   const target = PROGRESS[agent.state];
-  const statusNote = agent.state === "in-review" ? labels.inReview : agent.state === "fixing" ? labels.fixing : null;
   const showSpec = specVisible(agent.state);
-  const isFailing = agent.state === "rejected" || agent.state === "fixing";
-  const frame = isFailing ? "border-state-failed/45 bg-state-failed/[0.06]" : "border-line-soft bg-surface-2/40";
+  // A bounce is a STOP (red); actively working is IN PROGRESS (amber) — item 1.
+  const isRejected = agent.state === "rejected";
+  const inProgress = agentInProgress(agent.state);
+  const statusNote = agent.state === "in-review" ? labels.inReview : null;
+  const frame = isRejected
+    ? "border-state-failed/45 bg-state-failed/[0.06]"
+    : inProgress
+      ? "border-state-running/45 bg-state-running/[0.07]"
+      : "border-line-soft bg-surface-2/40";
+  const barColor = isRejected ? "bg-state-failed" : inProgress ? "bg-state-running" : "bg-brand";
   return (
     <motion.div
       data-flow-node="agent"
@@ -270,7 +318,12 @@ function AgentCard({ agent, labels, reduced }: { agent: Agent; labels: FlowFloor
             {agent.envelope.harness} · {agent.envelope.tier}
           </span>
           <span className="ml-auto flex items-center gap-1.5" data-flow-badge>
-            {badge ? (
+            {inProgress ? (
+              <>
+                <InProgressPill label={labels.inProgress} reduced={reduced} />
+                {agent.state === "fixing" ? <span className="font-mono text-[9.5px] text-state-running/80">{labels.fixing}</span> : null}
+              </>
+            ) : badge ? (
               <StateBadge state={badge} size="sm" title={false} />
             ) : (
               <span className="rounded-full border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-faint">
@@ -283,7 +336,7 @@ function AgentCard({ agent, labels, reduced }: { agent: Agent; labels: FlowFloor
         {/* work bar */}
         <div className="h-1 overflow-hidden rounded-full bg-surface-3">
           <motion.div
-            className={`h-full rounded-full ${isFailing ? "bg-state-failed" : "bg-brand"}`}
+            className={`h-full rounded-full ${barColor}`}
             initial={false}
             animate={{ width: `${Math.round(target * 100)}%` }}
             transition={reduced ? { duration: 0 } : { duration: agent.state === "running" ? 3 : 0.5, ease: "easeOut" }}
@@ -341,8 +394,11 @@ function AgentCard({ agent, labels, reduced }: { agent: Agent; labels: FlowFloor
 
 /* --------------------------------------------------------------------- the QA */
 
+// `reviewing` is a gate WORKING right now → the same amber `--st-running`
+// in-progress language as a coding/fixing dev (item 1). `rejected`/`approved`
+// are settled verdicts (red / green).
 const QA_VERDICT_CLASS: Record<"reviewing" | "rejected" | "approved", string> = {
-  reviewing: "border-line bg-surface-2 text-faint",
+  reviewing: "border-state-running/50 bg-state-running/10 text-state-running",
   rejected: "border-state-failed/40 bg-state-failed/10 text-state-failed",
   approved: "border-state-verified/40 bg-state-verified/10 text-state-verified",
 };
@@ -391,26 +447,60 @@ function QaCell({ gate, labels, reduced }: { gate: Gate | null; labels: FlowFloo
       <span className="font-mono text-[8.5px] leading-tight text-brand-strong">
         {gate.envelope.harness} · {gate.envelope.tier}
       </span>
-      <span data-flow-badge className={`w-fit rounded-full border px-1.5 py-0.5 font-mono text-[10px] ${QA_VERDICT_CLASS[gate.verdict]}`}>
+      <span data-flow-badge className={`flex w-fit items-center gap-1 rounded-full border px-1.5 py-0.5 font-mono text-[10px] ${QA_VERDICT_CLASS[gate.verdict]}`}>
+        {gate.verdict === "reviewing" ? (
+          <span aria-hidden="true" className={`inline-block h-1.5 w-1.5 rounded-full bg-state-running ${reduced ? "" : "animate-pulse"}`} />
+        ) : null}
         {verdictLabel}
       </span>
     </motion.div>
   );
 }
 
-/* --------------------------------------------------------------- the main node */
+/* --------------------------------------------------------------- the repo node */
 
-/** The repo's `main` — where its single promotion PR lands. Reserved as the
- *  lane's right terminus from the first frame; the promotion chip enters at its
- *  own beat, fading into the slot that was already there. */
-function MainNode({ group, labels, reduced }: { group: Group; labels: FlowFloorLabels; reduced?: boolean }) {
+/**
+ * Item 3 — the DESTINATION REPO, one node, sitting in front of the lane's cards
+ * with BOTH cards' arrows arriving at it (the two `LandingArrow`s the `Lane`
+ * draws in the column to its left). No card is left without a destination.
+ *
+ * Each card sends its OWN head branch, and the repo lists them — one incoming
+ * line per unit, `repo · branch`, DERIVED, so two units in the same repo read as
+ * two DISTINCT branches converging on one repo (the whole point of the ask). The
+ * line's colour is the unit's landing state: amber `--st-running` while the PR is
+ * in flight (in progress), green `--st-verified` once it has landed — so the
+ * independence is legible here too (one branch already in while its sibling is
+ * still amber). The repo's own `dev → main` promotion is a SEPARATE chip below,
+ * the second of the two distinct PRs. Reserved as the lane's terminus from the
+ * first frame; artifacts fade into slots that already exist.
+ */
+function RepoNode({ group, labels, reduced }: { group: Group; labels: FlowFloorLabels; reduced?: boolean }) {
   const { promotion } = group;
   return (
-    <div data-flow-node="main" className="flex flex-col justify-center gap-1.5 rounded-lg border border-brand/30 bg-brand/[0.05] px-2.5 py-2">
-      <span className="flex items-center gap-1.5 font-mono text-[11px] text-brand-strong">
+    <div data-flow-node="repo" className="flex min-w-0 flex-col justify-center gap-1.5 rounded-lg border border-brand/40 bg-brand/[0.06] px-2.5 py-2">
+      <span className="flex items-center gap-1.5 font-mono text-[11px] font-semibold text-brand-strong">
         <span aria-hidden="true">⬢</span>
-        {labels.mainBranch}
+        <span className="min-w-0 break-all">{group.repo}</span>
       </span>
+
+      {/* one incoming branch per card — the label each arrow carries. */}
+      <div className="flex flex-col gap-0.5">
+        {group.agents.map((a) => {
+          const tone = a.prDevMerged ? "text-state-verified" : a.prDevVisible ? "text-state-running" : "text-faint";
+          return (
+            <span key={a.id} data-flow-branch className={`flex items-start gap-1 font-mono text-[8.5px] leading-tight ${tone}`}>
+              <span aria-hidden="true" className="mt-px shrink-0">↳</span>
+              <span className="min-w-0 break-all">
+                <span className="text-faint">{group.repo} · </span>
+                {a.branch}
+              </span>
+            </span>
+          );
+        })}
+      </div>
+
+      <span className="font-mono text-[8.5px] text-faint">↦ {labels.mainBranch}</span>
+
       <AnimatePresence initial={false}>
         {promotion.visible ? (
           <motion.span
@@ -448,7 +538,6 @@ function MainNode({ group, labels, reduced }: { group: Group; labels: FlowFloorL
 function Lane({ group, facts, scene, labels, reduced }: { group: Group; facts: FlowFacts; scene: FlowState; labels: FlowFloorLabels; reduced?: boolean }) {
   const p = scene.phase;
   const reviewActive = p === "pr-dev" || p === "qa-review" || p === "qa-approve" || p === "merge-dev";
-  const promoteActive = p === "merge-dev" || p === "promote" || p === "merge-main";
   const isRejecting = (agentId: string) => agentId === facts.rejectedAgentId && (p === "qa-reject" || p === "dev-fix");
 
   return (
@@ -458,7 +547,7 @@ function Lane({ group, facts, scene, labels, reduced }: { group: Group; facts: F
         <span className="truncate font-mono text-[11px] font-semibold text-brand-strong">{group.repo}</span>
       </div>
 
-      <div className="grid grid-cols-1 gap-1.5 lg:gap-x-0 lg:gap-y-2 lg:[grid-template-columns:minmax(0,1fr)_3.75rem_8.5rem_3.75rem_8rem]">
+      <div className="grid grid-cols-1 gap-1.5 lg:gap-x-0 lg:gap-y-2 lg:[grid-template-columns:minmax(0,1fr)_2.75rem_7rem_2.75rem_minmax(9rem,11rem)]">
         {group.agents.map((agent, i) => {
           const gate = group.qaGates[i] ?? null;
           const rejecting = isRejecting(agent.id);
@@ -478,14 +567,23 @@ function Lane({ group, facts, scene, labels, reduced }: { group: Group; facts: F
               <div className="lg:col-start-3">
                 <QaCell gate={gate} labels={labels} reduced={reduced} />
               </div>
+              {/* item 3: THIS card's own arrow into the repo — one per card, so no
+                  card is left without a destination. Amber while its PR is in
+                  flight, green once it has landed (independently of its sibling). */}
+              <Connector
+                tone={agent.prDevMerged ? "verified" : "running"}
+                active={agent.prDevVisible && !agent.prDevMerged}
+                reduced={reduced}
+                label={labels.landsIn}
+                className="lg:col-start-4"
+              />
             </div>
           );
         })}
 
-        {/* promotion → main: one per repo, spanning the lane's delivery rows. */}
-        <Connector tone="brand" active={promoteActive} reduced={reduced} label={labels.conn.promote} className="lg:col-start-4 lg:row-[1/-1]" />
+        {/* the destination repo: one node, in front of the cards, both arrows land here. */}
         <div className="lg:col-start-5 lg:row-[1/-1]">
-          <MainNode group={group} labels={labels} reduced={reduced} />
+          <RepoNode group={group} labels={labels} reduced={reduced} />
         </div>
       </div>
     </div>
