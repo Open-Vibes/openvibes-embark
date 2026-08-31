@@ -466,6 +466,36 @@ the repo node in front of both cards with two branch-labelled arrows. Reduced
 motion opens on the complete settled frame; the zero-interactivity scans still bite
 (no handler, no `<button>`/`<a>`, no `cursor-pointer` anywhere in the scene).
 
+## v4 form (j-20260831-p1) — the PE's decision flowchart
+
+The PE drew the shape he wanted (a static mock) and said the animation was still
+far from it. The scene's FORM changed — from repo-grouped stacked cards to a
+left-to-right **decision flowchart with one lane per task**, the skeleton the
+unification will live inside. Four structural changes (not styling):
+
+1. **The decision is explicit.** Rejection is no longer only a card state: every
+   lane carries a labelled question on a return arc — `reproved? no` on the lanes
+   that pass, `reproved? yes` on the one that bounces (`DecisionArc`,
+   `data-flow-decision` / `data-reproved`). This is what makes it read as a flow.
+2. **The repo is a CONTAINER, not a destination.** `RepoContainer` is one box
+   holding `PR DEV` (where the tasks' distinct branches land) and `PR MAIN` (the
+   promotion) as two stacked sections; same-repo lanes converge into it — the old
+   two-arrow answer to "repo once, branches inside", in the form he asked for.
+3. **The PE is the origin.** The scene begins at `PENode` (Tasks 1–N) → the
+   coordinator (classifies & dispatches) → the lanes, instead of starting at the
+   coordinator.
+4. **The rejected lane has its own state:** amber task, red QA, and an amber
+   "adjust after the request" hop between them.
+
+Everything already earned is preserved and still verified: the hold of the final
+frame (D), amber in-progress, unit independence, the QA-per-delivery gate, the
+serialize half of the law, zero interactivity, and **0 horizontal overflow / 0
+badge-overlap at 320/390/768/1440/1920 in both themes** (real headless Chromium,
+DPR 2), peak and across the cycle. Data stays DERIVED (lanes, owners, repos,
+branches, QA count from the real law + registry); the form is the PE's, the facts
+are still facts. Shipped to the PE as a preview URL to steer from — not built
+blind.
+
 ## Files
 
 - `flowModel.ts` — pure, framework‑free model: derives the 3‑agent/2‑repo facts

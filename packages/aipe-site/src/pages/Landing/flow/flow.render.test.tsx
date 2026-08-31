@@ -37,6 +37,16 @@ const LABELS: FlowFloorLabels = {
   mainBranch: "main",
   lawSerial: "shared key → serialized in waves",
   serial: "serial · one step at a time",
+  pe: "PE (you)",
+  peTasks: (n) => `Tasks 1–${n}`,
+  classifyDispatch: (n) => `classifies and dispatches ${n} tasks`,
+  taskWord: "Task",
+  reprovedQ: "reproved?",
+  answerNo: "no",
+  answerYes: "yes",
+  adjustAfterRequest: "adjust after the request",
+  prDevSection: "PR DEV",
+  prMainSection: "PR MAIN",
   conn: { dispatch: "dispatch", review: "review", promote: "promote", reject: "sent back" },
   caption: "all merged · immutable",
   previousCycle: (merged, repos) => `last cycle: ${merged} merged across ${repos} repos`,
@@ -250,6 +260,53 @@ describe("Flow — the promotion: one repo, two arrows, each carrying repo · br
     expect((fix.match(/data-flow-conn="verified"/g) ?? []).length).toBeGreaterThanOrEqual(1);
     // …while the bounced unit's landing arrow is still amber (running), not yet landed.
     expect(fix).toContain('data-flow-conn="running"');
+  });
+});
+
+/* ----------------------------------- the PE's flowchart form (v4 drawing) */
+
+describe("Flow — the PE's decision-flowchart form", () => {
+  const settled = renderToStaticMarkup(<FlowFloor facts={facts} scene={foldFlow(FLOW_LAST_PHASE, facts)} labels={LABELS} reduced />);
+  const devFix = renderToStaticMarkup(
+    <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("dev-fix"), facts)} labels={LABELS} reduced />,
+  );
+
+  it("begins with the PE as the origin (v4 #3), tasks count derived", () => {
+    expect(settled).toContain('data-flow-node="pe"');
+    expect(settled).toContain("PE (you)");
+    expect(settled).toContain(`Tasks 1–${facts.agents.length}`); // Tasks 1–3
+    expect(settled).toContain(`classifies and dispatches ${facts.agents.length} tasks`);
+  });
+
+  it("the rejection is an EXPLICIT labelled decision on a return arc (v4 #1), not just a state", () => {
+    expect(settled).toContain("data-flow-decision");
+    expect(settled).toContain('data-reproved="yes"'); // the bounced lane
+    expect(settled).toContain('data-reproved="no"'); // the ones that passed
+    expect(settled).toContain("reproved?");
+    expect(settled).toContain("yes");
+    expect(settled).toContain("no");
+    // exactly one lane bounced → exactly one YES.
+    expect((settled.match(/data-reproved="yes"/g) ?? []).length).toBe(1);
+    expect((settled.match(/data-reproved="no"/g) ?? []).length).toBe(facts.agents.length - 1);
+  });
+
+  it("the repo is a CONTAINER of PR DEV / PR MAIN with the branches inside (v4 #2)", () => {
+    expect((settled.match(/data-flow-node="repo"/g) ?? []).length).toBe(facts.repos.length);
+    expect(settled).toContain("PR DEV");
+    expect(settled).toContain("PR MAIN");
+    for (const a of facts.agents) expect(settled).toContain(a.branch); // branches land inside PR DEV
+    for (const num of Object.values(facts.promotionPr)) expect(settled).toContain(`#${num}`);
+  });
+
+  it("task numbers are GLOBAL (Task 1..N across repos), not per-repo", () => {
+    for (let n = 1; n <= facts.agents.length; n++) expect(settled).toContain(`Task ${n} ·`);
+  });
+
+  it("the rejected lane's fix is the amber 'adjust after the request' hop (v4 #4)", () => {
+    expect(devFix).toContain("adjust after the request");
+    expect(devFix).toContain("data-flow-inprogress"); // the fixing task is amber/in-progress
+    expect(devFix).toContain('data-reproved="yes"'); // its lane's explicit decision reads YES
+    expect(devFix).toContain(LABELS.rejected); // and its QA gate still reads rejected mid-fix
   });
 });
 

@@ -95,6 +95,19 @@ const en = {
       // one step at a time — so it reads AS the law rather than as a mere detour.
       lawSerial: "shared key → serialized in waves",
       serial: "serial · one step at a time",
+      // The PE's flowchart form (v4 drawing): PE origin, an explicit labelled
+      // REPROVED? decision on the return arc, the repo as a container of PR DEV /
+      // PR MAIN, and the rejected lane's "adjust after the request" hop.
+      pe: "PE (you)",
+      peTasks: (n: number) => `Tasks 1–${n}`,
+      classifyDispatch: (n: number) => `classifies and dispatches ${n} tasks`,
+      taskWord: "Task",
+      reprovedQ: "reproved?",
+      answerNo: "no",
+      answerYes: "yes",
+      adjustAfterRequest: "adjust after the request",
+      prDevSection: "PR DEV",
+      prMainSection: "PR MAIN",
     },
     // Micro-labels naming each drawn connector (the visible hand-off links).
     conn: {
@@ -128,7 +141,7 @@ const en = {
     previousCycle: (merged: number, repos: number) => `last cycle: ${merged} merged across ${repos} repos`,
     aria: {
       label:
-        "AIPe dispatching three agents across two repositories, one at a time: Lawson on openvibes-embark/aipe-site, then Marco on openvibes-embark/embark-site, then Jane on agentistics/web, all running in parallel once dispatched, each on its own harness and model tier. Each agent opens a pull request into dev on its own branch; a QA gate reviews each delivery — one gate per unit, so a repo with two deliveries has two gates carrying the same reviewer; one PR is rejected and the same developer fixes it on the same branch, never the QA. The approved deliveries do not wait: they merge into their destination repo while the rejected one is still being fixed, each arriving on its own distinct branch, so two units land on the same repository from different branches at once. A separate promotion pull request then carries dev to main and merges, closing the ledger. The scene loops, carrying forward a summary of what just finished instead of erasing it.",
+        "A left-to-right decision flowchart of AIPe. It begins with the PE, who hands over three tasks, to the coordinator, who classifies and dispatches them. It then fans into one lane per task, each labelled with its owner and repository: Lawson on openvibes-embark/aipe-site, Marco on openvibes-embark/embark-site, Jane on agentistics/web, each on its own harness and model tier. In every lane the task flows to its own QA gate, and a return arc carries the explicit question 'reproved?': 'no' on the two that pass, 'yes' on the one that bounces. The rejected lane turns amber and is fixed by the same developer — an 'adjust after the request' step back to the gate, never the QA doing the fix. The approved tasks do not wait: they merge into their repository while the rejected one is still being fixed. Each repository is a container holding two sections, PR DEV — where the tasks' distinct branches land — and PR MAIN, the separate promotion; the same-repo lanes converge into the one container. The whole arc plays once and then holds on the finished frame instead of erasing it.",
     },
   },
 

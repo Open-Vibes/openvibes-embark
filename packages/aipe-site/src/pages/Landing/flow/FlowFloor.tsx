@@ -75,6 +75,17 @@ export interface FlowFloorLabels {
   serial: string;
   /** "→ <repo>" prefix for the destination node that both cards point at (item 3). */
   landsIn: string;
+  // The PE's flowchart form (v4).
+  pe: string;
+  peTasks: (n: number) => string;
+  classifyDispatch: (n: number) => string;
+  taskWord: string;
+  reprovedQ: string;
+  answerNo: string;
+  answerYes: string;
+  adjustAfterRequest: string;
+  prDevSection: string;
+  prMainSection: string;
   conn: { dispatch: string; review: string; promote: string; reject: string };
   previousCycle: (merged: number, repos: number) => string;
 }
@@ -467,134 +478,171 @@ function QaCell({ gate, labels, reduced }: { gate: Gate | null; labels: FlowFloo
   );
 }
 
-/* --------------------------------------------------------------- the repo node */
+/* ------------------------------------------------- the explicit decision (v4 #1) */
 
 /**
- * Item 3 — the DESTINATION REPO, one node, sitting in front of the lane's cards
- * with BOTH cards' arrows arriving at it (the two `LandingArrow`s the `Lane`
- * draws in the column to its left). No card is left without a destination.
- *
- * Each card sends its OWN head branch, and the repo lists them — one incoming
- * line per unit, `repo · branch`, DERIVED, so two units in the same repo read as
- * two DISTINCT branches converging on one repo (the whole point of the ask). The
- * line's colour is the unit's landing state: amber `--st-running` while the PR is
- * in flight (in progress), green `--st-verified` once it has landed — so the
- * independence is legible here too (one branch already in while its sibling is
- * still amber). The repo's own `dev → main` promotion is a SEPARATE chip below,
- * the second of the two distinct PRs. Reserved as the lane's terminus from the
- * first frame; artifacts fade into slots that already exist.
+ * The PE's flowchart heart: the rejection is an EXPLICIT, LABELLED question on a
+ * return path — `reproved? no` on a lane that passed, `reproved? yes` on the one
+ * that bounced — not a mere card state. The bracket returns from the QA (right)
+ * back to the task (left). Decorative on its own (`aria-hidden`); the labels the
+ * boxes carry hold the real state.
  */
-function RepoNode({ group, labels, reduced }: { group: Group; labels: FlowFloorLabels; reduced?: boolean }) {
-  const { promotion } = group;
+function DecisionArc({ rejected, labels, reduced }: { rejected: boolean; labels: FlowFloorLabels; reduced?: boolean }) {
+  const cls = rejected ? "text-state-failed" : "text-state-verified";
+  const border = rejected ? "border-state-failed/55" : "border-state-verified/45";
   return (
-    <div data-flow-node="repo" className="flex min-w-0 flex-col justify-center gap-1.5 rounded-lg border border-brand/40 bg-brand/[0.06] px-2.5 py-2">
-      <span className="flex items-center gap-1.5 font-mono text-[11px] font-semibold text-brand-strong">
-        <span aria-hidden="true">⬢</span>
-        <span className="min-w-0 break-all">{group.repo}</span>
+    <div aria-hidden="true" data-flow-decision data-reproved={rejected ? "yes" : "no"} className={`mt-1 flex items-center gap-1.5 ${cls}`}>
+      <span className={`font-mono text-[11px] leading-none ${reduced ? "" : rejected ? "animate-pulse" : ""}`}>↩</span>
+      <span className={`h-1.5 flex-1 rounded-bl-md border-b border-l ${border}`} />
+      <span className="whitespace-nowrap font-mono text-[8.5px] uppercase tracking-wide">
+        {labels.reprovedQ} {rejected ? labels.answerYes : labels.answerNo}
       </span>
-
-      {/* one incoming branch per card — the label each arrow carries. */}
-      <div className="flex flex-col gap-0.5">
-        {group.agents.map((a) => {
-          const tone = a.prDevMerged ? "text-state-verified" : a.prDevVisible ? "text-state-running" : "text-faint";
-          return (
-            <span key={a.id} data-flow-branch className={`flex items-start gap-1 font-mono text-[8.5px] leading-tight ${tone}`}>
-              <span aria-hidden="true" className="mt-px shrink-0">↳</span>
-              <span className="min-w-0 break-all">
-                <span className="text-faint">{group.repo} · </span>
-                {a.branch}
-              </span>
-            </span>
-          );
-        })}
-      </div>
-
-      <span className="font-mono text-[8.5px] text-faint">↦ {labels.mainBranch}</span>
-
-      <AnimatePresence initial={false}>
-        {promotion.visible ? (
-          <motion.span
-            key="promo"
-            data-flow-badge
-            className="inline-flex w-fit items-center gap-1 rounded-md border border-brand/40 bg-brand/[0.08] px-1.5 py-0.5 font-mono text-[10px] text-brand-strong"
-            initial={reduced ? false : CHIP_ENTER}
-            animate={CHIP_SHOWN}
-            exit={reduced ? undefined : CHIP_ENTER}
-            transition={reduced ? { duration: 0 } : { duration: 0.35, ease: "easeOut" }}
-          >
-            <span aria-hidden="true">⇢</span>
-            {labels.promotePr} #{promotion.number}
-          </motion.span>
-        ) : null}
-        {promotion.merged ? (
-          <motion.span key="merged" data-flow-badge className="w-fit font-mono text-[9.5px] text-state-merged" initial={reduced ? false : CHIP_ENTER} animate={CHIP_SHOWN} transition={reduced ? { duration: 0 } : { duration: 0.3 }}>
-            {labels.promoteMerged}
-          </motion.span>
-        ) : null}
-      </AnimatePresence>
+      <span className={`h-1.5 flex-1 rounded-br-md border-b border-r ${border}`} />
     </div>
   );
 }
 
-/* -------------------------------------------------------------------- the lane */
+/* --------------------------------------------- the repo as a CONTAINER (v4 #2) */
 
 /**
- * One repo. Each running unit is a row that flows left→right: specialist →
- * (review) → its own QA gate. The QA / promote / main columns are RESERVED from
- * the first frame (via the grid template), so artifacts fade into place instead
- * of shoving their neighbours. The promotion → main terminus spans the lane's
- * rows on the right (desktop) / sits at the foot (mobile).
+ * The PE wants the repository as a CONTAINER, not a destination: one box that
+ * HOLDS `PR DEV` and `PR MAIN` as two stacked sections, and the same-repo lanes
+ * converge INTO it. The unit branches land inside the `PR DEV` section (derived,
+ * distinct per unit — the old two-arrow answer, in the form he asked for); the
+ * `dev → main` promotion is the `PR MAIN` section — the two distinct PRs, now as
+ * two rooms of one repo. Sections dim until their beat, so nothing reflows.
  */
-function Lane({ group, facts, scene, labels, reduced }: { group: Group; facts: FlowFacts; scene: FlowState; labels: FlowFloorLabels; reduced?: boolean }) {
-  const p = scene.phase;
-  const reviewActive = p === "pr-dev" || p === "qa-review" || p === "qa-approve" || p === "merge-dev";
-  const isRejecting = (agentId: string) => agentId === facts.rejectedAgentId && (p === "qa-reject" || p === "dev-fix");
-
+function RepoContainer({ group, labels, reduced }: { group: Group; labels: FlowFloorLabels; reduced?: boolean }) {
+  const { promotion } = group;
+  const devLit = group.agents.some((a) => a.prDevVisible);
   return (
-    <div className="flex min-w-0 flex-col gap-2 rounded-xl border border-line-soft bg-surface-1/40 p-2.5">
-      <div className="flex items-center gap-1.5">
-        <span aria-hidden="true" className="text-faint">▸</span>
-        <span className="truncate font-mono text-[11px] font-semibold text-brand-strong">{group.repo}</span>
+    <div data-flow-node="repo" className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-brand/45 bg-brand/[0.04]">
+      <div className="flex items-center gap-1.5 border-b border-brand/25 bg-brand/[0.06] px-2.5 py-1 font-mono text-[10.5px] font-semibold text-brand-strong">
+        <span aria-hidden="true">⬢</span>
+        <span className="min-w-0 break-all">{group.repo}</span>
       </div>
 
-      <div className="grid grid-cols-1 gap-1.5 lg:gap-x-0 lg:gap-y-2 lg:[grid-template-columns:minmax(0,1fr)_2.75rem_7rem_2.75rem_minmax(9rem,11rem)]">
-        {group.agents.map((agent, i) => {
-          const gate = group.qaGates[i] ?? null;
-          const rejecting = isRejecting(agent.id);
-          return (
-            <div key={agent.id} className="contents">
-              <div className="lg:col-start-1">
-                <AgentCard agent={agent} labels={labels} reduced={reduced} />
-              </div>
-              <Connector
-                tone={rejecting ? "failed" : "delivered"}
-                active={reviewActive || rejecting}
-                back={rejecting}
-                reduced={reduced}
-                label={rejecting ? labels.conn.reject : labels.conn.review}
-                className="lg:col-start-2"
-              />
-              <div className="lg:col-start-3">
-                <QaCell gate={gate} labels={labels} reduced={reduced} />
-              </div>
-              {/* item 3: THIS card's own arrow into the repo — one per card, so no
-                  card is left without a destination. Amber while its PR is in
-                  flight, green once it has landed (independently of its sibling). */}
-              <Connector
-                tone={agent.prDevMerged ? "verified" : "running"}
-                active={agent.prDevVisible && !agent.prDevMerged}
-                reduced={reduced}
-                label={labels.landsIn}
-                className="lg:col-start-4"
-              />
-            </div>
-          );
-        })}
-
-        {/* the destination repo: one node, in front of the cards, both arrows land here. */}
-        <div className="lg:col-start-5 lg:row-[1/-1]">
-          <RepoNode group={group} labels={labels} reduced={reduced} />
+      {/* PR DEV — the branches land here (item 3, now inside the container) */}
+      <div className={`border-b border-brand/20 px-2.5 py-1.5 ${devLit ? "" : "opacity-40"}`}>
+        <span className="font-mono text-[9px] font-semibold uppercase tracking-wide text-state-delivered">{labels.prDevSection}</span>
+        <div className="mt-0.5 flex flex-col gap-0.5">
+          {group.agents.map((a) => (
+            <span
+              key={a.id}
+              data-flow-branch
+              className={`min-w-0 break-all font-mono text-[8px] leading-tight ${a.prDevMerged ? "text-state-verified" : a.prDevVisible ? "text-state-running" : "text-faint"}`}
+            >
+              {a.branch}
+              {a.prDevMerged ? <span className="text-state-verified"> ✓</span> : null}
+            </span>
+          ))}
         </div>
+      </div>
+
+      {/* PR MAIN — the promotion is the container's second section */}
+      <div className={`px-2.5 py-1.5 ${promotion.visible ? "" : "opacity-40"}`}>
+        <span className="font-mono text-[9px] font-semibold uppercase tracking-wide text-brand-strong">
+          {labels.prMainSection}
+          {promotion.visible ? <span className="ml-1 text-brand-strong">#{promotion.number}</span> : null}
+        </span>
+        {promotion.merged ? <span className="mt-0.5 block font-mono text-[8px] text-state-merged">✓ {labels.promoteMerged}</span> : null}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------- the origin: PE + coord */
+
+/** The PE, the ORIGIN of the flow (v4 #3) — the scene begins with them, not the
+ *  coordinator. The tasks count is derived (Tasks 1–N). */
+function PENode({ facts, labels }: { facts: FlowFacts; labels: FlowFloorLabels }) {
+  return (
+    <div data-flow-node="pe" className="flex flex-col items-center justify-center gap-1 rounded-xl border border-line bg-surface-2/50 px-3 py-2.5 text-center">
+      <span className="font-mono text-[8.5px] uppercase tracking-wide text-faint">{labels.peTasks(facts.agents.length)}</span>
+      <span className="font-mono text-[11px] font-semibold text-text">{labels.pe}</span>
+    </div>
+  );
+}
+
+/** The coordinator — classifies and dispatches the tasks the PE handed over. */
+function CoordNode({ facts, labels, reduced }: { facts: FlowFacts; labels: FlowFloorLabels; reduced?: boolean }) {
+  return (
+    <div
+      data-flow-node="coord"
+      className="flex flex-col items-center justify-center gap-1 rounded-xl border border-brand/40 bg-brand/[0.06] px-3 py-2.5 text-center"
+    >
+      <span aria-hidden="true" className={`inline-flex h-8 w-8 items-center justify-center rounded-full border border-brand/50 bg-brand/15 text-brand-strong ${reduced ? "" : "animate-pulse-soft"}`}>
+        ◆
+      </span>
+      <span className="font-mono text-[10.5px] text-text">{facts.coordinator}</span>
+      <span className="max-w-[7.5rem] font-mono text-[8px] leading-tight text-faint">{labels.classifyDispatch(facts.agents.length)}</span>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------- one repo's task lanes */
+
+/**
+ * The PE's flowchart, per repo: each TASK is its own LANE (`Especialista · repo`
+ * label above), flowing left→right `TASK → QA`, with the explicit `reproved?`
+ * decision on the return arc below it, and the lanes of one repo CONVERGING into
+ * that repo's container. The rejected lane's task→QA hop is the amber "adjust
+ * after the request" step (v4 #4). Lanes are grid rows; the repo container spans
+ * them (`row-[1/-1]`) so two same-repo lanes read as landing in one repo.
+ */
+function GroupBlock({ group, facts, scene, labels, reduced }: { group: Group; facts: FlowFacts; scene: FlowState; labels: FlowFloorLabels; reduced?: boolean }) {
+  const p = scene.phase;
+  const reviewActive = p === "pr-dev" || p === "qa-review" || p === "qa-approve" || p === "merge-dev";
+  const isFixing = (agentId: string) => agentId === facts.rejectedAgentId && p === "dev-fix";
+
+  return (
+    <div className="grid grid-cols-1 gap-2 lg:gap-x-0 lg:gap-y-2 lg:[grid-template-columns:minmax(0,1fr)_2.25rem_minmax(6.5rem,8.5rem)]">
+      {group.agents.map((agent, i) => {
+        const gate = group.qaGates[i] ?? null;
+        const fixing = isFixing(agent.id);
+        const isRejectedLane = agent.id === facts.rejectedAgentId;
+        // Global task number (stable across repos), so it reads Task 1, 2, 3 — not per-repo.
+        const taskNo = facts.agents.findIndex((a) => a.id === agent.id) + 1;
+        return (
+          <div key={agent.id} className="contents">
+            {/* the lane: owner label, TASK → QA, and the explicit decision below */}
+            <div className="min-w-0 rounded-xl border border-line-soft bg-surface-1/40 p-2 lg:col-start-1">
+              <span className="mb-1 block truncate font-mono text-[8.5px] uppercase tracking-wide text-faint">
+                {labels.taskWord} {taskNo} · {agent.persona} · {agent.repo}
+              </span>
+              <div className="flex flex-col gap-1.5 lg:flex-row lg:items-stretch">
+                <div className="min-w-0 flex-1">
+                  <AgentCard agent={agent} labels={labels} reduced={reduced} />
+                </div>
+                <Connector
+                  tone={fixing ? "running" : "delivered"}
+                  active={reviewActive || fixing}
+                  reduced={reduced}
+                  label={fixing ? labels.adjustAfterRequest : labels.conn.review}
+                  className="lg:w-16 lg:shrink-0"
+                />
+                <div className="lg:w-[8.5rem] lg:shrink-0">
+                  <QaCell gate={gate} labels={labels} reduced={reduced} />
+                </div>
+              </div>
+              {gate ? <DecisionArc rejected={isRejectedLane} labels={labels} reduced={reduced} /> : null}
+            </div>
+
+            {/* this lane converges INTO the repo container */}
+            <Connector
+              tone={agent.prDevMerged ? "verified" : "running"}
+              active={agent.prDevVisible && !agent.prDevMerged}
+              reduced={reduced}
+              label={labels.landsIn}
+              className="lg:col-start-2"
+            />
+          </div>
+        );
+      })}
+
+      {/* the repo, as a container of PR DEV / PR MAIN — the lanes land inside it */}
+      <div className="lg:col-start-3 lg:row-[1/-1] lg:self-stretch">
+        <RepoContainer group={group} labels={labels} reduced={reduced} />
       </div>
     </div>
   );
@@ -609,13 +657,9 @@ export default function FlowFloor({ facts, scene, labels, reduced }: FlowFloorPr
 
   return (
     <div role="img" aria-label={labels.ariaLabel} className="flex flex-col">
-      {/* Header: the coordinator, the journey, the LAW's real verdict, and what the previous cycle closed with. */}
+      {/* Header: the journey + the LAW's real verdict (both halves). The coordinator
+          is now a NODE in the flow (the PE's form), not a header label. */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-line-soft bg-surface-2/40 px-3.5 py-2.5">
-        <span className="flex items-center gap-1.5">
-          <span aria-hidden="true" className="text-brand">◆</span>
-          <span className="font-mono text-[11px] text-text">{facts.coordinator}</span>
-          <span className="font-mono text-[10px] text-faint">· {labels.coordinator}</span>
-        </span>
         <span className="font-mono text-[10px] text-faint">{facts.journey}</span>
         {scene.validated ? (
           <span className="inline-flex items-center gap-1.5 rounded-md border border-state-verified/40 bg-state-verified/10 px-2 py-0.5">
@@ -629,43 +673,33 @@ export default function FlowFloor({ facts, scene, labels, reduced }: FlowFloorPr
         {scene.validated ? <span className="font-mono text-[9.5px] text-faint">· {labels.lawSerial}</span> : null}
       </div>
 
-      {/* The assembly line: coordinator (left, spans the lane rows) → dispatch bus → repo lanes. */}
+      {/* The PE's flowchart: PE (origin) → coordinator → per-task lanes → repo containers. */}
       <div className="p-3.5 lg:p-4">
-        {scene.validated ? (
-          anyAgentVisible ? (
-            <div className="grid grid-cols-1 gap-3 lg:gap-x-0 lg:gap-y-4 lg:[grid-template-columns:auto_3.5rem_minmax(0,1fr)]">
-              {/* Coordinator core — one node feeding every lane; spans all lane rows on desktop. */}
-              <div
-                data-flow-node="coord"
-                className="flex items-center gap-2 self-start rounded-xl border border-brand/40 bg-brand/[0.06] px-3 py-2.5 lg:col-start-1 lg:row-[1/-1] lg:flex-col lg:justify-center lg:self-center lg:text-center"
-              >
-                <span
-                  aria-hidden="true"
-                  className={`inline-flex h-9 w-9 items-center justify-center rounded-full border border-brand/50 bg-brand/15 text-brand-strong ${reduced ? "" : "animate-pulse-soft"}`}
-                >
-                  ◆
-                </span>
-                <span className="font-mono text-[11px] text-text lg:mt-1.5">{facts.coordinator}</span>
-                <span className="font-mono text-[9.5px] text-faint lg:-mt-0.5">{labels.coordinator}</span>
-              </div>
-
-              {/* For each lane: a dispatch connector (the fan-out bus branch) + the lane itself. */}
-              {scene.groups.map((group) => (
-                <FlowLaneRow key={group.repo} group={group} facts={facts} scene={scene} labels={labels} reduced={reduced} dispatchActive={dispatchActive} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 py-2 font-mono text-[11px] text-faint">
-              <span aria-hidden="true" className={`inline-block h-2 w-2 rounded-full bg-brand ${reduced ? "" : "animate-pulse"}`} />
-              {labels.dispatching}
-            </div>
-          )
-        ) : (
-          <div className="flex items-center gap-2 py-2 font-mono text-[11px] text-faint">
-            <span aria-hidden="true" className={`inline-block h-2 w-2 rounded-full bg-brand ${reduced ? "" : "animate-pulse"}`} />
-            {labels.receiving}
+        <div className="grid grid-cols-1 gap-3 lg:gap-x-0 lg:gap-y-4 lg:items-stretch lg:[grid-template-columns:auto_2.5rem_auto_2.75rem_minmax(0,1fr)]">
+          {/* PE — the origin */}
+          <div className="lg:col-start-1 lg:row-[1/-1] lg:self-center">
+            <PENode facts={facts} labels={labels} />
           </div>
-        )}
+          <Connector tone="brand" active reduced={reduced} className="lg:col-start-2 lg:row-[1/-1] lg:self-stretch" />
+          {/* Coordinator — classifies & dispatches */}
+          <div className="lg:col-start-3 lg:row-[1/-1] lg:self-center">
+            <CoordNode facts={facts} labels={labels} reduced={reduced} />
+          </div>
+          <Connector tone="brand" active={dispatchActive} reduced={reduced} label={labels.conn.dispatch} className="lg:col-start-4 lg:row-[1/-1] lg:self-stretch" />
+          {/* The task lanes, grouped by repo; each repo is a container the lanes land in. */}
+          <div className="flex min-w-0 flex-col justify-center gap-3 lg:col-start-5 lg:gap-4">
+            {anyAgentVisible ? (
+              scene.groups.map((group) => (
+                <GroupBlock key={group.repo} group={group} facts={facts} scene={scene} labels={labels} reduced={reduced} />
+              ))
+            ) : (
+              <div className="flex items-center gap-2 py-2 font-mono text-[11px] text-faint">
+                <span aria-hidden="true" className={`inline-block h-2 w-2 rounded-full bg-brand ${reduced ? "" : "animate-pulse"}`} />
+                {scene.validated ? labels.dispatching : labels.receiving}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Ledger track: stations light in lifecycle order. */}
@@ -694,36 +728,5 @@ export default function FlowFloor({ facts, scene, labels, reduced }: FlowFloorPr
         </p>
       </div>
     </div>
-  );
-}
-
-/**
- * A lane and the dispatch connector that feeds it — two grid cells (bus branch
- * in column 2, lane in column 3) so the branch aligns to its lane row with no
- * measuring. Across rows the branches read as one fan-out from the coordinator.
- * On mobile the two stack (a down arrow, then the lane).
- */
-function FlowLaneRow({
-  group,
-  facts,
-  scene,
-  labels,
-  reduced,
-  dispatchActive,
-}: {
-  group: Group;
-  facts: FlowFacts;
-  scene: FlowState;
-  labels: FlowFloorLabels;
-  reduced?: boolean;
-  dispatchActive: boolean;
-}) {
-  return (
-    <>
-      <Connector tone="brand" active={dispatchActive} reduced={reduced} label={labels.conn.dispatch} className="lg:col-start-2 lg:self-stretch" />
-      <div className="lg:col-start-3">
-        <Lane group={group} facts={facts} scene={scene} labels={labels} reduced={reduced} />
-      </div>
-    </>
   );
 }
