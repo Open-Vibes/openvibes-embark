@@ -85,6 +85,8 @@ const pt: Translations = {
       landsIn: "entra em",
       spec: "spec",
       mainBranch: "main",
+      lawSerial: "chave repetida → serializado em ondas",
+      serial: "serial · um passo por vez",
     },
     // Micro-rótulos que nomeiam cada conector desenhado (os vínculos visíveis).
     conn: {

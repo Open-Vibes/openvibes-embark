@@ -8,11 +8,10 @@ import {
   buildFlowFacts,
   buildFlowTerminal,
   foldFlow,
-  summarizeCycle,
+  nextPhaseIndex,
   FLOW_PHASES,
   FLOW_PHASE_IDS,
   FLOW_LAST_PHASE,
-  type FlowCarry,
 } from "./flowModel";
 
 /**
@@ -47,8 +46,6 @@ export default function FlowScene() {
 
   // Reduced motion opens on the complete, settled frame; otherwise from the top.
   const [phaseIndex, setPhaseIndex] = useState(() => (reduced ? FLOW_LAST_PHASE : 0));
-  // What the previous cycle closed with — null until the first loop completes.
-  const [previousCycle, setPreviousCycle] = useState<FlowCarry | null>(null);
 
   useEffect(() => {
     if (reduced) setPhaseIndex(FLOW_LAST_PHASE);
@@ -63,25 +60,20 @@ export default function FlowScene() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
-  const scene = useMemo(() => foldFlow(phaseIndex, facts, previousCycle), [phaseIndex, facts, previousCycle]);
+  const scene = useMemo(() => foldFlow(phaseIndex, facts), [phaseIndex, facts]);
 
-  // The looping clock: one phase per dwell. Wrapping from the settled hold
-  // carries this cycle's summary forward before resetting the phase index —
-  // the floor/terminal stay mounted throughout, so nothing is torn down.
+  // The clock: one phase per dwell, played ONCE. At the settled end it HOLDS —
+  // no timer is scheduled past `FLOW_LAST_PHASE`, so the completed scene stays on
+  // screen with its ambient life (the coordinator's soft pulse etc.) and is never
+  // wiped back to an empty stage. This is the D fix: "quando terminar ele deve
+  // manter o estado final" — see `nextPhaseIndex`.
   useEffect(() => {
     if (reduced || !inView || !tabVisible) return;
+    if (phaseIndex >= FLOW_LAST_PHASE) return; // settled — hold, don't wipe
     const dwell = FLOW_PHASES[phaseIndex]?.ms ?? 2000;
-    const id = window.setTimeout(() => {
-      setPhaseIndex((n) => {
-        if (n >= FLOW_LAST_PHASE) {
-          setPreviousCycle(summarizeCycle(scene));
-          return 0;
-        }
-        return n + 1;
-      });
-    }, dwell);
+    const id = window.setTimeout(() => setPhaseIndex((n) => nextPhaseIndex(n)), dwell);
     return () => window.clearTimeout(id);
-  }, [phaseIndex, reduced, inView, tabVisible, scene]);
+  }, [phaseIndex, reduced, inView, tabVisible]);
 
   const revealedLines = useMemo(() => {
     const order = FLOW_PHASE_IDS.indexOf(scene.phase);
@@ -115,6 +107,8 @@ export default function FlowScene() {
     landsIn: f.labels.landsIn,
     spec: f.labels.spec,
     mainBranch: f.labels.mainBranch,
+    lawSerial: f.labels.lawSerial,
+    serial: f.labels.serial,
     conn: f.conn,
     caption: f.captions[scene.captionKey],
     previousCycle: f.previousCycle,

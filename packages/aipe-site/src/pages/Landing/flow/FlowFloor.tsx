@@ -69,6 +69,10 @@ export interface FlowFloorLabels {
   caption: string;
   spec: string;
   mainBranch: string;
+  /** The law's serialize half, shown beside the parallel verdict (SERIALIZE fix). */
+  lawSerial: string;
+  /** The reject→fix loop read as the same serialize principle at the unit scale. */
+  serial: string;
   /** "→ <repo>" prefix for the destination node that both cards point at (item 3). */
   landsIn: string;
   conn: { dispatch: string; review: string; promote: string; reject: string };
@@ -345,6 +349,12 @@ function AgentCard({ agent, labels, reduced }: { agent: Agent; labels: FlowFloor
 
         {/* the agent's own artifacts: → spec → PR, each reached by a drawn arrow */}
         <div className="flex min-h-[1.15rem] flex-wrap items-center gap-1">
+          {isRejected || agent.state === "fixing" ? (
+            <span data-flow-serial className="inline-flex items-center gap-1 rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[9px] text-faint" title={labels.lawSerial}>
+              <span aria-hidden="true">⧗</span>
+              {labels.serial}
+            </span>
+          ) : null}
           <AnimatePresence initial={false}>
             {showSpec ? (
               <motion.span key="arrow-spec" aria-hidden="true" className="font-mono text-[10px] text-state-delivered" initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -615,11 +625,8 @@ export default function FlowFloor({ facts, scene, labels, reduced }: FlowFloorPr
             </span>
           </span>
         ) : null}
-        {scene.previousCycle ? (
-          <span className="ml-auto font-mono text-[9.5px] text-faint">
-            {labels.previousCycle(scene.previousCycle.merged, scene.previousCycle.repos)}
-          </span>
-        ) : null}
+        {/* the law's OTHER half, so the scene teaches the whole rule, not the parallel half only */}
+        {scene.validated ? <span className="font-mono text-[9.5px] text-faint">· {labels.lawSerial}</span> : null}
       </div>
 
       {/* The assembly line: coordinator (left, spans the lane rows) → dispatch bus → repo lanes. */}

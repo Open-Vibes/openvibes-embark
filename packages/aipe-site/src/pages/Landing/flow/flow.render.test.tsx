@@ -35,6 +35,8 @@ const LABELS: FlowFloorLabels = {
   landsIn: "lands in",
   spec: "spec",
   mainBranch: "main",
+  lawSerial: "shared key → serialized in waves",
+  serial: "serial · one step at a time",
   conn: { dispatch: "dispatch", review: "review", promote: "promote", reject: "sent back" },
   caption: "all merged · immutable",
   previousCycle: (merged, repos) => `last cycle: ${merged} merged across ${repos} repos`,

@@ -7,7 +7,7 @@ import {
   envelopeForActor,
   flowUnits,
   foldFlow,
-  summarizeCycle,
+  nextPhaseIndex,
   FLOW_PHASES,
   FLOW_PHASE_IDS,
   FLOW_LAST_PHASE,
@@ -430,36 +430,35 @@ describe("flow fold — the settled end and its progression", () => {
   });
 });
 
-/* ------------------------------------------------------------ no reset seco */
+/* --------------------------------------- D: the settled end is KEPT, not wiped */
 
-describe("no reset seco — the next cycle's opening carries the last one's close forward", () => {
-  it("the very first cycle's opening frame carries nothing (there is nothing before it)", () => {
-    const first = foldFlow(FLOW_PHASE_IDS.indexOf("demand"), buildFlowFacts(), null);
-    expect(first.previousCycle).toBeNull();
+describe("no reset seco — the arc plays once and HOLDS the final state, never wiping to empty", () => {
+  // The v4 gate measured the WRONG thing: it asserted the next cycle's stage was
+  // EMPTY (`groups` length 0, "the fan-out genuinely restarts") and only checked a
+  // `previousCycle` summary proxy — so a proxy became the assertion and the test
+  // PROTECTED the reset defect. These assert the PE's real requirement instead:
+  // the completed scene stays on screen. Each one FAILS on the old wipe-to-0 clock.
+
+  it("the clock HOLDS at the settled end — it does not wipe back to the empty first frame", () => {
+    // The whole finding in one line: old behaviour returned 0 here (wipe); the fix holds.
+    expect(nextPhaseIndex(FLOW_LAST_PHASE)).toBe(FLOW_LAST_PHASE);
+    expect(nextPhaseIndex(FLOW_LAST_PHASE)).not.toBe(0);
   });
 
-  it("summarizeCycle reads the settled frame's real merged/repo counts", () => {
-    const facts = buildFlowFacts();
-    const lastFrame = foldFlow(FLOW_LAST_PHASE, facts);
-    const carry = summarizeCycle(lastFrame);
-    expect(carry.merged).toBe(3);
-    expect(carry.repos).toBe(2);
+  it("still advances one step at a time on the way there (it is not frozen from the start)", () => {
+    for (let i = 0; i < FLOW_LAST_PHASE; i++) expect(nextPhaseIndex(i)).toBe(i + 1);
+    expect(nextPhaseIndex(FLOW_LAST_PHASE - 1)).toBe(FLOW_LAST_PHASE);
   });
 
-  it("cycle 2's opening frame is provably NOT the same blank picture as cycle 1's", () => {
-    const facts = buildFlowFacts();
-    const cycle1Last = foldFlow(FLOW_LAST_PHASE, facts, null);
-    const carry = summarizeCycle(cycle1Last);
-
-    const cycle1First = foldFlow(FLOW_PHASE_IDS.indexOf("demand"), facts, null);
-    const cycle2First = foldFlow(FLOW_PHASE_IDS.indexOf("demand"), facts, carry);
-
-    // Both open with an empty stage (the fan-out genuinely restarts)...
-    expect(cycle2First.groups).toHaveLength(0);
-    // ...but cycle 2 is NOT an erasure: it carries proof the previous cycle happened.
-    expect(cycle1First.previousCycle).toBeNull();
-    expect(cycle2First.previousCycle).toEqual({ merged: 3, repos: 2 });
-    expect(cycle2First).not.toEqual(cycle1First);
+  it("the frame the clock holds on is the COMPLETE, fully-populated scene — nothing erased", () => {
+    const held = foldFlow(nextPhaseIndex(FLOW_LAST_PHASE), buildFlowFacts());
+    expect(held.settled).toBe(true);
+    const agents = held.groups.flatMap((g) => g.agents);
+    expect(agents).toHaveLength(3); // every unit still on screen
+    expect(agents.every((a) => a.state === "merged" && a.prDevMerged)).toBe(true);
+    expect(held.groups.every((g) => g.promotion.visible && g.promotion.merged)).toBe(true);
+    expect(held.entityCount).toBeGreaterThanOrEqual(7); // the built population is intact, not wiped
+    expect(held.ledger).toEqual(["dispatched", "delivered", "verified", "merged"]);
   });
 });
 

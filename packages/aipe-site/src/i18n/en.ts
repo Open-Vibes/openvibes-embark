@@ -89,6 +89,12 @@ const en = {
       landsIn: "lands in",
       spec: "spec",
       mainBranch: "main",
+      // The law's OTHER half, taught alongside the parallel verdict: distinct
+      // package keys run at once; a shared key is serialized into waves. The
+      // reject→fix loop is the same principle at the unit scale — the gate waits,
+      // one step at a time — so it reads AS the law rather than as a mere detour.
+      lawSerial: "shared key → serialized in waves",
+      serial: "serial · one step at a time",
     },
     // Micro-labels naming each drawn connector (the visible hand-off links).
     conn: {

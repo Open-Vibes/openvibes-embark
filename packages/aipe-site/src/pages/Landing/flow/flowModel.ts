@@ -321,6 +321,24 @@ export const FLOW_PHASES: readonly FlowPhase[] = [
 export const FLOW_PHASE_IDS: readonly FlowPhaseId[] = FLOW_PHASES.map((p) => p.id);
 export const FLOW_LAST_PHASE = FLOW_PHASES.length - 1;
 
+/**
+ * The clock's next index. The arc plays ONCE and then **holds** on the settled
+ * end — at `FLOW_LAST_PHASE` this returns the SAME index, so the completed scene
+ * stays fully on screen and is never wiped back to an empty stage.
+ *
+ * This is the D fix (PE, 4th time: *"quando terminar ele deve manter o estado
+ * final"*). The v4 loop returned `0` here, wiping everything it had built and
+ * replaying from the void — the reset the PE kept rejecting. The v4 gate hid it:
+ * `flowModel.test.ts` asserted the next cycle's stage was EMPTY (`groups` length
+ * 0, "the fan-out genuinely restarts") and only checked that a `previousCycle`
+ * summary proxy differed — a proxy became the assertion, so the test *protected*
+ * the defect. `nextPhaseIndex(FLOW_LAST_PHASE) === FLOW_LAST_PHASE` fails on that
+ * old wipe-to-0 behaviour by construction.
+ */
+export function nextPhaseIndex(index: number): number {
+  return index >= FLOW_LAST_PHASE ? FLOW_LAST_PHASE : index + 1;
+}
+
 /** The order a phase reaches, for cumulative reveals. */
 function phaseOrder(id: FlowPhaseId): number {
   return FLOW_PHASE_IDS.indexOf(id);
@@ -383,6 +401,9 @@ export function buildFlowTerminal(facts: FlowFacts = buildFlowFacts(), script: F
       tone: "ok",
       text: `OK parallel · ${facts.agents.length} units · ${facts.repos.length} repos · wave ${facts.waves.length}`,
     },
+    // The law's full rule, as machine notation (literal in every locale, like the
+    // `parallel` token): distinct package keys run at once, a shared key serializes.
+    { phase: "validate", tone: "info", text: `~ law: distinct-key ∥ · same-key ⇒ serialize (waves)` },
 
     { phase: "dispatch-1", tone: "info", text: `$ aipe session dispatch --unit ${lawson.fqid} --harness ${lawson.envelope.harness} --tier ${lawson.envelope.tier}` },
     { phase: "dispatch-1", tone: "ok", text: `OK ${lawson.fqid} → running` },
