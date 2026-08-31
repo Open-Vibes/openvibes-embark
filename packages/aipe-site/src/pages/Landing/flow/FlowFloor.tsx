@@ -478,31 +478,7 @@ function QaCell({ gate, labels, reduced }: { gate: Gate | null; labels: FlowFloo
   );
 }
 
-/* ------------------------------------------------- the explicit decision (v4 #1) */
-
-/**
- * The PE's flowchart heart: the rejection is an EXPLICIT, LABELLED question on a
- * return path — `reproved? no` on a lane that passed, `reproved? yes` on the one
- * that bounced — not a mere card state. The bracket returns from the QA (right)
- * back to the task (left). Decorative on its own (`aria-hidden`); the labels the
- * boxes carry hold the real state.
- */
-function DecisionArc({ rejected, labels, reduced }: { rejected: boolean; labels: FlowFloorLabels; reduced?: boolean }) {
-  const cls = rejected ? "text-state-failed" : "text-state-verified";
-  const border = rejected ? "border-state-failed/55" : "border-state-verified/45";
-  return (
-    <div aria-hidden="true" data-flow-decision data-reproved={rejected ? "yes" : "no"} className={`mt-1 flex items-center gap-1.5 ${cls}`}>
-      <span className={`font-mono text-[11px] leading-none ${reduced ? "" : rejected ? "animate-pulse" : ""}`}>↩</span>
-      <span className={`h-1.5 flex-1 rounded-bl-md border-b border-l ${border}`} />
-      <span className="whitespace-nowrap font-mono text-[8.5px] uppercase tracking-wide">
-        {labels.reprovedQ} {rejected ? labels.answerYes : labels.answerNo}
-      </span>
-      <span className={`h-1.5 flex-1 rounded-br-md border-b border-r ${border}`} />
-    </div>
-  );
-}
-
-/* --------------------------------------------- the repo as a CONTAINER (v4 #2) */
+/* --------------------------------------------- the repo as a place (v4 #2) */
 
 /**
  * The PE wants the repository as a CONTAINER, not a destination: one box that
@@ -583,64 +559,65 @@ function CoordNode({ facts, labels, reduced }: { facts: FlowFacts; labels: FlowF
 /* ------------------------------------------------------- one repo's task lanes */
 
 /**
- * The PE's flowchart, per repo: each TASK is its own LANE (`Especialista · repo`
- * label above), flowing left→right `TASK → QA`, with the explicit `reproved?`
- * decision on the return arc below it, and the lanes of one repo CONVERGING into
- * that repo's container. The rejected lane's task→QA hop is the amber "adjust
- * after the request" step (v4 #4). Lanes are grid rows; the repo container spans
- * them (`row-[1/-1]`) so two same-repo lanes read as landing in one repo.
+ * One repo's task lanes — expressed as SCENE, not diagram (v4 read: the PE wanted
+ * the idea of his sketch animated, not the sketch transcribed). No labelled arcs,
+ * no decision captions: each task flows `dev → QA` and the story is told by
+ * MOVEMENT and colour. Rejection isn't a drawn return arc — it HAPPENS: the card
+ * reddens, and the work travels BACK to the dev (a backwards pulse on the same
+ * path), who turns amber and resumes. The lanes of one repo land in the one repo
+ * place (`row-[1/-1]`). What the boxes carry is identity and live state; what the
+ * connectors carry is motion.
  */
 function GroupBlock({ group, facts, scene, labels, reduced }: { group: Group; facts: FlowFacts; scene: FlowState; labels: FlowFloorLabels; reduced?: boolean }) {
   const p = scene.phase;
-  const reviewActive = p === "pr-dev" || p === "qa-review" || p === "qa-approve" || p === "merge-dev";
-  const isFixing = (agentId: string) => agentId === facts.rejectedAgentId && p === "dev-fix";
+  const flowActive = p === "pr-dev" || p === "qa-review" || p === "qa-approve" || p === "merge-dev";
 
   return (
     <div className="grid grid-cols-1 gap-2 lg:gap-x-0 lg:gap-y-2 lg:[grid-template-columns:minmax(0,1fr)_2.25rem_minmax(6.5rem,8.5rem)]">
       {group.agents.map((agent, i) => {
         const gate = group.qaGates[i] ?? null;
-        const fixing = isFixing(agent.id);
         const isRejectedLane = agent.id === facts.rejectedAgentId;
-        // Global task number (stable across repos), so it reads Task 1, 2, 3 — not per-repo.
-        const taskNo = facts.agents.findIndex((a) => a.id === agent.id) + 1;
+        const rejecting = isRejectedLane && p === "qa-reject"; // the bounce: red, travelling back
+        const fixing = isRejectedLane && p === "dev-fix"; // the rework: amber, still on the return path
+        const returning = rejecting || fixing;
         return (
           <div key={agent.id} className="contents">
-            {/* the lane: owner label, TASK → QA, and the explicit decision below */}
-            <div className="min-w-0 rounded-xl border border-line-soft bg-surface-1/40 p-2 lg:col-start-1">
+            {/* the lane: the owner, their work, their QA — flowing left→right */}
+            <div className="min-w-0 rounded-2xl border border-line-soft/70 bg-surface-1/30 p-2 lg:col-start-1">
               <span className="mb-1 block truncate font-mono text-[8.5px] uppercase tracking-wide text-faint">
-                {labels.taskWord} {taskNo} · {agent.persona} · {agent.repo}
+                {agent.persona} · {agent.repo}
               </span>
               <div className="flex flex-col gap-1.5 lg:flex-row lg:items-stretch">
                 <div className="min-w-0 flex-1">
                   <AgentCard agent={agent} labels={labels} reduced={reduced} />
                 </div>
+                {/* dev ↔ QA: forward while under review, and a RED pulse travelling
+                    BACK to the dev the moment it is rejected — the motion IS the decision. */}
                 <Connector
-                  tone={fixing ? "running" : "delivered"}
-                  active={reviewActive || fixing}
+                  tone={rejecting ? "failed" : fixing ? "running" : "delivered"}
+                  active={flowActive || returning}
+                  back={returning}
                   reduced={reduced}
-                  label={fixing ? labels.adjustAfterRequest : labels.conn.review}
                   className="lg:w-16 lg:shrink-0"
                 />
                 <div className="lg:w-[8.5rem] lg:shrink-0">
                   <QaCell gate={gate} labels={labels} reduced={reduced} />
                 </div>
               </div>
-              {gate ? <DecisionArc rejected={isRejectedLane} labels={labels} reduced={reduced} /> : null}
             </div>
 
-            {/* this lane converges INTO the repo container */}
+            {/* the lane lands in the repo place — a pulse travelling in as it merges */}
             <Connector
               tone={agent.prDevMerged ? "verified" : "running"}
               active={agent.prDevVisible && !agent.prDevMerged}
               reduced={reduced}
-              label={labels.landsIn}
               className="lg:col-start-2"
             />
           </div>
         );
       })}
 
-      {/* the repo, as a container of PR DEV / PR MAIN — the lanes land inside it */}
+      {/* the repo: one place the lanes land in */}
       <div className="lg:col-start-3 lg:row-[1/-1] lg:self-stretch">
         <RepoContainer group={group} labels={labels} reduced={reduced} />
       </div>
@@ -685,7 +662,7 @@ export default function FlowFloor({ facts, scene, labels, reduced }: FlowFloorPr
           <div className="lg:col-start-3 lg:row-[1/-1] lg:self-center">
             <CoordNode facts={facts} labels={labels} reduced={reduced} />
           </div>
-          <Connector tone="brand" active={dispatchActive} reduced={reduced} label={labels.conn.dispatch} className="lg:col-start-4 lg:row-[1/-1] lg:self-stretch" />
+          <Connector tone="brand" active={dispatchActive} reduced={reduced} className="lg:col-start-4 lg:row-[1/-1] lg:self-stretch" />
           {/* The task lanes, grouped by repo; each repo is a container the lanes land in. */}
           <div className="flex min-w-0 flex-col justify-center gap-3 lg:col-start-5 lg:gap-4">
             {anyAgentVisible ? (

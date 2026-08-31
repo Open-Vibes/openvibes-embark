@@ -263,50 +263,44 @@ describe("Flow — the promotion: one repo, two arrows, each carrying repo · br
   });
 });
 
-/* ----------------------------------- the PE's flowchart form (v4 drawing) */
+/* ---------------------------- the PE's flow as SCENE, not a transcribed diagram */
 
-describe("Flow — the PE's decision-flowchart form", () => {
+describe("Flow — the flow's IDEAS, expressed as scene (v4 read: not the sketch's furniture)", () => {
+  const at = (phase: FlowPhaseId) =>
+    renderToStaticMarkup(<FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf(phase), facts)} labels={LABELS} reduced />);
   const settled = renderToStaticMarkup(<FlowFloor facts={facts} scene={foldFlow(FLOW_LAST_PHASE, facts)} labels={LABELS} reduced />);
-  const devFix = renderToStaticMarkup(
-    <FlowFloor facts={facts} scene={foldFlow(FLOW_PHASE_IDS.indexOf("dev-fix"), facts)} labels={LABELS} reduced />,
-  );
+  const reject = at("qa-reject");
+  const devFix = at("dev-fix");
 
-  it("begins with the PE as the origin (v4 #3), tasks count derived", () => {
+  it("keeps the ideas: work enters through the PE, the coordinator splits it, each task has an owner and a QA", () => {
     expect(settled).toContain('data-flow-node="pe"');
     expect(settled).toContain("PE (you)");
-    expect(settled).toContain(`Tasks 1–${facts.agents.length}`); // Tasks 1–3
     expect(settled).toContain(`classifies and dispatches ${facts.agents.length} tasks`);
+    for (const a of facts.agents) expect(settled).toContain(`${a.persona} · ${a.repo}`); // owner · where
+    for (const qa of facts.qaTeam) expect(settled).toContain(qa.persona);
   });
 
-  it("the rejection is an EXPLICIT labelled decision on a return arc (v4 #1), not just a state", () => {
-    expect(settled).toContain("data-flow-decision");
-    expect(settled).toContain('data-reproved="yes"'); // the bounced lane
-    expect(settled).toContain('data-reproved="no"'); // the ones that passed
-    expect(settled).toContain("reproved?");
-    expect(settled).toContain("yes");
-    expect(settled).toContain("no");
-    // exactly one lane bounced → exactly one YES.
-    expect((settled.match(/data-reproved="yes"/g) ?? []).length).toBe(1);
-    expect((settled.match(/data-reproved="no"/g) ?? []).length).toBe(facts.agents.length - 1);
-  });
-
-  it("the repo is a CONTAINER of PR DEV / PR MAIN with the branches inside (v4 #2)", () => {
+  it("the repo is ONE place the different branches land in — not separate destinations", () => {
     expect((settled.match(/data-flow-node="repo"/g) ?? []).length).toBe(facts.repos.length);
-    expect(settled).toContain("PR DEV");
-    expect(settled).toContain("PR MAIN");
-    for (const a of facts.agents) expect(settled).toContain(a.branch); // branches land inside PR DEV
+    for (const a of facts.agents) expect(settled).toContain(a.branch);
     for (const num of Object.values(facts.promotionPr)) expect(settled).toContain(`#${num}`);
   });
 
-  it("task numbers are GLOBAL (Task 1..N across repos), not per-repo", () => {
-    for (let n = 1; n <= facts.agents.length; n++) expect(settled).toContain(`Task ${n} ·`);
+  it("DROPS the flowchart furniture: no labelled decision arc, no 'reproved?' caption, no 'adjust' label, no Task-N numbering", () => {
+    for (const html of [settled, reject, devFix]) {
+      expect(html).not.toContain("data-flow-decision");
+      expect(html).not.toContain("reproved?");
+      expect(html).not.toContain("adjust after the request");
+      expect(html).not.toContain("Task 1 ·");
+    }
   });
 
-  it("the rejected lane's fix is the amber 'adjust after the request' hop (v4 #4)", () => {
-    expect(devFix).toContain("adjust after the request");
-    expect(devFix).toContain("data-flow-inprogress"); // the fixing task is amber/in-progress
-    expect(devFix).toContain('data-reproved="yes"'); // its lane's explicit decision reads YES
-    expect(devFix).toContain(LABELS.rejected); // and its QA gate still reads rejected mid-fix
+  it("the rejection is expressed by STATE + MOTION, not a drawn label: the card reddens and its dev↔QA path turns red to travel back", () => {
+    expect(reject).toContain(">failed<"); // the card itself reddens
+    expect(reject).toContain('data-flow-conn="failed"'); // the same path turns red — the work travels back
+    expect(devFix).toContain("data-flow-inprogress"); // then the dev is amber, resuming the rework
+    // and none of it is carried by a diagram caption
+    expect(reject).not.toContain("reproved?");
   });
 });
 
