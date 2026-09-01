@@ -77,6 +77,8 @@ export interface FlowFloorLabels {
   landsIn: string;
   // The PE's flowchart form (v4).
   pe: string;
+  /** The demand text the PE writes — the very first beat (end-to-end from input). */
+  demandText: string;
   peTasks: (n: number) => string;
   classifyDispatch: (n: number) => string;
   taskWord: string;
@@ -310,17 +312,18 @@ function AgentCard({ agent, labels, reduced }: { agent: Agent; labels: FlowFloor
       exit={reduced ? undefined : NODE_ENTER}
       transition={reduced ? { duration: 0 } : { duration: 0.4, ease: "easeOut" }}
     >
-      {/* identity */}
-      <div className="flex items-center gap-2 border-b border-line-soft/70 bg-surface-1/30 px-2.5 py-2 lg:w-[8.5rem] lg:shrink-0 lg:flex-col lg:items-start lg:justify-center lg:border-b-0 lg:border-r">
+      {/* identity — who, and from which repo, legible at a glance (point 3) */}
+      <div className="flex items-center gap-2 border-b border-line-soft/70 bg-surface-1/30 px-2.5 py-2 lg:w-[9rem] lg:shrink-0 lg:flex-col lg:items-start lg:justify-center lg:border-b-0 lg:border-r">
         <span
-          className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand/15 font-mono text-[10px] font-bold text-brand-strong"
+          className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/15 font-mono text-[11px] font-bold text-brand-strong"
           aria-hidden="true"
         >
           {agent.persona.charAt(0)}
         </span>
-        <span className="min-w-0 font-mono text-[11.5px] leading-tight text-text">
-          {agent.persona}
-          <span className="block text-[9.5px] text-faint">{agent.role}</span>
+        <span className="min-w-0 font-mono leading-tight text-text">
+          <span className="block text-[12.5px] font-bold">{agent.persona}</span>
+          <span className="block text-[9px] text-faint">{agent.role}</span>
+          <span className="mt-0.5 block truncate text-[9px] text-brand-strong">{agent.repo}</span>
         </span>
       </div>
 
@@ -492,21 +495,22 @@ function RepoContainer({ group, labels, reduced }: { group: Group; labels: FlowF
   const { promotion } = group;
   const devLit = group.agents.some((a) => a.prDevVisible);
   return (
-    <div data-flow-node="repo" className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-brand/45 bg-brand/[0.04]">
-      <div className="flex items-center gap-1.5 border-b border-brand/25 bg-brand/[0.06] px-2.5 py-1 font-mono text-[10.5px] font-semibold text-brand-strong">
-        <span aria-hidden="true">⬢</span>
-        <span className="min-w-0 break-all">{group.repo}</span>
+    <div data-flow-node="repo" className="flex min-w-0 w-full flex-col justify-center overflow-hidden rounded-xl border border-brand/50 bg-brand/[0.05]">
+      {/* the repo name, prominent — reads at a glance (identification, point 3) */}
+      <div className="flex items-center gap-1.5 border-b border-brand/25 bg-brand/[0.08] px-2.5 py-1.5 text-brand-strong">
+        <span aria-hidden="true" className="text-[13px]">⬢</span>
+        <span className="min-w-0 break-all font-mono text-[12px] font-bold">{group.repo}</span>
       </div>
 
-      {/* PR DEV — the branches land here (item 3, now inside the container) */}
-      <div className={`border-b border-brand/20 px-2.5 py-1.5 ${devLit ? "" : "opacity-40"}`}>
-        <span className="font-mono text-[9px] font-semibold uppercase tracking-wide text-state-delivered">{labels.prDevSection}</span>
-        <div className="mt-0.5 flex flex-col gap-0.5">
+      {/* PR DEV — the branches land here */}
+      <div className={`border-b border-brand/20 px-2.5 py-2 ${devLit ? "" : "opacity-40"}`}>
+        <span className="font-mono text-[9.5px] font-semibold uppercase tracking-wide text-state-delivered">{labels.prDevSection}</span>
+        <div className="mt-1 flex flex-col gap-0.5">
           {group.agents.map((a) => (
             <span
               key={a.id}
               data-flow-branch
-              className={`min-w-0 break-all font-mono text-[8px] leading-tight ${a.prDevMerged ? "text-state-verified" : a.prDevVisible ? "text-state-running" : "text-faint"}`}
+              className={`min-w-0 break-all font-mono text-[8.5px] leading-tight ${a.prDevMerged ? "text-state-verified" : a.prDevVisible ? "text-state-running" : "text-faint"}`}
             >
               {a.branch}
               {a.prDevMerged ? <span className="text-state-verified"> ✓</span> : null}
@@ -515,13 +519,13 @@ function RepoContainer({ group, labels, reduced }: { group: Group; labels: FlowF
         </div>
       </div>
 
-      {/* PR MAIN — the promotion is the container's second section */}
-      <div className={`px-2.5 py-1.5 ${promotion.visible ? "" : "opacity-40"}`}>
-        <span className="font-mono text-[9px] font-semibold uppercase tracking-wide text-brand-strong">
+      {/* PR MAIN — the promotion */}
+      <div className={`px-2.5 py-2 ${promotion.visible ? "" : "opacity-40"}`}>
+        <span className="font-mono text-[9.5px] font-semibold uppercase tracking-wide text-brand-strong">
           {labels.prMainSection}
           {promotion.visible ? <span className="ml-1 text-brand-strong">#{promotion.number}</span> : null}
         </span>
-        {promotion.merged ? <span className="mt-0.5 block font-mono text-[8px] text-state-merged">✓ {labels.promoteMerged}</span> : null}
+        {promotion.merged ? <span className="mt-0.5 block font-mono text-[8.5px] text-state-merged">✓ {labels.promoteMerged}</span> : null}
       </div>
     </div>
   );
@@ -529,13 +533,44 @@ function RepoContainer({ group, labels, reduced }: { group: Group; labels: FlowF
 
 /* ------------------------------------------------------- the origin: PE + coord */
 
-/** The PE, the ORIGIN of the flow (v4 #3) — the scene begins with them, not the
- *  coordinator. The tasks count is derived (Tasks 1–N). */
-function PENode({ facts, labels }: { facts: FlowFacts; labels: FlowFloorLabels }) {
+/** The PE, the ORIGIN of the flow — the scene begins with the request being
+ *  WRITTEN (the true end-to-end start, point 4), then the input recedes as the
+ *  devs come on so the lanes get their full width (that recede is also what keeps
+ *  the demand's width from crowding the cards — the two never share the frame). */
+function PENode({ facts, labels, phase, reduced }: { facts: FlowFacts; labels: FlowFloorLabels; phase: FlowState["phase"]; reduced?: boolean }) {
+  const writing = phase === "demand" || phase === "validate";
+  const text = labels.demandText;
   return (
-    <div data-flow-node="pe" className="flex flex-col items-center justify-center gap-1 rounded-xl border border-line bg-surface-2/50 px-3 py-2.5 text-center">
+    <div data-flow-node="pe" className="flex flex-col items-center gap-1.5 rounded-xl border border-line bg-surface-2/50 px-3 py-2.5 text-center">
       <span className="font-mono text-[8.5px] uppercase tracking-wide text-faint">{labels.peTasks(facts.agents.length)}</span>
       <span className="font-mono text-[11px] font-semibold text-text">{labels.pe}</span>
+      <AnimatePresence initial={false}>
+        {writing ? (
+          <motion.div
+            key="demand"
+            data-flow-demand
+            className="mt-0.5 w-fit max-w-[min(24rem,78vw)] overflow-hidden rounded-md border border-brand/30 bg-surface-1/70 px-2 py-1 text-left"
+            initial={reduced ? false : { opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={reduced ? undefined : { opacity: 0, height: 0 }}
+            transition={reduced ? { duration: 0 } : { duration: 0.35 }}
+          >
+            <span className="mb-0.5 block font-mono text-[7.5px] uppercase tracking-wide text-faint">demand</span>
+            <span className="flex items-center overflow-hidden whitespace-nowrap font-mono text-[9px] text-text">
+              <motion.span
+                className="inline-block"
+                style={{ overflow: "hidden" }}
+                initial={reduced ? false : { maxWidth: "0ch" }}
+                animate={{ maxWidth: `${text.length + 1}ch` }}
+                transition={reduced ? { duration: 0 } : { duration: 1.3, ease: "linear" }}
+              >
+                {text}
+              </motion.span>
+              <span aria-hidden="true" className={`ml-px text-brand ${reduced ? "" : "animate-pulse"}`}>▌</span>
+            </span>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }
@@ -573,52 +608,48 @@ function GroupBlock({ group, facts, scene, labels, reduced }: { group: Group; fa
   const flowActive = p === "pr-dev" || p === "qa-review" || p === "qa-approve" || p === "merge-dev";
 
   return (
-    <div className="grid grid-cols-1 gap-2 lg:gap-x-0 lg:gap-y-2 lg:[grid-template-columns:minmax(0,1fr)_2.25rem_minmax(6.5rem,8.5rem)]">
-      {group.agents.map((agent, i) => {
-        const gate = group.qaGates[i] ?? null;
-        const isRejectedLane = agent.id === facts.rejectedAgentId;
-        const rejecting = isRejectedLane && p === "qa-reject"; // the bounce: red, travelling back
-        const fixing = isRejectedLane && p === "dev-fix"; // the rework: amber, still on the return path
-        const returning = rejecting || fixing;
-        return (
-          <div key={agent.id} className="contents">
-            {/* the lane: the owner, their work, their QA — flowing left→right */}
-            <div className="min-w-0 rounded-2xl border border-line-soft/70 bg-surface-1/30 p-2 lg:col-start-1">
-              <span className="mb-1 block truncate font-mono text-[8.5px] uppercase tracking-wide text-faint">
-                {agent.persona} · {agent.repo}
-              </span>
-              <div className="flex flex-col gap-1.5 lg:flex-row lg:items-stretch">
-                <div className="min-w-0 flex-1">
-                  <AgentCard agent={agent} labels={labels} reduced={reduced} />
-                </div>
-                {/* dev ↔ QA: forward while under review, and a RED pulse travelling
-                    BACK to the dev the moment it is rejected — the motion IS the decision. */}
-                <Connector
-                  tone={rejecting ? "failed" : fixing ? "running" : "delivered"}
-                  active={flowActive || returning}
-                  back={returning}
-                  reduced={reduced}
-                  className="lg:w-16 lg:shrink-0"
-                />
-                <div className="lg:w-[8.5rem] lg:shrink-0">
-                  <QaCell gate={gate} labels={labels} reduced={reduced} />
-                </div>
+    <div className="flex flex-col gap-2.5 lg:flex-row lg:items-stretch lg:gap-2">
+      {/* the lanes of this repo, stacked; no strangling wrapper — the card breathes */}
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+        {group.agents.map((agent, i) => {
+          const gate = group.qaGates[i] ?? null;
+          const isRejectedLane = agent.id === facts.rejectedAgentId;
+          const rejecting = isRejectedLane && p === "qa-reject"; // the bounce: red, travelling back
+          const fixing = isRejectedLane && p === "dev-fix"; // the rework: amber, still returning
+          const returning = rejecting || fixing;
+          return (
+            <div key={agent.id} className="flex min-w-0 flex-col gap-1.5 lg:flex-row lg:items-center">
+              <div className="min-w-0 flex-1">
+                <AgentCard agent={agent} labels={labels} reduced={reduced} />
               </div>
+              {/* dev ↔ QA: forward while under review, a RED pulse travelling BACK
+                  to the dev the moment it is rejected — the motion IS the decision. */}
+              <Connector
+                tone={rejecting ? "failed" : fixing ? "running" : "delivered"}
+                active={flowActive || returning}
+                back={returning}
+                reduced={reduced}
+                className="lg:w-12 lg:shrink-0"
+              />
+              <div className="lg:w-[9rem] lg:shrink-0">
+                <QaCell gate={gate} labels={labels} reduced={reduced} />
+              </div>
+              {/* this lane lands in the repo — a pulse travelling in as it merges.
+                  Both same-repo lanes' arrows enter the ONE node to the right. */}
+              <Connector
+                tone={agent.prDevMerged ? "verified" : "running"}
+                active={agent.prDevVisible && !agent.prDevMerged}
+                reduced={reduced}
+                className="lg:w-9 lg:shrink-0"
+              />
             </div>
+          );
+        })}
+      </div>
 
-            {/* the lane lands in the repo place — a pulse travelling in as it merges */}
-            <Connector
-              tone={agent.prDevMerged ? "verified" : "running"}
-              active={agent.prDevVisible && !agent.prDevMerged}
-              reduced={reduced}
-              className="lg:col-start-2"
-            />
-          </div>
-        );
-      })}
-
-      {/* the repo: one place the lanes land in */}
-      <div className="lg:col-start-3 lg:row-[1/-1] lg:self-stretch">
+      {/* the repo: ONE place, spanning the lanes' height so BOTH arrows land in it
+          (repo derived from the data — same repo → one node, distinct repos → two). */}
+      <div className="flex lg:w-[10.5rem] lg:shrink-0 lg:self-stretch">
         <RepoContainer group={group} labels={labels} reduced={reduced} />
       </div>
     </div>
@@ -653,16 +684,16 @@ export default function FlowFloor({ facts, scene, labels, reduced }: FlowFloorPr
       {/* The PE's flowchart: PE (origin) → coordinator → per-task lanes → repo containers. */}
       <div className="p-3.5 lg:p-4">
         <div className="grid grid-cols-1 gap-3 lg:gap-x-0 lg:gap-y-4 lg:items-stretch lg:[grid-template-columns:auto_2.5rem_auto_2.75rem_minmax(0,1fr)]">
-          {/* PE — the origin */}
+          {/* PE — the origin, where the request is written */}
           <div className="lg:col-start-1 lg:row-[1/-1] lg:self-center">
-            <PENode facts={facts} labels={labels} />
+            <PENode facts={facts} labels={labels} phase={scene.phase} reduced={reduced} />
           </div>
           <Connector tone="brand" active reduced={reduced} className="lg:col-start-2 lg:row-[1/-1] lg:self-stretch" />
-          {/* Coordinator — classifies & dispatches */}
+          {/* Coordinator — the split HAPPENS here (the fan-out pulses as it decides) */}
           <div className="lg:col-start-3 lg:row-[1/-1] lg:self-center">
             <CoordNode facts={facts} labels={labels} reduced={reduced} />
           </div>
-          <Connector tone="brand" active={dispatchActive} reduced={reduced} className="lg:col-start-4 lg:row-[1/-1] lg:self-stretch" />
+          <Connector tone="brand" active={dispatchActive || scene.phase === "validate"} reduced={reduced} className="lg:col-start-4 lg:row-[1/-1] lg:self-stretch" />
           {/* The task lanes, grouped by repo; each repo is a container the lanes land in. */}
           <div className="flex min-w-0 flex-col justify-center gap-3 lg:col-start-5 lg:gap-4">
             {anyAgentVisible ? (

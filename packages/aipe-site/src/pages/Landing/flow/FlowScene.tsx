@@ -110,6 +110,7 @@ export default function FlowScene() {
     lawSerial: f.labels.lawSerial,
     serial: f.labels.serial,
     pe: f.labels.pe,
+    demandText: f.script.demand,
     peTasks: f.labels.peTasks,
     classifyDispatch: f.labels.classifyDispatch,
     taskWord: f.labels.taskWord,

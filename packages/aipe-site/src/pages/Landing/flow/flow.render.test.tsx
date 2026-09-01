@@ -38,6 +38,7 @@ const LABELS: FlowFloorLabels = {
   lawSerial: "shared key → serialized in waves",
   serial: "serial · one step at a time",
   pe: "PE (you)",
+  demandText: "ship three units across two repos — and show them run at once",
   peTasks: (n) => `Tasks 1–${n}`,
   classifyDispatch: (n) => `classifies and dispatches ${n} tasks`,
   taskWord: "Task",
@@ -276,7 +277,10 @@ describe("Flow — the flow's IDEAS, expressed as scene (v4 read: not the sketch
     expect(settled).toContain('data-flow-node="pe"');
     expect(settled).toContain("PE (you)");
     expect(settled).toContain(`classifies and dispatches ${facts.agents.length} tasks`);
-    for (const a of facts.agents) expect(settled).toContain(`${a.persona} · ${a.repo}`); // owner · where
+    for (const a of facts.agents) {
+      expect(settled).toContain(a.persona); // the owner, named
+      expect(settled).toContain(a.repo); // and which repo they're on
+    }
     for (const qa of facts.qaTeam) expect(settled).toContain(qa.persona);
   });
 
